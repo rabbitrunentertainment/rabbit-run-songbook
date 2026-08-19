@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rabbit Run Entertainment | Karaoke Song Book</title>
+<style>
+:root{--pink:#d42fc5;--purple:#7b39d9;--blue:#2f7eea;--ink:#f8f8fb;--muted:#b9b8c7}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 15% 0%,#32104b 0,transparent 35%),radial-gradient(circle at 85% 10%,#09285c 0,transparent 38%),#050711;color:var(--ink);font-family:Arial,Helvetica,sans-serif;min-height:100vh}
+.wrap{max-width:920px;margin:auto;padding:28px 18px 60px}
+header{text-align:center}
+.logo{width:min(280px,70vw);height:auto;filter:drop-shadow(0 0 18px rgba(166,66,255,.25))}
+h1{font-size:clamp(32px,7vw,58px);margin:8px 0 4px;letter-spacing:.03em}
+.tag{font-size:clamp(18px,4vw,25px);color:#e17ce1;margin:0 0 28px;font-style:italic}
+.searchbox{position:sticky;top:0;padding:12px 0 14px;background:linear-gradient(#050711 70%,transparent);z-index:3}
+input{width:100%;padding:18px 20px;border-radius:18px;border:2px solid transparent;background:linear-gradient(#0c1020,#0c1020) padding-box,linear-gradient(90deg,var(--pink),var(--blue)) border-box;color:white;font-size:19px;outline:none}
+.status{color:var(--muted);text-align:center;margin:10px 0 18px;min-height:20px}
+.results{display:grid;gap:10px}
+.song{background:rgba(18,22,39,.88);border:1px solid #262d49;border-radius:14px;padding:14px 16px}
+.title{font-weight:700;font-size:18px}.artist{color:#c7c9d7;margin-top:4px}
+.note{text-align:center;color:var(--muted);margin-top:30px;font-size:14px}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header>
+<img class="logo" src="rabbit-run-logo.png" alt="Rabbit Run Entertainment">
+<h1>Karaoke Song Book</h1>
+<p class="tag">Keepin' the Party Hoppin'</p>
+</header>
+<div class="searchbox"><input id="q" type="search" placeholder="Search by artist or song title..." autocomplete="off"></div>
+<div id="status" class="status">Loading song book…</div>
+<section id="results" class="results"></section>
+<p class="note">Don't see what you're looking for? Ask us. We may have another version available.</p>
+</main>
+<script>
+let songs=[];
+const q=document.getElementById('q'), results=document.getElementById('results'), status=document.getElementById('status');
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+fetch('songs.json').then(r=>r.json()).then(data=>{songs=data;status.textContent=`${songs.length.toLocaleString()} songs ready to search`;}).catch(()=>status.textContent='Song book could not be loaded.');
+function render(){
+ const term=q.value.trim().toLowerCase();
+ results.innerHTML='';
+ if(term.length<2){status.textContent=songs.length?`${songs.length.toLocaleString()} songs ready to search`:'Loading song book…';return}
+ const found=[];
+ for(const s of songs){if((s.artist+' '+s.title).toLowerCase().includes(term)){found.push(s);if(found.length>=100)break}}
+ status.textContent=found.length?`Showing ${found.length}${found.length===100?'+' : ''} match${found.length===1?'':'es'}`:'No matches found';
+ results.innerHTML=found.map(s=>`<article class="song"><div class="title">${esc(s.title)}</div><div class="artist">${esc(s.artist)}</div></article>`).join('');
+}
+let timer;q.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(render,100)});
+</script>
+</body>
+</html>
