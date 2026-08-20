@@ -46,7 +46,27 @@ function render(){
  const found=[];
  for(const s of songs){if((s.artist+' '+s.title).toLowerCase().includes(term)){found.push(s);if(found.length>=100)break}}
  status.textContent=found.length?`Showing ${found.length}${found.length===100?'+' : ''} match${found.length===1?'':'es'}`:'No matches found';
- results.innerHTML=found.map(s=>`<article class="song"><div class="title">${esc(s.title)}</div><div class="artist">${esc(s.artist)}</div></article>`).join('');
+results.innerHTML = found.map(s => `
+  <div class="song">
+    <b>${s.title}</b>
+    <span>${s.artist}</span>
+    <button onclick="requestSong(${JSON.stringify(s.title)}, ${JSON.stringify(s.artist)})">
+      Request This Song
+    </button>
+  </div>
+`).join("");
+}
+
+ async function requestSong(title, artist) {
+  const singerName = prompt("What is your name?");
+  if (!singerName) return;
+
+  try {
+    await submitRequest(singerName, title, artist);
+    alert(`${title} has been added to the request list!`);
+  } catch (error) {
+    alert("Sorry! Your request could not be sent.");
+  }
 }
 let timer;q.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(render,100)});
 </script>
