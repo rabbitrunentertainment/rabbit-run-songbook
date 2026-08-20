@@ -389,7 +389,110 @@
       min-height: 14px;
     }
 
+
+    .wishlist-control {
+      max-width: 1100px;
+      margin: 0 auto 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wishlist-toggle-button {
+      background: #7c3aed;
+      color: white;
+      border: 2px solid #a78bfa;
+    }
+
+    .wishlist-panel {
+      max-width: 1100px;
+      margin: 12px auto 20px;
+      padding: 12px;
+      background: #1f2937;
+      border: 2px solid #7c3aed;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .wishlist-panel.open {
+      display: block;
+    }
+
+    .wishlist-panel h2 {
+      margin: 0 0 10px;
+      text-align: center;
+      color: #f9a8d4;
+      font-size: 20px;
+    }
+
+    .wishlist-empty {
+      text-align: center;
+      color: #94a3b8;
+      padding: 14px 0;
+    }
+
+    .wishlist-item {
+      display: grid;
+      grid-template-columns:
+        minmax(180px, 1.4fr)
+        minmax(160px, 1.2fr)
+        120px
+        auto;
+      gap: 10px;
+      align-items: center;
+      background: #111827;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 9px 10px;
+      margin-bottom: 7px;
+    }
+
+    .wishlist-song {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .wishlist-artist {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .wishlist-date {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    .wishlist-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .wishlist-added-button {
+      background: #22c55e;
+      color: #052e16;
+    }
+
+    .wishlist-delete-button {
+      background: #991b1b;
+      color: white;
+    }
+
     @media (max-width: 750px) {
+
+      .wishlist-item {
+        display: block;
+      }
+
+      .wishlist-artist,
+      .wishlist-date {
+        margin-top: 4px;
+      }
+
+      .wishlist-actions {
+        justify-content: flex-start;
+        margin-top: 8px;
+      }
 
       .final-three-control {
         width: calc(100% - 12px);
@@ -545,6 +648,28 @@
       Choose the final three singers in order.
     </div>
 
+  </div>
+
+
+  <div class="wishlist-control">
+    <button
+      id="wishlistToggleButton"
+      class="wishlist-toggle-button"
+      onclick="toggleWishlistPanel()"
+    >
+      🎵 Song Wishlist
+    </button>
+  </div>
+
+  <div
+    id="wishlistPanel"
+    class="wishlist-panel"
+  >
+    <h2>🎵 Song Wishlist</h2>
+
+    <div id="wishlistList">
+      Loading wishlist...
+    </div>
   </div>
 
   <div class="tv-display-control">
@@ -774,6 +899,283 @@
       }
 
       return headers;
+
+    }
+
+
+    /* =========================
+       SONG WISHLIST
+       ========================= */
+
+    let wishlistOpen = false;
+
+
+    function toggleWishlistPanel() {
+
+      wishlistOpen =
+        !wishlistOpen;
+
+
+      const panel =
+        document.getElementById(
+          "wishlistPanel"
+        );
+
+
+      if (!panel) {
+        return;
+      }
+
+
+      panel.classList.toggle(
+        "open",
+        wishlistOpen
+      );
+
+
+      if (wishlistOpen) {
+        loadWishlist();
+      }
+
+    }
+
+
+    async function loadWishlist() {
+
+      const list =
+        document.getElementById(
+          "wishlistList"
+        );
+
+
+      if (!list) {
+        return;
+      }
+
+
+      list.innerHTML =
+        "Loading wishlist...";
+
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/song_wishlist?select=*&status=eq.requested&order=created_at.desc`,
+
+            {
+              headers:
+                apiHeaders()
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Could not load wishlist: ${await response.text()}`
+          );
+
+        }
+
+
+        const items =
+          await response.json();
+
+
+        if (items.length === 0) {
+
+          list.innerHTML = `
+
+            <div class="wishlist-empty">
+              No open song requests right now.
+            </div>
+
+          `;
+
+          return;
+
+        }
+
+
+        list.innerHTML =
+          items.map(item => {
+
+            const created =
+              item.created_at
+                ? new Date(
+                    item.created_at
+                  ).toLocaleDateString()
+                : "";
+
+
+            return `
+
+              <div class="wishlist-item">
+
+                <div class="wishlist-song">
+                  ${escapeHtml(
+                    item.song_title || ""
+                  )}
+                </div>
+
+                <div class="wishlist-artist">
+                  ${escapeHtml(
+                    item.artist || ""
+                  )}
+                </div>
+
+                <div class="wishlist-date">
+                  ${escapeHtml(created)}
+                </div>
+
+                <div class="wishlist-actions">
+
+                  <button
+                    class="wishlist-added-button"
+                    onclick="markWishlistAdded(${item.id})"
+                  >
+                    ✓ Added
+                  </button>
+
+                  <button
+                    class="wishlist-delete-button"
+                    onclick="deleteWishlistItem(${item.id})"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+
+              </div>
+
+            `;
+
+          }).join("");
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        list.innerHTML = `
+
+          <div class="wishlist-empty">
+            Could not load the song wishlist.
+          </div>
+
+        `;
+
+      }
+
+    }
+
+
+    async function markWishlistAdded(id) {
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/song_wishlist?id=eq.${id}`,
+
+            {
+              method: "PATCH",
+
+              headers:
+                apiHeaders(true),
+
+              body: JSON.stringify({
+                status: "added"
+              })
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Could not mark wishlist song added: ${await response.text()}`
+          );
+
+        }
+
+
+        await loadWishlist();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not mark this song as added."
+        );
+
+      }
+
+    }
+
+
+    async function deleteWishlistItem(id) {
+
+      if (
+        !confirm(
+          "Delete this song request?"
+        )
+      ) {
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/song_wishlist?id=eq.${id}`,
+
+            {
+              method: "DELETE",
+
+              headers:
+                apiHeaders()
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Could not delete wishlist song: ${await response.text()}`
+          );
+
+        }
+
+
+        await loadWishlist();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not delete this song request."
+        );
+
+      }
 
     }
 
@@ -2765,6 +3167,10 @@
             "venueNameInput"
           ).value = getVenueName(data);
           venueInputInitialized = true;
+        }
+
+        if (wishlistOpen) {
+          await loadWishlist();
         }
 
 
