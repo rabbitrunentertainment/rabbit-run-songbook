@@ -286,8 +286,8 @@ fetch('songs.json')
     if (!response.ok) {
 
       throw new Error(
-  `Supabase ${response.status}: ${errorText}`
-);
+        `Could not load songs.json (${response.status})`
+      );
 
     }
 
@@ -487,7 +487,7 @@ async function submitRequest(
 
 
     throw new Error(
-      'Request failed'
+      `Supabase ${response.status}: ${errorText}`
     );
 
   }
@@ -576,14 +576,14 @@ async function requestSong(
 
   }
 
-
   catch (error) {
 
-  console.error(error);
+    console.error(error);
 
-  alert(
-    'Request failed: ' + error.message
-  );
+    alert(
+      'Request failed: ' + error.message
+    );
+
   }
 
 }
