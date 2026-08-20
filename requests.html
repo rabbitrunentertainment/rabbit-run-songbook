@@ -217,7 +217,7 @@
           namesByDevice[
             request.singer_id
           ].add(
-            String(request.singer_name)
+            String(request.singer_name || "")
               .trim()
               .toLowerCase()
           );
@@ -434,20 +434,9 @@
     }
 
 
-    /* DONE = DELETE REQUEST */
+    /* DONE = DELETE IMMEDIATELY */
 
     async function finishRequest(id) {
-
-      const confirmed =
-        confirm(
-          "Mark this song as done?"
-        );
-
-
-      if (!confirmed) {
-        return;
-      }
-
 
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
