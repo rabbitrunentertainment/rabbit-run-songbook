@@ -185,6 +185,33 @@
       margin: auto;
     }
 
+    .requests-toggle-control {
+      max-width: 1100px;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .requests-toggle-button {
+      min-width: 130px;
+      border: 2px solid #64748b;
+    }
+
+    .requests-toggle-button.open {
+      background: #15803d;
+      color: white;
+      border-color: #4ade80;
+    }
+
+    .requests-toggle-button.closed {
+      background: #b91c1c;
+      color: white;
+      border-color: #f87171;
+    }
+
     .tv-display-control {
       max-width: 1100px;
       margin: 0 auto 14px;
@@ -385,6 +412,17 @@
     <button class="venue-save-button" onclick="saveVenueName()">Save Venue</button>
   </div>
 
+  <div class="requests-toggle-control">
+    <span class="tv-display-label">LIVE REQUESTS:</span>
+    <button
+      id="requestsToggleButton"
+      class="requests-toggle-button open"
+      onclick="toggleLiveRequests()"
+    >
+      OPEN
+    </button>
+  </div>
+
   <div class="tv-display-control">
     <span class="tv-display-label">TV SHOWS:</span>
     <button id="tvShow2" class="tv-count-button" onclick="setTvDisplayCount(2)">2</button>
@@ -554,6 +592,136 @@
 
     const VENUE_NAME_SETTING =
       "VENUE_NAME";
+
+
+    const LIVE_REQUESTS_SETTING =
+      "LIVE_REQUESTS_OPEN";
+
+    function getLiveRequestsOpen(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === LIVE_REQUESTS_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return true;
+      }
+
+      return String(
+        settings[0].artist || "true"
+      ).toLowerCase() !== "false";
+
+    }
+
+
+    function updateLiveRequestsButton(isOpen) {
+
+      const button =
+        document.getElementById(
+          "requestsToggleButton"
+        );
+
+      if (!button) {
+        return;
+      }
+
+      button.textContent =
+        isOpen ? "OPEN" : "CLOSED";
+
+      button.classList.toggle(
+        "open",
+        isOpen
+      );
+
+      button.classList.toggle(
+        "closed",
+        !isOpen
+      );
+
+    }
+
+
+    async function setLiveRequestsOpen(isOpen) {
+
+      const deleteResponse =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(LIVE_REQUESTS_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+        );
+
+      if (!deleteResponse.ok) {
+        throw new Error(
+          "Could not clear old live request setting."
+        );
+      }
+
+      const response =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests`,
+          {
+            method: "POST",
+            headers: apiHeaders(true),
+            body: JSON.stringify({
+              singer_name: SETTINGS_SINGER,
+              song_title: LIVE_REQUESTS_SETTING,
+              artist: isOpen ? "true" : "false",
+              status: "completed"
+            })
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          `Could not save live request setting: ${await response.text()}`
+        );
+      }
+
+      updateLiveRequestsButton(isOpen);
+
+    }
+
+
+    async function toggleLiveRequests() {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+        const currentlyOpen =
+          getLiveRequestsOpen(data);
+
+        await setLiveRequestsOpen(
+          !currentlyOpen
+        );
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not change the live request setting."
+        );
+
+      }
+
+    }
 
     function getVenueName(data) {
       const settings = data
@@ -1800,6 +1968,11 @@
 
         updateTvDisplayButtons(
           getTvDisplayCount(data)
+        );
+
+
+        updateLiveRequestsButton(
+          getLiveRequestsOpen(data)
         );
 
         if (!venueInputInitialized) {

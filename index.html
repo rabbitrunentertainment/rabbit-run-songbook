@@ -97,6 +97,25 @@ h1 {
 }
 
 
+.requests-closed-banner {
+  display:none;
+  width:min(620px,100%);
+  margin:8px auto 14px;
+  padding:10px 14px;
+  text-align:center;
+  border:1px solid #f87171;
+  border-radius:12px;
+  background:rgba(127,29,29,.28);
+  color:#fecaca;
+  font-size:15px;
+  font-weight:bold;
+}
+
+.requests-closed-banner.show {
+  display:block;
+}
+
+
 /* =========================
    SEARCH
    ========================= */
@@ -327,6 +346,14 @@ input {
 
 </section>
 
+<div
+  id="requestsClosedBanner"
+  class="requests-closed-banner"
+>
+  🔒 Tonight's live karaoke rotation is closed to new requests.
+  You can still search the song book.
+</div>
+
 
 <!-- =========================
      SEARCH
@@ -440,6 +467,84 @@ const SUPABASE_URL =
 
 const SUPABASE_KEY =
   "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
+
+
+const SETTINGS_SINGER =
+  "__RABBIT_RUN_SETTINGS__";
+
+const LIVE_REQUESTS_SETTING =
+  "LIVE_REQUESTS_OPEN";
+
+let liveRequestsOpen = true;
+
+
+/* =========================
+   LIVE REQUESTS OPEN / CLOSED
+   ========================= */
+
+async function loadLiveRequestsSetting() {
+
+  try {
+
+    const response =
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(LIVE_REQUESTS_SETTING)}&select=artist,created_at&order=created_at.desc&limit=1`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        `Could not load live request setting (${response.status})`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    liveRequestsOpen =
+      data.length === 0 ||
+      String(data[0].artist || "true").toLowerCase() !== "false";
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Live request setting error:",
+      error
+    );
+
+    /* Fail open if the setting cannot be read. */
+    liveRequestsOpen = true;
+
+  }
+
+  updateLiveRequestUI();
+  render();
+
+}
+
+
+function updateLiveRequestUI() {
+
+  const banner =
+    document.getElementById(
+      'requestsClosedBanner'
+    );
+
+  if (banner) {
+    banner.classList.toggle(
+      'show',
+      !liveRequestsOpen
+    );
+  }
+
+}
 
 
 /* =========================
@@ -630,12 +735,16 @@ function render() {
         </span>
 
         <button
-          onclick='requestSong(
-            ${JSON.stringify(song.title)},
-            ${JSON.stringify(song.artist)}
-          )'
+          ${liveRequestsOpen
+            ? `onclick='requestSong(
+                ${JSON.stringify(song.title)},
+                ${JSON.stringify(song.artist)}
+              )'`
+            : 'disabled'}
         >
-          Request This Song
+          ${liveRequestsOpen
+            ? 'Request This Song'
+            : 'Requests Closed'}
         </button>
 
       </div>
@@ -738,6 +847,16 @@ async function requestSong(
   title,
   artist
 ) {
+
+  if (!liveRequestsOpen) {
+
+    alert(
+      "Tonight's live karaoke rotation is closed to new requests."
+    );
+
+    return;
+
+  }
 
   const singerName =
     prompt(
@@ -998,6 +1117,14 @@ q.addEventListener(
       );
 
   }
+);
+
+
+loadLiveRequestsSetting();
+
+setInterval(
+  loadLiveRequestsSetting,
+  5000
 );
 
 </script>
