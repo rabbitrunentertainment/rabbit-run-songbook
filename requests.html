@@ -2463,6 +2463,27 @@
 
       try {
 
+        const data =
+          await fetchRequests();
+
+        const finishedRequest =
+          data.find(
+            request =>
+              String(request.id) === String(id)
+          );
+
+        if (!finishedRequest) {
+          throw new Error(
+            "Could not find the finished request."
+          );
+        }
+
+        const finishedSingerKey =
+          singerKey(finishedRequest);
+
+
+        /* Mark only the song just sung as completed. */
+
         const response =
           await fetch(
 
@@ -2488,17 +2509,94 @@
 
 
         if (!response.ok) {
-
           throw new Error(
             "Could not finish request."
           );
+        }
+
+
+        /*
+          If this singer has more songs,
+          put all remaining songs at the
+          back of the current rotation.
+        */
+
+        const remainingSingerRequests =
+          data.filter(
+            request =>
+              String(request.id) !== String(finishedRequest.id) &&
+              isActive(request) &&
+              singerKey(request) === finishedSingerKey
+          );
+
+        if (remainingSingerRequests.length > 0) {
+
+          const backOfRotationStatus =
+            `waiting_resumed_${Date.now()}`;
+
+          for (const request of remainingSingerRequests) {
+
+            const moveResponse =
+              await fetch(
+
+                `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+
+                {
+                  method: "PATCH",
+
+                  headers: {
+                    "apikey": SUPABASE_KEY,
+                    "Authorization":
+                      `Bearer ${accessToken || SUPABASE_KEY}`,
+                    "Content-Type":
+                      "application/json"
+                  },
+
+                  body: JSON.stringify({
+                    status: backOfRotationStatus
+                  })
+                }
+
+              );
+
+            if (!moveResponse.ok) {
+              throw new Error(
+                "Song finished, but remaining songs could not be moved to the back."
+              );
+            }
+
+          }
 
         }
 
 
         /*
-          AUTOMATICALLY ADVANCE
-          TO NEXT AVAILABLE SINGER
+          If a saved manual order exists,
+          move this singer to its end too,
+          so an old manual order cannot
+          pull the singer forward again.
+        */
+
+        const savedOrder =
+          getManualOrder(data);
+
+        if (savedOrder.includes(finishedSingerKey)) {
+
+          const updatedOrder = [
+            ...savedOrder.filter(
+              key => key !== finishedSingerKey
+            ),
+            finishedSingerKey
+          ];
+
+          await saveManualOrder(updatedOrder);
+
+        }
+
+
+        /*
+          loadRequests() automatically
+          chooses the next available singer.
         */
 
         await loadRequests();
