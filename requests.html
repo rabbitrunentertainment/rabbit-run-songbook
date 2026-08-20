@@ -480,20 +480,13 @@
 
     @media (max-width: 750px) {
 
-      body {
-        display: flex;
-        flex-direction: column;
-      }
-
       .wishlist-control {
-        order: 999;
         width: 100%;
         margin: 18px auto 28px;
         justify-content: center;
       }
 
       .wishlist-panel {
-        order: 998;
         width: calc(100% - 20px);
         margin: 12px auto 8px;
       }
@@ -926,6 +919,94 @@
        ========================= */
 
     let wishlistOpen = false;
+
+
+    function positionWishlistForScreen() {
+
+      const control =
+        document.querySelector(
+          ".wishlist-control"
+        );
+
+      const panel =
+        document.getElementById(
+          "wishlistPanel"
+        );
+
+      const kjApp =
+        document.getElementById(
+          "kjApp"
+        );
+
+      const tvControl =
+        document.querySelector(
+          ".tv-display-control"
+        );
+
+
+      if (
+        !control ||
+        !panel ||
+        !kjApp ||
+        !tvControl
+      ) {
+        return;
+      }
+
+
+      if (
+        window.innerWidth <= 750
+      ) {
+
+        /*
+          MOBILE:
+          panel first, button LAST,
+          so Song Wishlist is at the
+          very bottom center.
+        */
+
+        kjApp.appendChild(
+          panel
+        );
+
+        kjApp.appendChild(
+          control
+        );
+
+      }
+
+
+      else {
+
+        /*
+          DESKTOP:
+          restore original placement
+          above TV SHOWS.
+        */
+
+        kjApp.insertBefore(
+          control,
+          tvControl
+        );
+
+        kjApp.insertBefore(
+          panel,
+          tvControl
+        );
+
+      }
+
+    }
+
+
+    positionWishlistForScreen();
+
+
+    window.addEventListener(
+      "resize",
+      positionWishlistForScreen
+    );
+
 
 
     function toggleWishlistPanel() {
