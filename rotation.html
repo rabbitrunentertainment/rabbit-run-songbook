@@ -284,7 +284,43 @@
       "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
 
 
-    const MAX_VISIBLE_SINGERS = 6;
+    const SETTINGS_SINGER =
+      "__RABBIT_RUN_SETTINGS__";
+
+    const TV_DISPLAY_SETTING =
+      "TV_DISPLAY_COUNT";
+
+    const DEFAULT_TV_DISPLAY_COUNT = 6;
+
+
+    function getTvDisplayCount(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === TV_DISPLAY_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return DEFAULT_TV_DISPLAY_COUNT;
+      }
+
+      const value =
+        Number(settings[0].artist);
+
+      return [2, 4, 6].includes(value)
+        ? value
+        : DEFAULT_TV_DISPLAY_COUNT;
+
+    }
+
 
     /*
       SHOW RECRUITING MESSAGE
@@ -318,6 +354,13 @@
 
     function singerKey(request) {
 
+      if (
+        request.singer_name ===
+        SETTINGS_SINGER
+      ) {
+        return "";
+      }
+
       return String(
         request.singer_name || ""
       )
@@ -333,7 +376,10 @@
 
     function isCompleted(request) {
 
-      return request.status === "completed";
+      return (
+        request.status === "completed" &&
+        request.singer_name !== SETTINGS_SINGER
+      );
 
     }
 
@@ -348,6 +394,7 @@
     function isActive(request) {
 
       return (
+        request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
         !isPaused(request)
       );
@@ -845,6 +892,15 @@
 
 
         /*
+          READ THE KJ'S CURRENT
+          2 / 4 / 6 TV SETTING
+        */
+
+        const tvDisplayCount =
+          getTvDisplayCount(data);
+
+
+        /*
           ONLY ACTIVE REQUESTS COUNT.
 
           PAUSED REQUESTS ARE
@@ -928,14 +984,14 @@
 
 
         /*
-          SHOW UP TO SIX
-          UPCOMING SINGERS
+          SHOW THE NUMBER SELECTED
+          ON THE KJ PAGE: 2, 4, OR 6.
         */
 
         const visibleSingers =
           waiting.slice(
             0,
-            MAX_VISIBLE_SINGERS
+            tvDisplayCount
           );
 
 
@@ -971,8 +1027,10 @@
 
 
         /*
-          7 OR MORE UPCOMING:
-          SHOW EXTRA COUNT
+          IF THE KJ CHOOSES TO SHOW
+          FEWER PEOPLE THAN ARE WAITING,
+          TELL THE CROWD HOW MANY MORE
+          ARE STILL IN THE REAL QUEUE.
         */
 
         if (hiddenCount > 0) {
@@ -997,17 +1055,14 @@
 
 
         /*
-          0-4 UPCOMING:
-          SHOW RECRUITING MESSAGE
+          RECRUITING USES THE REAL
+          ACTIVE WAITING COUNT, NOT
+          THE 2 / 4 / 6 DISPLAY CHOICE.
 
-          PAUSED SINGERS ARE NOT
-          INCLUDED IN waiting.length.
-
-          5 OR MORE UPCOMING:
-          NO RECRUITING MESSAGE.
+          PAUSED SINGERS DO NOT COUNT.
         */
 
-        else if (
+        if (
           waiting.length <=
           RECRUITING_THRESHOLD
         ) {
