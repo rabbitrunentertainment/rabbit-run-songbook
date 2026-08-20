@@ -35,66 +35,110 @@ input{width:100%;padding:18px 20px;border-radius:18px;border:2px solid transpare
 <p class="note">Don't see what you're looking for? Ask us. We may have another version available.</p>
 </main>
 <script>
-let songs=[];
-const q=document.getElementById('q'), results=document.getElementById('results'), status=document.getElementById('status');
-const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-fetch('songs.json').then(r=>r.json()).then(data=>{songs=data;status.textContent=`${songs.length.toLocaleString()} songs ready to search`;}).catch(()=>status.textContent='Song book could not be loaded.');
-function render(){
- const term=q.value.trim().toLowerCase();
- results.innerHTML='';
- if(term.length<2){status.textContent=songs.length?`${songs.length.toLocaleString()} songs ready to search`:'Loading song book…';return}
- const found=[];
- for(const s of songs){if((s.artist+' '+s.title).toLowerCase().includes(term)){found.push(s);if(found.length>=100)break}}
- status.textContent=found.length?`Showing ${found.length}${found.length===100?'+' : ''} match${found.length===1?'':'es'}`:'No matches found';
-results.innerHTML = found.map(s => `
-  <div class="song">
-    <b>${s.title}</b>
-    <span>${s.artist}</span>
-    <button onclick="requestSong(${JSON.stringify(s.title)}, ${JSON.stringify(s.artist)})">
-      Request This Song
-    </button>
-  </div>
-`).join("");
+let songs = [];
+
+const q = document.getElementById('q');
+const results = document.getElementById('results');
+const status = document.getElementById('status');
+
+const SUPABASE_URL = "https://cpprxqlevftbgpjjfgnz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
+
+const esc = s => String(s).replace(/[&<>"']/g, m => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+}[m]));
+
+fetch('songs.json')
+  .then(r => r.json())
+  .then(data => {
+    songs = data;
+    status.textContent = `${songs.length.toLocaleString()} songs ready to search`;
+  })
+  .catch(() => {
+    status.textContent = 'Could not load song book.';
+  });
+
+function render() {
+  const term = q.value.trim().toLowerCase();
+  results.innerHTML = '';
+
+  if (term.length < 2) {
+    status.textContent = songs.length
+      ? `${songs.length.toLocaleString()} songs ready to search`
+      : 'Loading song book...';
+    return;
+  }
+
+  const found = [];
+
+  for (const s of songs) {
+    if ((s.artist + ' ' + s.title).toLowerCase().includes(term)) {
+      found.push(s);
+      if (found.length >= 100) break;
+    }
+  }
+
+  status.textContent = found.length
+    ? `Showing ${found.length}${found.length === 100 ? '+' : ''} matches`
+    : 'No matches found';
+
+  results.innerHTML = found.map(s => `
+    <div class="song">
+      <b>${esc(s.title)}</b>
+      <span>${esc(s.artist)}</span>
+      <button onclick='requestSong(${JSON.stringify(s.title)}, ${JSON.stringify(s.artist)})'>
+        Request This Song
+      </button>
+    </div>
+  `).join('');
 }
 
- async function requestSong(title, artist) {
-  const singerName = prompt("What is your name?");
+async function submitRequest(singerName, songTitle, artist) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/requests`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      singer_name: singerName,
+      song_title: songTitle,
+      artist: artist,
+      status: 'waiting'
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Request failed');
+  }
+
+  return true;
+}
+
+async function requestSong(title, artist) {
+  const singerName = prompt('What is your name?');
+
   if (!singerName) return;
 
   try {
     await submitRequest(singerName, title, artist);
     alert(`${title} has been added to the request list!`);
   } catch (error) {
-    alert("Sorry! Your request could not be sent.");
+    alert('Sorry! Your request could not be sent.');
   }
 }
-let timer;q.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(render,100)});
-</script>
-<script>
-const SUPABASE_URL = "https://cpprxqlevftbgpjjfgnz.supabase.co"
-const SUPABASE_KEY = "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3"
- async function submitRequest(singerName, songTitle, artist) {
- const response = await fetch(`${SUPABASE_URL}/rest/v1/requests`, {
-  method: "POST",
- headers: {
- "apikey": SUPABASE_KEY,
- "Authorization": `Bearer ${SUPABASE_KEY}`,
- "Content-Type": "application/json"
- },
- body: JSON.stringify({
- singer_name: singerName,
- song_title: songTitle,
-artist: artist,
-status: "waiting"
-})
+
+let timer;
+
+q.addEventListener('input', () => {
+  clearTimeout(timer);
+  timer = setTimeout(render, 100);
 });
-
-if (!response.ok) {
-  throw new Error("Request failed");
-}
-
-return true;
-}
 </script>
 </body>
 </html>
