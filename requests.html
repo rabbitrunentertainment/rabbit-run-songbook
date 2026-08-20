@@ -391,17 +391,6 @@
 
     @media (max-width: 750px) {
 
-      .kj-app {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .final-three-control {
-        order: 999;
-        width: 100%;
-        margin-top: 18px;
-      }
-
       .final-three-grid {
         grid-template-columns: 1fr;
       }
@@ -598,6 +587,82 @@
     let accessToken = null;
     let venueInputInitialized = false;
     let finalThreeEditing = false;
+
+
+    /* =========================
+       FINAL 3 MOBILE POSITION
+       ========================= */
+
+    function positionFinalThreeForScreen() {
+
+      const finalThree =
+        document.querySelector(
+          ".final-three-control"
+        );
+
+      const kjApp =
+        document.getElementById(
+          "kjApp"
+        );
+
+      const tvControl =
+        document.querySelector(
+          ".tv-display-control"
+        );
+
+
+      if (
+        !finalThree ||
+        !kjApp ||
+        !tvControl
+      ) {
+        return;
+      }
+
+
+      /*
+        MOBILE:
+        physically move Final 3
+        to the very bottom of KJ.
+      */
+
+      if (
+        window.innerWidth <= 750
+      ) {
+
+        kjApp.appendChild(
+          finalThree
+        );
+
+      }
+
+
+      /*
+        DESKTOP:
+        put Final 3 back above
+        the TV display control.
+      */
+
+      else {
+
+        kjApp.insertBefore(
+          finalThree,
+          tvControl
+        );
+
+      }
+
+    }
+
+
+    positionFinalThreeForScreen();
+
+
+    window.addEventListener(
+      "resize",
+      positionFinalThreeForScreen
+    );
+
 
 
     async function refreshAuthUI() {
