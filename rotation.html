@@ -32,9 +32,9 @@
     header {
       position: relative;
       text-align: center;
-      margin-bottom: 10px;
+      margin: 0 238px 10px 0;
       min-height: 112px;
-      padding: 8px 340px 0;
+      padding: 8px 0 0;
     }
 
     /* DESKTOP LOGO */
@@ -53,17 +53,17 @@
 
     .venue-name {
       min-height: 72px;
-      color: #ffffff;
+      color: #93c5fd;
       font-size: clamp(32px, 4vw, 48px);
       font-weight: bold;
       letter-spacing: .08em;
       text-transform: uppercase;
       margin-bottom: 6px;
       text-shadow:
-        0 0 6px #f472e8,
-        0 0 14px #d42fc5,
-        0 0 26px #7b39d9,
-        0 0 38px #2f7eea;
+        0 0 6px #60a5fa,
+        0 0 14px #3b82f6,
+        0 0 26px #2563eb,
+        0 0 38px #1d4ed8;
     }
 
     h1 {
@@ -265,6 +265,7 @@
   header {
     min-height: 0;
     padding: 0;
+    margin: 0 0 10px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1132,6 +1133,64 @@
         );
 
 
+      /*
+        FINAL 3 ORDER
+
+        All non-final singers keep their
+        normal place first. The KJ-selected
+        Final 3 are then placed at the end
+        in the exact selected order.
+      */
+
+      const finalThree =
+        getFinalThree(data);
+
+
+      if (finalThree.length === 3) {
+
+        const finalPositions =
+          new Map(
+            finalThree.map(
+              (key, index) => [
+                key,
+                index
+              ]
+            )
+          );
+
+
+        const normalWaiting =
+          waiting.filter(
+            singer =>
+              !finalPositions.has(
+                singer.key
+              )
+          );
+
+
+        const finalWaiting =
+          waiting
+            .filter(
+              singer =>
+                finalPositions.has(
+                  singer.key
+                )
+            )
+            .sort(
+              (a, b) =>
+                finalPositions.get(a.key) -
+                finalPositions.get(b.key)
+            );
+
+
+        waiting = [
+          ...normalWaiting,
+          ...finalWaiting
+        ];
+
+      }
+
+
       return {
         upNextSinger,
         waiting
@@ -1300,8 +1359,23 @@
           ).length;
 
 
-        rotationTitle.textContent =
+        const activeNonFinalCount =
           finalThree.length === 3
+            ? Array.from(activeSingerKeys)
+                .filter(
+                  key =>
+                    !finalThree.includes(key)
+                ).length
+            : 0;
+
+
+        const finalThreePhase =
+          finalThree.length === 3 &&
+          activeNonFinalCount === 0;
+
+
+        rotationTitle.textContent =
+          finalThreePhase
             ? (
                 remainingFinalCount > 0
                   ? `🎤 FINAL ${remainingFinalCount} ${remainingFinalCount === 1 ? "SINGER" : "SINGERS"} 🎤`
@@ -1369,7 +1443,7 @@
         }
 
 
-        if (finalThree.length === 3) {
+        if (finalThreePhase) {
 
           rotationHtml +=
             closingMessage(
@@ -1380,7 +1454,8 @@
 
         else if (
           waiting.length <=
-          RECRUITING_THRESHOLD
+          RECRUITING_THRESHOLD &&
+          finalThree.length !== 3
         ) {
 
           rotationHtml +=
