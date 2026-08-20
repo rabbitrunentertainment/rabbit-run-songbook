@@ -133,6 +133,10 @@ container.innerHTML = data
   .map(request => `
     <div class="request">
       <div class="singer">${request.singer_name}</div>
+      ${request.original_name &&
+request.original_name.toLowerCase() !== request.singer_name.toLowerCase()
+  ? `<div class="warning">⚠️ Originally: ${request.original_name}</div>`
+  : ''}
       ${mismatchedDevices.has(request.singer_id)
   ? '<div class="warning">⚠️ NAME MISMATCH - SAME DEVICE</div>'
   : ''}
