@@ -381,7 +381,7 @@
 
   <div class="venue-control">
     <span class="tv-display-label">VENUE:</span>
-    <input id="venueNameInput" type="text" placeholder="Enter venue/location name">
+    <input id="venueNameInput" type="text" placeholder="Enter venue/location name" autocomplete="off" onkeydown="event.stopPropagation()" onkeyup="event.stopPropagation()">
     <button class="venue-save-button" onclick="saveVenueName()">Save Venue</button>
   </div>
 
@@ -570,7 +570,7 @@
 
     async function saveVenueName() {
       const input = document.getElementById("venueNameInput");
-      const venueName = input.value.trim();
+      const venueName = input.value.replace(/\s+/g, " ").trim();
 
       try {
         const deleteResponse = await fetch(
