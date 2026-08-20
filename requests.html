@@ -173,6 +173,37 @@
       margin: auto;
     }
 
+    .tv-display-control {
+      max-width: 1100px;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tv-display-label {
+      color: #d8b4fe;
+      font-size: 13px;
+      font-weight: bold;
+      margin-right: 2px;
+    }
+
+    .tv-count-button {
+      min-width: 42px;
+      background: #374151;
+      color: white;
+      border: 2px solid #64748b;
+    }
+
+    .tv-count-button.selected {
+      background: #d42fc5;
+      border-color: #f9a8d4;
+      color: white;
+      box-shadow: 0 0 12px rgba(212,47,197,.35);
+    }
+
     @media (max-width: 750px) {
 
       .request {
@@ -212,6 +243,13 @@
   <h1>🎤 Song Requests</h1>
   <div class="subtitle">Rabbit Run Entertainment</div>
 
+  <div class="tv-display-control">
+    <span class="tv-display-label">TV SHOWS:</span>
+    <button id="tvShow2" class="tv-count-button" onclick="setTvDisplayCount(2)">2</button>
+    <button id="tvShow4" class="tv-count-button" onclick="setTvDisplayCount(4)">4</button>
+    <button id="tvShow6" class="tv-count-button" onclick="setTvDisplayCount(6)">6</button>
+  </div>
+
   <div id="requests">
     Loading requests...
   </div>
@@ -241,6 +279,143 @@
 
     const SUPABASE_KEY =
       "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
+
+
+    /* =========================
+       SHARED TV DISPLAY SETTING
+       ========================= */
+
+    const SETTINGS_SINGER =
+      "__RABBIT_RUN_SETTINGS__";
+
+    const TV_DISPLAY_SETTING =
+      "TV_DISPLAY_COUNT";
+
+    const DEFAULT_TV_DISPLAY_COUNT = 6;
+
+
+    function getTvDisplayCount(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === TV_DISPLAY_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return DEFAULT_TV_DISPLAY_COUNT;
+      }
+
+      const value = Number(settings[0].artist);
+
+      return [2, 4, 6].includes(value)
+        ? value
+        : DEFAULT_TV_DISPLAY_COUNT;
+    }
+
+
+    function updateTvDisplayButtons(count) {
+
+      [2, 4, 6].forEach(value => {
+
+        const button =
+          document.getElementById(
+            `tvShow${value}`
+          );
+
+        if (!button) {
+          return;
+        }
+
+        button.classList.toggle(
+          "selected",
+          value === count
+        );
+
+      });
+
+    }
+
+
+    async function setTvDisplayCount(count) {
+
+      if (![2, 4, 6].includes(count)) {
+        return;
+      }
+
+      try {
+
+        const deleteResponse =
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(TV_DISPLAY_SETTING)}`,
+            {
+              method: "DELETE",
+              headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization":
+                  `Bearer ${SUPABASE_KEY}`
+              }
+            }
+          );
+
+        if (!deleteResponse.ok) {
+          throw new Error(
+            "Could not clear old TV display setting."
+          );
+        }
+
+        const response =
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/requests`,
+            {
+              method: "POST",
+              headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization":
+                  `Bearer ${SUPABASE_KEY}`,
+                "Content-Type":
+                  "application/json"
+              },
+              body: JSON.stringify({
+                singer_name: SETTINGS_SINGER,
+                song_title: TV_DISPLAY_SETTING,
+                artist: String(count),
+                status: "completed"
+              })
+            }
+          );
+
+        if (!response.ok) {
+          const errorText =
+            await response.text();
+
+          throw new Error(
+            `Could not save TV display setting: ${errorText}`
+          );
+        }
+
+        updateTvDisplayButtons(count);
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not change the TV display."
+        );
+
+      }
+
+    }
 
 
     /* =========================
@@ -281,6 +456,13 @@
 
     function singerKey(request) {
 
+      if (
+        request.singer_name ===
+        SETTINGS_SINGER
+      ) {
+        return "";
+      }
+
       return String(
         request.singer_name || ""
       )
@@ -303,7 +485,10 @@
 
     function isCompleted(request) {
 
-      return request.status === "completed";
+      return (
+        request.status === "completed" &&
+        request.singer_name !== SETTINGS_SINGER
+      );
 
     }
 
@@ -311,6 +496,7 @@
     function isActive(request) {
 
       return (
+        request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
         !isPaused(request)
       );
@@ -1020,6 +1206,16 @@
 
         let data =
           await fetchRequests();
+
+
+        /*
+          SHOW CURRENT TV DISPLAY
+          SETTING ON THE KJ PAGE
+        */
+
+        updateTvDisplayButtons(
+          getTvDisplayCount(data)
+        );
 
 
         /*
