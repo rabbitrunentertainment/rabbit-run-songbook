@@ -202,54 +202,47 @@
        MOBILE
        ========================= */
 
-    @media (max-width: 700px) {
+   @media (max-width: 700px) {
 
-      header {
-        min-height: 0;
-        padding: 90px 0 0;
-      }
+  header {
+    min-height: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-      /*
-        IMPORTANT:
-        On mobile the logo is NOT fixed.
+  .logo {
+    position: static;
+    width: 130px;
+    height: 130px;
+    max-height: none;
+    object-fit: contain;
+    transform: none;
+    margin: 0 0 8px 0;
+    z-index: auto;
+  }
 
-        It stays with the header and
-        scrolls normally with the page.
-      */
+  .up-next-box {
+    margin-right: 0;
+  }
 
-      .logo {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 120px;
-        height: 120px;
-        max-height: none;
-        object-fit: contain;
-        transform: none;
-        transform-origin: center;
-        z-index: 1;
-      }
+  .content {
+    grid-template-columns: 1fr;
+  }
 
-      .up-next-box {
-        margin-right: 0;
-      }
+  .qr-section {
+    margin-top: 15px;
+  }
 
-      .content {
-        grid-template-columns: 1fr;
-      }
+  .qr {
+    width: 160px;
+  }
 
-      .qr-section {
-        margin-top: 15px;
-      }
-
-      .qr {
-        width: 160px;
-      }
-
-      .rotation-row {
-        grid-template-columns: 42px 1fr;
-      }
-    }
+  .rotation-row {
+    grid-template-columns: 42px 1fr;
+  }
+}
 
   </style>
 </head>
