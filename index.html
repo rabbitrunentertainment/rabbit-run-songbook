@@ -177,17 +177,19 @@ input {
 
 
 /* =========================
-   SEPARATION BEFORE WISHLIST
+   BOTTOM SECTION SPACING
    ========================= */
 
 .note {
   text-align:center;
   color:var(--muted);
 
-  /* BIG GAP GOES HERE */
+  /* LARGE GAP ABOVE THIS TEXT */
   margin-top:140px;
 
-  margin-bottom:12px;
+  /* KEEP REQUEST BOX CLOSE BELOW */
+  margin-bottom:8px;
+
   font-size:14px;
 }
 
@@ -199,8 +201,8 @@ input {
 .wishlist {
   width:min(380px,100%);
 
-  /* KEEP BOX CLOSE TO NOTE */
-  margin:12px auto 0;
+  /* NO EXTRA GAP ABOVE BOX */
+  margin:0 auto;
 
   padding:8px 10px;
 
@@ -358,7 +360,7 @@ input {
 
 
 <!-- =========================
-     BOTTOM / WISHLIST AREA
+     FUTURE SONG REQUEST AREA
      ========================= -->
 
 <p class="note">
@@ -813,11 +815,10 @@ async function requestSong(
 /* =========================
    SONG WISHLIST
 
-   THIS ONLY GOES TO
+   THIS GOES ONLY TO
    song_wishlist
 
-   IT DOES NOT GO INTO
-   TONIGHT'S ROTATION
+   NOT TONIGHT'S ROTATION
    ========================= */
 
 const wishlistTitle =
