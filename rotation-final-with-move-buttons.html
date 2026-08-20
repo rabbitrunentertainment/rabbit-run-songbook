@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Rabbit Run Karaoke Rotation</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 0%, #32104b 0, transparent 35%),
+        radial-gradient(circle at 85% 10%, #09285c 0, transparent 38%),
+        #050711;
+      color: white;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .wrap {
+      width: min(1400px, 96vw);
+      margin: auto;
+      padding: 14px 20px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .logo {
+      width: min(260px, 34vw);
+      max-height: 130px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 16px rgba(166,66,255,.3));
+    }
+
+    h1 {
+      font-size: clamp(30px, 3.8vw, 50px);
+      margin: 0;
+      line-height: 1;
+    }
+
+    .up-next-box {
+      border: 3px solid #d42fc5;
+      background: rgba(212,47,197,.13);
+      border-radius: 14px;
+      padding: 10px 18px;
+      text-align: center;
+      margin: 12px auto;
+      box-shadow: 0 0 22px rgba(212,47,197,.2);
+    }
+
+    .up-next-label {
+      color: #f9a8d4;
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: .15em;
+    }
+
+    .up-next-name {
+      font-size: clamp(34px, 5vw, 60px);
+      font-weight: bold;
+      line-height: 1.05;
+      margin-top: 2px;
+    }
+
+    .rotation-title {
+      text-align: center;
+      color: #d8b4fe;
+      font-size: 21px;
+      font-weight: bold;
+      margin: 10px 0 8px;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 18px;
+      align-items: end;
+    }
+
+    #rotation {
+      display: grid;
+      gap: 7px;
+      align-self: start;
+    }
+
+    .rotation-row {
+      display: grid;
+      grid-template-columns: 55px 1fr;
+      align-items: center;
+      background: rgba(31,41,55,.92);
+      border: 2px solid #7c3aed;
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-height: 52px;
+    }
+
+    .position {
+      color: #d8b4fe;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .name {
+      font-size: clamp(21px, 2.5vw, 31px);
+      font-weight: bold;
+    }
+
+    .more-waiting {
+      text-align: center;
+      color: #d8b4fe;
+      font-size: 17px;
+      font-weight: bold;
+      padding: 6px 0 2px;
+    }
+
+    .need-more {
+      text-align: center;
+      padding: 22px 16px;
+      margin-top: 4px;
+      background: rgba(31,41,55,.45);
+      border: 2px dashed #7c3aed;
+      border-radius: 12px;
+    }
+
+    .need-more-main {
+      font-size: clamp(22px, 2.6vw, 34px);
+      font-weight: bold;
+      color: #f9a8d4;
+      margin-bottom: 5px;
+    }
+
+    .need-more-sub {
+      color: #d8b4fe;
+      font-size: clamp(15px, 1.7vw, 20px);
+    }
+
+    .qr-section {
+      text-align: center;
+      align-self: end;
+      padding-bottom: 4px;
+    }
+
+    .qr-title {
+      font-size: 21px;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .qr-subtitle {
+      color: #d8b4fe;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .qr {
+      width: 180px;
+      max-width: 100%;
+      height: auto;
+      background: white;
+      padding: 5px;
+      border-radius: 9px;
+    }
+
+    footer {
+      text-align: center;
+      color: #b9b8c7;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 700px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .qr-section {
+        margin-top: 15px;
+      }
+
+      .qr {
+        width: 160px;
+      }
+
+      .rotation-row {
+        grid-template-columns: 42px 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrap">
+
+    <header>
+
+      <img
+        class="logo"
+        src="Rabbit Run logo with effects-clear bkgd.png"
+        alt="Rabbit Run Entertainment"
+      >
+
+      <h1>🎤 Karaoke Rotation</h1>
+
+    </header>
+
+
+    <div
+      id="upNextBox"
+      class="up-next-box"
+      style="display:none;"
+    >
+
+      <div class="up-next-label">
+        UP NEXT
+      </div>
+
+      <div
+        id="upNextName"
+        class="up-next-name"
+      ></div>
+
+    </div>
+
+
+    <div
+      id="rotationTitle"
+      class="rotation-title"
+    >
+      Upcoming Singers
+    </div>
+
+
+    <div class="content">
+
+      <div id="rotation">
+        Loading rotation...
+      </div>
+
+
+      <div class="qr-section">
+
+        <div class="qr-title">
+          Want to Sing? 🎤
+        </div>
+
+        <div class="qr-subtitle">
+          Scan to Search & Request Songs
+        </div>
+
+        <img
+          class="qr"
+          src="Rabbit_Run_Songbook_QR_with_Logo (1).png"
+          alt="Scan to open the Rabbit Run Karaoke Song Book"
+        >
+
+      </div>
+
+    </div>
+
+
+    <footer>
+      Keepin' the Party Hoppin'
+    </footer>
+
+  </div>
+
+
+  <script>
+
+    const SUPABASE_URL =
+      "https://cpprxqlevftbgpjjfgnz.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
+
+
+    const SETTINGS_SINGER =
+      "__RABBIT_RUN_SETTINGS__";
+
+    const TV_DISPLAY_SETTING =
+      "TV_DISPLAY_COUNT";
+
+    const DEFAULT_TV_DISPLAY_COUNT = 6;
+
+
+    function getTvDisplayCount(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === TV_DISPLAY_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return DEFAULT_TV_DISPLAY_COUNT;
+      }
+
+      const value =
+        Number(settings[0].artist);
+
+      return [2, 4, 6].includes(value)
+        ? value
+        : DEFAULT_TV_DISPLAY_COUNT;
+
+    }
+
+
+    /*
+      SHOW RECRUITING MESSAGE
+      WHEN THERE ARE 0-4
+      UPCOMING SINGERS.
+    */
+
+    const RECRUITING_THRESHOLD = 4;
+
+
+    /* =========================
+       MANUAL ROTATION ORDER
+       ========================= */
+
+    const MANUAL_ORDER_SETTING =
+      "MANUAL_ROTATION_ORDER";
+
+
+    function getManualOrder(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === MANUAL_ORDER_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return [];
+      }
+
+      try {
+
+        const value =
+          JSON.parse(settings[0].artist || "[]");
+
+        return Array.isArray(value)
+          ? value.map(String)
+          : [];
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Could not read manual rotation order.",
+          error
+        );
+
+        return [];
+
+      }
+
+    }
+
+
+    function applyManualOrder(
+      waiting,
+      data
+    ) {
+
+      const savedOrder =
+        getManualOrder(data);
+
+      if (savedOrder.length === 0) {
+        return waiting;
+      }
+
+      const positions =
+        new Map(
+          savedOrder.map(
+            (key, index) => [
+              key,
+              index
+            ]
+          )
+        );
+
+      const originalPositions =
+        new Map(
+          waiting.map(
+            (singer, index) => [
+              singer.key,
+              index
+            ]
+          )
+        );
+
+      return [...waiting].sort(
+        (a, b) => {
+
+          const aSaved =
+            positions.has(a.key);
+
+          const bSaved =
+            positions.has(b.key);
+
+          if (aSaved && bSaved) {
+            return (
+              positions.get(a.key) -
+              positions.get(b.key)
+            );
+          }
+
+          if (aSaved !== bSaved) {
+            return aSaved ? -1 : 1;
+          }
+
+          return (
+            originalPositions.get(a.key) -
+            originalPositions.get(b.key)
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =========================
+       SAFE DISPLAY TEXT
+       ========================= */
+
+    const escapeHtml = value =>
+      String(value ?? "").replace(
+        /[&<>"']/g,
+        character => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        }[character])
+      );
+
+
+    /* =========================
+       SINGER IDENTITY
+       ========================= */
+
+    function singerKey(request) {
+
+      if (
+        request.singer_name ===
+        SETTINGS_SINGER
+      ) {
+        return "";
+      }
+
+      return String(
+        request.singer_name || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    }
+
+
+    /* =========================
+       STATUS HELPERS
+       ========================= */
+
+    function isCompleted(request) {
+
+      return (
+        request.status === "completed" &&
+        request.singer_name !== SETTINGS_SINGER
+      );
+
+    }
+
+
+    function isPaused(request) {
+
+      return request.status === "paused";
+
+    }
+
+
+    function isActive(request) {
+
+      return (
+        request.singer_name !== SETTINGS_SINGER &&
+        !isCompleted(request) &&
+        !isPaused(request)
+      );
+
+    }
+
+
+    /*
+      RESUMED SINGERS HAVE A
+      TIMESTAMP STORED IN STATUS.
+
+      EXAMPLE:
+
+      waiting_resumed_123456789
+    */
+
+    function resumedTime(request) {
+
+      const status =
+        String(request.status || "");
+
+
+      if (
+        !status.startsWith(
+          "waiting_resumed_"
+        )
+      ) {
+
+        return null;
+
+      }
+
+
+      const value =
+        Number(
+          status.replace(
+            "waiting_resumed_",
+            ""
+          )
+        );
+
+
+      return Number.isFinite(value)
+        ? value
+        : null;
+
+    }
+
+
+    /* =========================
+       RECRUITING MESSAGE
+       ========================= */
+
+    function needMoreMessage() {
+
+      return `
+
+        <div class="need-more">
+
+          <div class="need-more-main">
+            🐇 Don't leave the mic hangin'!
+            We need more singers!
+          </div>
+
+          <div class="need-more-sub">
+            Scan the QR code and hop into the rotation.
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+
+    /* =========================
+       BUILD SAME ROTATION AS KJ
+       ========================= */
+
+    function buildRotation(data) {
+
+
+      /*
+        IMPORTANT:
+
+        COMPLETED = NOT ACTIVE
+        PAUSED = NOT ACTIVE
+
+        THIS IS THE CHANGE THAT
+        MAKES PAUSED SINGERS
+        DISAPPEAR FROM THE TV.
+      */
+
+      const active =
+        data.filter(isActive);
+
+
+      const completed =
+        data.filter(isCompleted);
+
+
+      /*
+        FIND LAST COMPLETED TURN
+        FOR EACH SINGER
+      */
+
+      const lastCompletedBySinger =
+        new Map();
+
+
+      completed.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        const completedTime =
+          new Date(
+            request.created_at
+          ).getTime();
+
+
+        const existing =
+          lastCompletedBySinger.get(key);
+
+
+        if (
+          existing === undefined ||
+          completedTime > existing
+        ) {
+
+          lastCompletedBySinger.set(
+            key,
+            completedTime
+          );
+
+        }
+
+      });
+
+
+      /*
+        GROUP ACTIVE REQUESTS
+        BY SINGER
+      */
+
+      const singersByName =
+        new Map();
+
+
+      active.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        if (
+          !singersByName.has(key)
+        ) {
+
+          singersByName.set(
+            key,
+            {
+              key: key,
+
+              name:
+                String(
+                  request.singer_name || ""
+                ).trim(),
+
+              requests: [],
+
+              firstRequestTime:
+                new Date(
+                  request.created_at
+                ).getTime(),
+
+              lastCompletedTime:
+                lastCompletedBySinger.has(key)
+                  ? lastCompletedBySinger.get(key)
+                  : null,
+
+              resumedAt: null
+            }
+          );
+
+        }
+
+
+        const singer =
+          singersByName.get(key);
+
+
+        singer.requests.push(request);
+
+
+        /*
+          FIND RESUME TIME FOR
+          THIS SINGER IF PRESENT
+        */
+
+        const resume =
+          resumedTime(request);
+
+
+        if (
+          resume !== null &&
+          (
+            singer.resumedAt === null ||
+            resume > singer.resumedAt
+          )
+        ) {
+
+          singer.resumedAt =
+            resume;
+
+        }
+
+      });
+
+
+      const singers =
+        Array.from(
+          singersByName.values()
+        );
+
+
+      /*
+        SORT EACH SINGER'S SONGS
+        OLDEST FIRST
+      */
+
+      singers.forEach(singer => {
+
+        singer.requests.sort(
+          (a, b) =>
+            new Date(a.created_at) -
+            new Date(b.created_at)
+        );
+
+      });
+
+
+      /*
+        FIND CURRENT UP NEXT
+      */
+
+      let upNextSinger = null;
+
+
+      for (const singer of singers) {
+
+        const upNextRequest =
+          singer.requests.find(
+            request =>
+              request.status ===
+              "up_next"
+          );
+
+
+        if (upNextRequest) {
+
+          upNextSinger = singer;
+
+          upNextSinger.currentRequest =
+            upNextRequest;
+
+          break;
+
+        }
+
+      }
+
+
+      /*
+        EVERY OTHER SINGER'S
+        CURRENT SONG IS THEIR
+        OLDEST ACTIVE REQUEST
+      */
+
+      singers.forEach(singer => {
+
+        if (
+          upNextSinger &&
+          singer.key ===
+          upNextSinger.key
+        ) {
+          return;
+        }
+
+
+        singer.currentRequest =
+          singer.requests[0];
+
+      });
+
+
+      /*
+        REMOVE UP NEXT FROM
+        WAITING ROTATION
+      */
+
+      let waiting =
+        singers.filter(
+          singer =>
+            !upNextSinger ||
+            singer.key !==
+            upNextSinger.key
+        );
+
+
+      /*
+        SAME SORT AS KJ:
+
+        - NEW SINGERS FIRST
+        - REPEAT SINGERS AFTER THEM
+        - RESUMED SINGERS GO TO
+          THE BACK OF THE CURRENT
+          ROTATION
+      */
+
+      waiting.sort(
+        (a, b) => {
+
+          const aResumed =
+            a.resumedAt !== null;
+
+          const bResumed =
+            b.resumedAt !== null;
+
+
+          /*
+            RESUMED SINGER GOES
+            BEHIND CURRENT ROTATION
+          */
+
+          if (
+            aResumed !== bResumed
+          ) {
+
+            return aResumed ? 1 : -1;
+
+          }
+
+
+          /*
+            IF BOTH WERE RESUMED,
+            FIRST RESUMED GOES FIRST
+          */
+
+          if (
+            aResumed &&
+            bResumed
+          ) {
+
+            return (
+              a.resumedAt -
+              b.resumedAt
+            );
+
+          }
+
+
+          const aHasSung =
+            a.lastCompletedTime !== null;
+
+          const bHasSung =
+            b.lastCompletedTime !== null;
+
+
+          /*
+            NEW SINGERS BEFORE
+            REPEAT SINGERS
+          */
+
+          if (
+            aHasSung !== bHasSung
+          ) {
+
+            return aHasSung ? 1 : -1;
+
+          }
+
+
+          /*
+            BOTH NEW:
+            OLDEST REQUEST FIRST
+          */
+
+          if (
+            !aHasSung &&
+            !bHasSung
+          ) {
+
+            return (
+              a.firstRequestTime -
+              b.firstRequestTime
+            );
+
+          }
+
+
+          /*
+            BOTH REPEAT:
+            WHOEVER SANG LONGEST
+            AGO GOES FIRST
+          */
+
+          return (
+            a.lastCompletedTime -
+            b.lastCompletedTime
+          );
+
+        }
+      );
+
+
+      /*
+        APPLY KJ MANUAL UP / DOWN
+        ORDER AFTER NORMAL SORT.
+      */
+
+      waiting =
+        applyManualOrder(
+          waiting,
+          data
+        );
+
+
+      return {
+        upNextSinger,
+        waiting
+      };
+
+    }
+
+
+    /* =========================
+       LOAD ROTATION
+       ========================= */
+
+    async function loadRotation() {
+
+      const rotation =
+        document.getElementById(
+          "rotation"
+        );
+
+      const rotationTitle =
+        document.getElementById(
+          "rotationTitle"
+        );
+
+      const upNextBox =
+        document.getElementById(
+          "upNextBox"
+        );
+
+      const upNextName =
+        document.getElementById(
+          "upNextName"
+        );
+
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
+
+            {
+              headers: {
+                "apikey":
+                  SUPABASE_KEY,
+
+                "Authorization":
+                  `Bearer ${SUPABASE_KEY}`
+              }
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          rotation.innerHTML =
+            "Could not load rotation.";
+
+          return;
+
+        }
+
+
+        const data =
+          await response.json();
+
+
+        /*
+          READ THE KJ'S CURRENT
+          2 / 4 / 6 TV SETTING
+        */
+
+        const tvDisplayCount =
+          getTvDisplayCount(data);
+
+
+        /*
+          ONLY ACTIVE REQUESTS COUNT.
+
+          PAUSED REQUESTS ARE
+          COMPLETELY IGNORED HERE.
+        */
+
+        const active =
+          data.filter(isActive);
+
+
+        /*
+          ABSOLUTELY NOBODY ACTIVE
+        */
+
+        if (active.length === 0) {
+
+          upNextBox.style.display =
+            "none";
+
+          rotationTitle.textContent =
+            "Who's Singing Next?";
+
+          rotation.innerHTML =
+            needMoreMessage();
+
+          return;
+
+        }
+
+
+        /*
+          BUILD SAME QUEUE
+          AS KJ PAGE
+        */
+
+        const queue =
+          buildRotation(data);
+
+
+        const upNextSinger =
+          queue.upNextSinger;
+
+        const waiting =
+          queue.waiting;
+
+
+        /*
+          SHOW UP NEXT
+        */
+
+        if (upNextSinger) {
+
+          upNextName.textContent =
+            upNextSinger.name;
+
+          upNextBox.style.display =
+            "block";
+
+        }
+
+        else {
+
+          /*
+            KJ PAGE NORMALLY
+            AUTOMATICALLY CHOOSES
+            UP NEXT.
+
+            DURING THE TINY WINDOW
+            BEFORE THAT HAPPENS,
+            DON'T INVENT ONE.
+          */
+
+          upNextBox.style.display =
+            "none";
+
+        }
+
+
+        rotationTitle.textContent =
+          "Upcoming Singers";
+
+
+        /*
+          SHOW THE NUMBER SELECTED
+          ON THE KJ PAGE: 2, 4, OR 6.
+        */
+
+        const visibleSingers =
+          waiting.slice(
+            0,
+            tvDisplayCount
+          );
+
+
+        const hiddenCount =
+          waiting.length -
+          visibleSingers.length;
+
+
+        let rotationHtml = "";
+
+
+        rotationHtml +=
+
+          visibleSingers.map(
+            (singer, index) => `
+
+              <div class="rotation-row">
+
+                <div class="position">
+                  ${index + 1}.
+                </div>
+
+                <div class="name">
+                  ${escapeHtml(
+                    singer.name
+                  )}
+                </div>
+
+              </div>
+
+            `
+          ).join("");
+
+
+        /*
+          IF THE KJ CHOOSES TO SHOW
+          FEWER PEOPLE THAN ARE WAITING,
+          TELL THE CROWD HOW MANY MORE
+          ARE STILL IN THE REAL QUEUE.
+        */
+
+        if (hiddenCount > 0) {
+
+          rotationHtml += `
+
+            <div class="more-waiting">
+
+              + ${hiddenCount} more
+              ${
+                hiddenCount === 1
+                  ? "singer"
+                  : "singers"
+              }
+              waiting 🎤
+
+            </div>
+
+          `;
+
+        }
+
+
+        /*
+          RECRUITING USES THE REAL
+          ACTIVE WAITING COUNT, NOT
+          THE 2 / 4 / 6 DISPLAY CHOICE.
+
+          PAUSED SINGERS DO NOT COUNT.
+        */
+
+        if (
+          waiting.length <=
+          RECRUITING_THRESHOLD
+        ) {
+
+          rotationHtml +=
+            needMoreMessage();
+
+        }
+
+
+        rotation.innerHTML =
+          rotationHtml;
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        rotation.innerHTML =
+          "Could not load rotation.";
+
+      }
+
+    }
+
+
+    /* =========================
+       START
+       ========================= */
+
+    loadRotation();
+
+
+    /* =========================
+       REFRESH EVERY 5 SECONDS
+       ========================= */
+
+    setInterval(
+      loadRotation,
+      5000
+    );
+
+  </script>
+
+</body>
+
+</html>
