@@ -5,142 +5,171 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Rabbit Run Song Requests</title>
+  <title>Rabbit Run Karaoke Rotation</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: #111827;
-      color: white;
-      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 16px;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 0%, #32104b 0, transparent 35%),
+        radial-gradient(circle at 85% 10%, #09285c 0, transparent 38%),
+        #050711;
+      color: white;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .wrap {
+      width: min(1200px, 94vw);
+      margin: auto;
+      padding: 20px 20px 35px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: min(250px, 40vw);
+      max-height: 150px;
+      object-fit: contain;
+      margin-bottom: 5px;
+      filter: drop-shadow(0 0 18px rgba(166,66,255,.3));
     }
 
     h1 {
-      text-align: center;
-      font-size: 30px;
-      margin: 0 0 2px;
+      font-size: clamp(32px, 4vw, 54px);
+      margin: 0;
     }
 
     .subtitle {
-      text-align: center;
       color: #d8b4fe;
-      margin-bottom: 14px;
-      font-size: 13px;
+      font-size: clamp(15px, 2vw, 20px);
+      margin-top: 4px;
     }
 
-    #requests {
-      max-width: 1100px;
-      margin: auto;
+    .up-next-box {
+      border: 3px solid #d42fc5;
+      background: rgba(212, 47, 197, 0.12);
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 0 24px rgba(212, 47, 197, 0.18);
     }
 
-    .request {
-      background: #1f2937;
-      border: 2px solid #7c3aed;
-      border-radius: 9px;
-      padding: 8px 10px;
-      margin-bottom: 6px;
+    .up-next-label {
+      color: #f9a8d4;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+    }
 
+    .up-next-name {
+      font-size: clamp(34px, 5vw, 62px);
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .rotation-title {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: #d8b4fe;
+      font-weight: bold;
+    }
+
+    #rotation {
       display: grid;
-      grid-template-columns:
-        minmax(110px, 0.8fr)
-        minmax(180px, 1.6fr)
-        minmax(140px, 1.3fr)
-        85px
-        75px
-        auto;
+      gap: 8px;
+    }
 
-      gap: 10px;
+    .rotation-row {
+      display: grid;
+      grid-template-columns: 65px 1fr;
       align-items: center;
+      background: rgba(31, 41, 55, 0.92);
+      border: 2px solid #7c3aed;
+      border-radius: 12px;
+      padding: 10px 16px;
     }
 
-    .request.up-next {
-      border-width: 3px;
+    .position {
+      color: #d8b4fe;
+      font-size: 20px;
+      font-weight: bold;
     }
 
-    .singer {
+    .name {
+      font-size: clamp(21px, 2.5vw, 31px);
+      font-weight: bold;
+    }
+
+    .empty {
+      text-align: center;
+      color: #b9b8c7;
+      font-size: 22px;
+      padding: 35px 20px;
+    }
+
+    .qr-section {
+      margin: 22px auto 0;
+      text-align: center;
+    }
+
+    .qr-title {
+      font-size: clamp(20px, 2.5vw, 28px);
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .qr-subtitle {
+      color: #d8b4fe;
       font-size: 16px;
-      font-weight: bold;
-      overflow-wrap: anywhere;
+      margin-bottom: 10px;
     }
 
-    .song {
-      font-size: 15px;
-      font-weight: bold;
+    .qr {
+      width: min(180px, 30vw);
+      height: auto;
+      background: white;
+      padding: 6px;
+      border-radius: 10px;
     }
 
-    .artist {
-      color: #cbd5e1;
+    footer {
+      text-align: center;
+      color: #b9b8c7;
+      margin-top: 14px;
       font-size: 14px;
     }
 
-    .status {
-      color: #f9a8d4;
-      font-weight: bold;
-      text-transform: uppercase;
-      font-size: 12px;
-    }
+    @media (max-width: 600px) {
 
-    .time {
-      color: #cbd5e1;
-      font-size: 12px;
-    }
-
-    .warnings {
-      grid-column: 1 / -1;
-    }
-
-    .warning {
-      color: #fbbf24;
-      font-weight: bold;
-      font-size: 12px;
-      margin-top: 2px;
-    }
-
-    .controls {
-      display: flex;
-      gap: 6px;
-      justify-content: flex-end;
-    }
-
-    button {
-      border: none;
-      border-radius: 6px;
-      padding: 7px 10px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 750px) {
-
-      .request {
-        display: block;
-        padding: 10px;
+      .wrap {
+        padding: 15px 12px 30px;
       }
 
-      .singer {
-        font-size: 18px;
+      .logo {
+        width: min(220px, 65vw);
       }
 
-      .song {
-        margin-top: 4px;
+      .rotation-row {
+        grid-template-columns: 42px 1fr;
+        padding: 10px 12px;
       }
 
-      .artist,
-      .status,
-      .time {
-        margin-top: 3px;
+      .position {
+        font-size: 17px;
       }
 
-      .controls {
-        justify-content: flex-start;
-        margin-top: 7px;
-      }
-
-      .warnings {
-        margin-top: 4px;
+      .qr {
+        width: min(170px, 48vw);
       }
     }
   </style>
@@ -148,12 +177,82 @@
 
 <body>
 
-  <h1>🎤 Song Requests</h1>
-  <div class="subtitle">Rabbit Run Entertainment</div>
+  <div class="wrap">
 
-  <div id="requests">
-    Loading requests...
+    <header>
+
+      <img
+        class="logo"
+        src="Rabbit Run logo with effects-clear bkgd.png"
+        alt="Rabbit Run Entertainment"
+      >
+
+      <h1>🎤 Karaoke Rotation</h1>
+
+      <div class="subtitle">
+        Rabbit Run Entertainment
+      </div>
+
+    </header>
+
+
+    <div
+      id="upNextBox"
+      class="up-next-box"
+      style="display:none;"
+    >
+
+      <div class="up-next-label">
+        UP NEXT
+      </div>
+
+      <div
+        id="upNextName"
+        class="up-next-name"
+      ></div>
+
+    </div>
+
+
+    <div class="rotation-title">
+      Upcoming Singers
+    </div>
+
+
+    <div id="rotation">
+
+      <div class="empty">
+        Loading rotation...
+      </div>
+
+    </div>
+
+
+    <div class="qr-section">
+
+      <div class="qr-title">
+        Want to Sing? 🎤
+      </div>
+
+      <div class="qr-subtitle">
+        Scan to Search & Request Songs
+      </div>
+
+      <img
+        class="qr"
+        src="Rabbit_Run_Songbook_QR_with_Logo (1).png"
+        alt="Scan to open the Rabbit Run Karaoke Song Book"
+      >
+
+    </div>
+
+
+    <footer>
+      Keepin' the Party Hoppin'
+    </footer>
+
   </div>
+
 
   <script>
 
@@ -163,8 +262,6 @@
     const SUPABASE_KEY =
       "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
 
-
-    /* SAFE DISPLAY TEXT */
 
     const escapeHtml = value =>
       String(value ?? "").replace(
@@ -179,30 +276,24 @@
       );
 
 
-    /* FORMAT REQUEST TIME */
+    async function loadRotation() {
 
-    function formatTime(timestamp) {
+      const rotation =
+        document.getElementById("rotation");
 
-      return new Date(timestamp)
-        .toLocaleTimeString([], {
-          hour: "numeric",
-          minute: "2-digit"
-        });
+      const upNextBox =
+        document.getElementById("upNextBox");
 
-    }
+      const upNextName =
+        document.getElementById("upNextName");
 
-
-    /* LOAD REQUESTS */
-
-    async function loadRequests() {
-
-      const container =
-        document.getElementById("requests");
 
       try {
 
         const response = await fetch(
+
           `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
+
           {
             headers: {
               "apikey": SUPABASE_KEY,
@@ -210,22 +301,16 @@
                 `Bearer ${SUPABASE_KEY}`
             }
           }
+
         );
 
 
         if (!response.ok) {
 
-          const errorText =
-            await response.text();
-
-          console.error(
-            "Could not load requests:",
-            response.status,
-            errorText
-          );
-
-          container.innerHTML =
-            "Could not load requests.";
+          rotation.innerHTML =
+            `<div class="empty">
+              Could not load rotation.
+            </div>`;
 
           return;
         }
@@ -235,201 +320,128 @@
           await response.json();
 
 
-        if (data.length === 0) {
+        const active =
+          data.filter(request =>
+            request.status !== "completed"
+          );
 
-          container.innerHTML =
-            "No song requests yet.";
+
+        if (active.length === 0) {
+
+          upNextBox.style.display =
+            "none";
+
+          rotation.innerHTML =
+            `<div class="empty">
+              No singers in the rotation yet.
+            </div>`;
 
           return;
         }
 
 
-        /* FIND DEVICES USING MULTIPLE NAMES */
+        const upNextRequest =
+          active.find(request =>
+            request.status === "up_next"
+          );
 
-        const namesByDevice = {};
 
-        data.forEach(request => {
+        if (upNextRequest) {
 
-          if (!request.singer_id) {
+          upNextName.textContent =
+            upNextRequest.singer_name;
+
+          upNextBox.style.display =
+            "block";
+
+        }
+
+        else {
+
+          upNextBox.style.display =
+            "none";
+
+        }
+
+
+        const singers = [];
+        const seenSingers = new Set();
+
+
+        active.forEach(request => {
+
+          if (
+            upNextRequest &&
+            request.id === upNextRequest.id
+          ) {
             return;
           }
 
-          if (!namesByDevice[request.singer_id]) {
 
-            namesByDevice[
-              request.singer_id
-            ] = new Set();
+          const singerKey =
+            request.singer_id
 
+              ? `device:${request.singer_id}`
+
+              : `name:${String(
+                  request.singer_name || ""
+                )
+                  .trim()
+                  .toLowerCase()}`;
+
+
+          if (seenSingers.has(singerKey)) {
+            return;
           }
 
-          namesByDevice[
-            request.singer_id
-          ].add(
-            String(request.singer_name || "")
-              .trim()
-              .toLowerCase()
-          );
+
+          seenSingers.add(singerKey);
+
+
+          singers.push({
+
+            name:
+              String(
+                request.singer_name || ""
+              ).trim(),
+
+            created_at:
+              request.created_at
+
+          });
 
         });
 
 
-        const mismatchedDevices =
-          new Set(
+        if (singers.length === 0) {
 
-            Object.entries(namesByDevice)
-
-              .filter(
-                ([id, names]) =>
-                  names.size > 1
-              )
-
-              .map(
-                ([id]) => id
-              )
-
-          );
-
-
-        /* ACTIVE REQUESTS */
-
-        const activeRequests =
-          data.filter(
-            request =>
-              request.status !== "completed"
-          );
-
-
-        if (activeRequests.length === 0) {
-
-          container.innerHTML =
-            "No song requests yet.";
+          rotation.innerHTML =
+            `<div class="empty">
+              No other singers waiting.
+            </div>`;
 
           return;
         }
 
 
-        /* BUILD COMPACT REQUEST ROWS */
+        rotation.innerHTML =
+          singers.map(
+            (singer, index) => `
 
-        container.innerHTML =
-          activeRequests.map(request => {
+              <div class="rotation-row">
 
-            const currentName =
-              String(
-                request.singer_name || ""
-              ).trim();
-
-            const originalName =
-              String(
-                request.original_name || ""
-              ).trim();
-
-            const nameChanged =
-              originalName &&
-              originalName.toLowerCase() !==
-              currentName.toLowerCase();
-
-            const sameDeviceMismatch =
-              request.singer_id &&
-              mismatchedDevices.has(
-                request.singer_id
-              );
-
-            const isUpNext =
-              request.status === "up_next";
-
-
-            return `
-
-              <div class="request ${isUpNext ? "up-next" : ""}">
-
-                <div class="singer">
-                  ${escapeHtml(currentName)}
+                <div class="position">
+                  ${index + 1}.
                 </div>
 
-                <div class="song">
-                  ${escapeHtml(request.song_title)}
+                <div class="name">
+                  ${escapeHtml(singer.name)}
                 </div>
-
-                <div class="artist">
-                  ${escapeHtml(request.artist)}
-                </div>
-
-                <div class="status">
-                  ${
-                    isUpNext
-                      ? "UP NEXT"
-                      : "WAITING"
-                  }
-                </div>
-
-                <div class="time">
-                  ${formatTime(request.created_at)}
-                </div>
-
-                <div class="controls">
-
-                  <button
-                    onclick="updateStatus(
-                      ${request.id},
-                      'up_next'
-                    )"
-                  >
-                    Up Next
-                  </button>
-
-                  <button
-                    onclick="finishRequest(
-                      ${request.id}
-                    )"
-                  >
-                    Done
-                  </button>
-
-                </div>
-
-
-                ${
-                  nameChanged || sameDeviceMismatch
-
-                    ? `
-                      <div class="warnings">
-
-                        ${
-                          nameChanged
-
-                            ? `
-                              <div class="warning">
-                                ⚠️ Originally:
-                                ${escapeHtml(originalName)}
-                              </div>
-                            `
-
-                            : ""
-                        }
-
-                        ${
-                          sameDeviceMismatch
-
-                            ? `
-                              <div class="warning">
-                                ⚠️ NAME MISMATCH - SAME DEVICE
-                              </div>
-                            `
-
-                            : ""
-                        }
-
-                      </div>
-                    `
-
-                    : ""
-                }
 
               </div>
 
-            `;
-
-          }).join("");
+            `
+          ).join("");
 
       }
 
@@ -437,98 +449,21 @@
 
         console.error(error);
 
-        container.innerHTML =
-          "Could not load requests.";
+        rotation.innerHTML =
+          `<div class="empty">
+            Could not load rotation.
+          </div>`;
 
       }
 
     }
 
 
-    /* UP NEXT */
+    loadRotation();
 
-    async function updateStatus(
-      id,
-      newStatus
-    ) {
-
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
-        {
-          method: "PATCH",
-
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization":
-              `Bearer ${SUPABASE_KEY}`,
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-            status: newStatus
-          })
-        }
-      );
-
-
-      if (!response.ok) {
-
-        alert(
-          "Could not update this request."
-        );
-
-        return;
-      }
-
-
-      loadRequests();
-
-    }
-
-
-    /* DONE = DELETE IMMEDIATELY */
-
-    async function finishRequest(id) {
-
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
-        {
-          method: "DELETE",
-
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization":
-              `Bearer ${SUPABASE_KEY}`
-          }
-        }
-      );
-
-
-      if (!response.ok) {
-
-        alert(
-          "Could not finish this request."
-        );
-
-        return;
-      }
-
-
-      loadRequests();
-
-    }
-
-
-    /* START */
-
-    loadRequests();
-
-
-    /* AUTO REFRESH EVERY 5 SECONDS */
 
     setInterval(
-      loadRequests,
+      loadRotation,
       5000
     );
 
