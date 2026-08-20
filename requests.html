@@ -55,7 +55,8 @@
     }
 
     .request.up-next {
-      border-width: 3px;
+      border: 3px solid #d42fc5;
+      background: #29203a;
     }
 
     .singer {
@@ -113,6 +114,28 @@
       white-space: nowrap;
     }
 
+    .up-next-button {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .done-button {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .current-button {
+      background: #d42fc5;
+      color: white;
+    }
+
+    .extra-songs {
+      grid-column: 1 / -1;
+      color: #d8b4fe;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
     @media (max-width: 750px) {
 
       .request {
@@ -139,7 +162,8 @@
         margin-top: 7px;
       }
 
-      .warnings {
+      .warnings,
+      .extra-songs {
         margin-top: 4px;
       }
     }
@@ -155,6 +179,7 @@
     Loading requests...
   </div>
 
+
   <script>
 
     const SUPABASE_URL =
@@ -164,7 +189,9 @@
       "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
 
 
-    /* SAFE DISPLAY TEXT */
+    /* =========================
+       SAFE DISPLAY TEXT
+       ========================= */
 
     const escapeHtml = value =>
       String(value ?? "").replace(
@@ -179,7 +206,9 @@
       );
 
 
-    /* FORMAT REQUEST TIME */
+    /* =========================
+       FORMAT TIME
+       ========================= */
 
     function formatTime(timestamp) {
 
@@ -192,114 +221,593 @@
     }
 
 
-    /* LOAD REQUESTS */
+    /* =========================
+       SINGER IDENTITY
+
+       Rotation uses singer name,
+       NOT device ID.
+       ========================= */
+
+    function singerKey(request) {
+
+      return String(
+        request.singer_name || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    }
+
+
+    /* =========================
+       FETCH ALL REQUESTS
+       ========================= */
+
+    async function fetchRequests() {
+
+      const response = await fetch(
+
+        `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
+
+        {
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization":
+              `Bearer ${SUPABASE_KEY}`
+          }
+        }
+
+      );
+
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          `Could not load requests: ${errorText}`
+        );
+
+      }
+
+
+      return await response.json();
+
+    }
+
+
+    /* =========================
+       FIND DEVICE NAME MISMATCHES
+       ========================= */
+
+    function findMismatchedDevices(data) {
+
+      const namesByDevice = {};
+
+
+      data.forEach(request => {
+
+        if (!request.singer_id) {
+          return;
+        }
+
+
+        if (
+          !namesByDevice[
+            request.singer_id
+          ]
+        ) {
+
+          namesByDevice[
+            request.singer_id
+          ] = new Set();
+
+        }
+
+
+        namesByDevice[
+          request.singer_id
+        ].add(
+          String(
+            request.singer_name || ""
+          )
+            .trim()
+            .toLowerCase()
+        );
+
+      });
+
+
+      return new Set(
+
+        Object.entries(
+          namesByDevice
+        )
+
+          .filter(
+            ([id, names]) =>
+              names.size > 1
+          )
+
+          .map(
+            ([id]) => id
+          )
+
+      );
+
+    }
+
+
+    /* =========================
+       BUILD ROTATION
+       ========================= */
+
+    function buildRotation(data) {
+
+      const active =
+        data.filter(
+          request =>
+            request.status !== "completed"
+        );
+
+
+      const completed =
+        data.filter(
+          request =>
+            request.status === "completed"
+        );
+
+
+      /*
+        LAST COMPLETED TURN
+        FOR EACH SINGER
+      */
+
+      const lastCompletedBySinger =
+        new Map();
+
+
+      completed.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        const completedTime =
+          new Date(
+            request.created_at
+          ).getTime();
+
+
+        const existing =
+          lastCompletedBySinger.get(key);
+
+
+        if (
+          existing === undefined ||
+          completedTime > existing
+        ) {
+
+          lastCompletedBySinger.set(
+            key,
+            completedTime
+          );
+
+        }
+
+      });
+
+
+      /*
+        GROUP ACTIVE SONGS
+        BY SINGER
+      */
+
+      const singersByName =
+        new Map();
+
+
+      active.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        if (
+          !singersByName.has(key)
+        ) {
+
+          singersByName.set(
+            key,
+            {
+              key: key,
+
+              name:
+                String(
+                  request.singer_name || ""
+                ).trim(),
+
+              requests: [],
+
+              firstRequestTime:
+                new Date(
+                  request.created_at
+                ).getTime(),
+
+              lastCompletedTime:
+                lastCompletedBySinger.has(key)
+                  ? lastCompletedBySinger.get(key)
+                  : null
+            }
+          );
+
+        }
+
+
+        singersByName
+          .get(key)
+          .requests
+          .push(request);
+
+      });
+
+
+      const singers =
+        Array.from(
+          singersByName.values()
+        );
+
+
+      /*
+        SORT EACH SINGER'S SONGS
+        OLDEST FIRST
+      */
+
+      singers.forEach(singer => {
+
+        singer.requests.sort(
+          (a, b) =>
+            new Date(a.created_at) -
+            new Date(b.created_at)
+        );
+
+      });
+
+
+      /*
+        FIND CURRENT UP NEXT
+      */
+
+      let upNextSinger = null;
+
+
+      for (const singer of singers) {
+
+        const upNextRequest =
+          singer.requests.find(
+            request =>
+              request.status === "up_next"
+          );
+
+
+        if (upNextRequest) {
+
+          upNextSinger = singer;
+          upNextSinger.currentRequest =
+            upNextRequest;
+
+          break;
+
+        }
+
+      }
+
+
+      /*
+        EVERY OTHER SINGER'S
+        CURRENT SONG IS THEIR
+        OLDEST ACTIVE REQUEST
+      */
+
+      singers.forEach(singer => {
+
+        if (
+          upNextSinger &&
+          singer.key ===
+          upNextSinger.key
+        ) {
+          return;
+        }
+
+
+        singer.currentRequest =
+          singer.requests[0];
+
+      });
+
+
+      /*
+        SORT THE WAITING SINGERS
+
+        NEW SINGERS FIRST.
+
+        REPEAT SINGERS CYCLE
+        TO THE BACK.
+
+        AMONG REPEAT SINGERS,
+        THE PERSON WHO SANG
+        LONGEST AGO COMES FIRST.
+      */
+
+      let waiting =
+        singers.filter(
+          singer =>
+            !upNextSinger ||
+            singer.key !==
+            upNextSinger.key
+        );
+
+
+      waiting.sort(
+        (a, b) => {
+
+          const aHasSung =
+            a.lastCompletedTime !== null;
+
+          const bHasSung =
+            b.lastCompletedTime !== null;
+
+
+          if (
+            aHasSung !== bHasSung
+          ) {
+
+            return aHasSung ? 1 : -1;
+
+          }
+
+
+          if (
+            !aHasSung &&
+            !bHasSung
+          ) {
+
+            return (
+              a.firstRequestTime -
+              b.firstRequestTime
+            );
+
+          }
+
+
+          return (
+            a.lastCompletedTime -
+            b.lastCompletedTime
+          );
+
+        }
+      );
+
+
+      /*
+        UP NEXT ALWAYS FIRST
+        ON KJ SCREEN
+      */
+
+      if (upNextSinger) {
+
+        return [
+          upNextSinger,
+          ...waiting
+        ];
+
+      }
+
+
+      return waiting;
+
+    }
+
+
+    /* =========================
+       MAKE ONE REQUEST UP NEXT
+
+       FIRST RESET ANY EXISTING
+       UP NEXT REQUESTS TO WAITING.
+       ========================= */
+
+    async function setUpNext(id) {
+
+      /*
+        RESET CURRENT UP NEXT
+      */
+
+      const resetResponse =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests?status=eq.up_next`,
+
+          {
+            method: "PATCH",
+
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization":
+                `Bearer ${SUPABASE_KEY}`,
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              status: "waiting"
+            })
+          }
+
+        );
+
+
+      if (!resetResponse.ok) {
+
+        throw new Error(
+          "Could not reset Up Next."
+        );
+
+      }
+
+
+      /*
+        SET SELECTED SONG
+        TO UP NEXT
+      */
+
+      const response =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
+
+          {
+            method: "PATCH",
+
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization":
+                `Bearer ${SUPABASE_KEY}`,
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              status: "up_next"
+            })
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Could not set Up Next."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       AUTOMATICALLY CHOOSE
+       UP NEXT IF NONE EXISTS
+       ========================= */
+
+    async function ensureUpNext(data) {
+
+      const active =
+        data.filter(
+          request =>
+            request.status !== "completed"
+        );
+
+
+      if (active.length === 0) {
+        return false;
+      }
+
+
+      const existingUpNext =
+        active.find(
+          request =>
+            request.status === "up_next"
+        );
+
+
+      if (existingUpNext) {
+        return false;
+      }
+
+
+      const rotation =
+        buildRotation(data);
+
+
+      if (
+        rotation.length === 0 ||
+        !rotation[0].currentRequest
+      ) {
+        return false;
+      }
+
+
+      await setUpNext(
+        rotation[0]
+          .currentRequest
+          .id
+      );
+
+
+      return true;
+
+    }
+
+
+    /* =========================
+       LOAD KJ SCREEN
+       ========================= */
 
     async function loadRequests() {
 
       const container =
-        document.getElementById("requests");
-
-      try {
-
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
-          {
-            headers: {
-              "apikey": SUPABASE_KEY,
-              "Authorization":
-                `Bearer ${SUPABASE_KEY}`
-            }
-          }
+        document.getElementById(
+          "requests"
         );
 
 
-        if (!response.ok) {
+      try {
 
-          const errorText =
-            await response.text();
+        let data =
+          await fetchRequests();
 
-          console.error(
-            "Could not load requests:",
-            response.status,
-            errorText
-          );
 
-          container.innerHTML =
-            "Could not load requests.";
+        /*
+          IF NOBODY IS UP NEXT,
+          PICK THE FIRST SINGER
+          AUTOMATICALLY.
+        */
 
-          return;
+        const changed =
+          await ensureUpNext(data);
+
+
+        if (changed) {
+
+          data =
+            await fetchRequests();
+
         }
 
-
-        const data =
-          await response.json();
-
-
-        if (data.length === 0) {
-
-          container.innerHTML =
-            "No song requests yet.";
-
-          return;
-        }
-
-
-        /* FIND DEVICES USING MULTIPLE NAMES */
-
-        const namesByDevice = {};
-
-        data.forEach(request => {
-
-          if (!request.singer_id) {
-            return;
-          }
-
-          if (!namesByDevice[request.singer_id]) {
-
-            namesByDevice[
-              request.singer_id
-            ] = new Set();
-
-          }
-
-          namesByDevice[
-            request.singer_id
-          ].add(
-            String(request.singer_name || "")
-              .trim()
-              .toLowerCase()
-          );
-
-        });
-
-
-        const mismatchedDevices =
-          new Set(
-
-            Object.entries(namesByDevice)
-
-              .filter(
-                ([id, names]) =>
-                  names.size > 1
-              )
-
-              .map(
-                ([id]) => id
-              )
-
-          );
-
-
-        /* ACTIVE REQUESTS ONLY */
 
         const activeRequests =
           data.filter(
             request =>
-              request.status !== "completed"
+              request.status !==
+              "completed"
           );
 
 
-        if (activeRequests.length === 0) {
+        if (
+          activeRequests.length === 0
+        ) {
 
           container.innerHTML =
             "No song requests yet.";
@@ -308,25 +816,48 @@
         }
 
 
-        /* BUILD COMPACT REQUEST ROWS */
+        const mismatchedDevices =
+          findMismatchedDevices(data);
+
+
+        const rotation =
+          buildRotation(data);
+
+
+        /*
+          BUILD KJ ROWS IN THE
+          SAME ROTATION ORDER
+        */
 
         container.innerHTML =
-          activeRequests.map(request => {
+          rotation.map(singer => {
+
+            const request =
+              singer.currentRequest;
+
+
+            if (!request) {
+              return "";
+            }
+
 
             const currentName =
               String(
                 request.singer_name || ""
               ).trim();
 
+
             const originalName =
               String(
                 request.original_name || ""
               ).trim();
 
+
             const nameChanged =
               originalName &&
               originalName.toLowerCase() !==
               currentName.toLowerCase();
+
 
             const sameDeviceMismatch =
               request.singer_id &&
@@ -334,50 +865,91 @@
                 request.singer_id
               );
 
+
             const isUpNext =
-              request.status === "up_next";
+              request.status ===
+              "up_next";
+
+
+            const extraSongCount =
+              singer.requests.length - 1;
 
 
             return `
 
-              <div class="request ${isUpNext ? "up-next" : ""}">
+              <div
+                class="request
+                ${isUpNext ? "up-next" : ""}"
+              >
 
                 <div class="singer">
-                  ${escapeHtml(currentName)}
+                  ${escapeHtml(
+                    currentName
+                  )}
                 </div>
+
 
                 <div class="song">
-                  ${escapeHtml(request.song_title)}
+                  ${escapeHtml(
+                    request.song_title
+                  )}
                 </div>
+
 
                 <div class="artist">
-                  ${escapeHtml(request.artist)}
+                  ${escapeHtml(
+                    request.artist
+                  )}
                 </div>
 
+
                 <div class="status">
+
                   ${
                     isUpNext
                       ? "UP NEXT"
                       : "WAITING"
                   }
+
                 </div>
 
+
                 <div class="time">
-                  ${formatTime(request.created_at)}
+                  ${formatTime(
+                    request.created_at
+                  )}
                 </div>
+
 
                 <div class="controls">
 
-                  <button
-                    onclick="updateStatus(
-                      ${request.id},
-                      'up_next'
-                    )"
-                  >
-                    Up Next
-                  </button>
+                  ${
+                    isUpNext
+
+                      ? `
+                        <button
+                          class="current-button"
+                          disabled
+                        >
+                          Up Next
+                        </button>
+                      `
+
+                      : `
+                        <button
+                          class="up-next-button"
+                          onclick="manualUpNext(
+                            ${request.id}
+                          )"
+                        >
+                          Up Next
+                        </button>
+                      `
+                  }
+
 
                   <button
+                    class="done-button"
                     onclick="finishRequest(
                       ${request.id}
                     )"
@@ -389,7 +961,33 @@
 
 
                 ${
-                  nameChanged || sameDeviceMismatch
+                  extraSongCount > 0
+
+                    ? `
+                      <div class="extra-songs">
+
+                        + ${extraSongCount}
+                        more
+                        ${
+                          extraSongCount === 1
+                            ? "song"
+                            : "songs"
+                        }
+                        waiting for
+                        ${escapeHtml(
+                          currentName
+                        )}
+
+                      </div>
+                    `
+
+                    : ""
+                }
+
+
+                ${
+                  nameChanged ||
+                  sameDeviceMismatch
 
                     ? `
                       <div class="warnings">
@@ -399,20 +997,28 @@
 
                             ? `
                               <div class="warning">
+
                                 ⚠️ Originally:
-                                ${escapeHtml(originalName)}
+                                ${escapeHtml(
+                                  originalName
+                                )}
+
                               </div>
                             `
 
                             : ""
                         }
 
+
                         ${
                           sameDeviceMismatch
 
                             ? `
                               <div class="warning">
-                                ⚠️ NAME MISMATCH - SAME DEVICE
+
+                                ⚠️ NAME MISMATCH -
+                                SAME DEVICE
+
                               </div>
                             `
 
@@ -433,6 +1039,7 @@
 
       }
 
+
       catch (error) {
 
         console.error(error);
@@ -445,93 +1052,119 @@
     }
 
 
-    /* UP NEXT */
+    /* =========================
+       MANUAL UP NEXT OVERRIDE
+       ========================= */
 
-    async function updateStatus(
-      id,
-      newStatus
-    ) {
+    async function manualUpNext(id) {
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
-        {
-          method: "PATCH",
+      try {
 
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization":
-              `Bearer ${SUPABASE_KEY}`,
-            "Content-Type":
-              "application/json"
-          },
+        await setUpNext(id);
 
-          body: JSON.stringify({
-            status: newStatus
-          })
-        }
-      );
+        await loadRequests();
 
-
-      if (!response.ok) {
-
-        alert(
-          "Could not update this request."
-        );
-
-        return;
       }
 
+      catch (error) {
 
-      loadRequests();
+        console.error(error);
+
+        alert(
+          "Could not change Up Next."
+        );
+
+      }
 
     }
 
 
-    /* DONE = MARK COMPLETED */
+    /* =========================
+       DONE
+
+       MARK CURRENT SONG
+       COMPLETED.
+
+       THEN LOADREQUESTS()
+       AUTOMATICALLY CHOOSES
+       THE NEXT SINGER.
+       ========================= */
 
     async function finishRequest(id) {
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
-        {
-          method: "PATCH",
+      try {
 
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization":
-              `Bearer ${SUPABASE_KEY}`,
-            "Content-Type":
-              "application/json"
-          },
+        const response =
+          await fetch(
 
-          body: JSON.stringify({
-            status: "completed"
-          })
+            `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
+
+            {
+              method: "PATCH",
+
+              headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization":
+                  `Bearer ${SUPABASE_KEY}`,
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                status: "completed"
+              })
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "Could not finish request."
+          );
+
         }
-      );
 
 
-      if (!response.ok) {
+        /*
+          RELOAD.
+
+          SINCE THE OLD UP NEXT
+          IS NOW COMPLETED,
+          LOADREQUESTS WILL
+          AUTOMATICALLY SELECT
+          THE NEXT SINGER.
+        */
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
 
         alert(
           "Could not finish this request."
         );
 
-        return;
       }
-
-
-      loadRequests();
 
     }
 
 
-    /* START */
+    /* =========================
+       START
+       ========================= */
 
     loadRequests();
 
 
-    /* AUTO REFRESH EVERY 5 SECONDS */
+    /* =========================
+       AUTO REFRESH
+       ========================= */
 
     setInterval(
       loadRequests,
@@ -541,4 +1174,5 @@
   </script>
 
 </body>
+
 </html>
