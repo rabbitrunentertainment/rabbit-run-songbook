@@ -434,6 +434,7 @@
       );
 
     let accessToken = null;
+    let venueInputInitialized = false;
 
 
     async function refreshAuthUI() {
@@ -512,6 +513,7 @@
 
       await supabaseClient.auth.signOut();
       accessToken = null;
+      venueInputInitialized = false;
       await refreshAuthUI();
 
     }
@@ -606,6 +608,7 @@
         }
 
         input.value = venueName;
+        venueInputInitialized = true;
       } catch (error) {
         console.error(error);
         alert("Could not save the venue name.");
@@ -1799,9 +1802,12 @@
           getTvDisplayCount(data)
         );
 
-        document.getElementById(
-          "venueNameInput"
-        ).value = getVenueName(data);
+        if (!venueInputInitialized) {
+          document.getElementById(
+            "venueNameInput"
+          ).value = getVenueName(data);
+          venueInputInitialized = true;
+        }
 
 
         /*
