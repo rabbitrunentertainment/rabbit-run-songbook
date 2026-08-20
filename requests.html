@@ -3359,9 +3359,18 @@
 
 
         /*
+          NORMAL NIGHT:
           If this singer has more songs,
-          put all remaining songs at the
+          put their remaining songs at the
           back of the current rotation.
+
+          FINAL 3 MODE:
+          Each selected Final 3 singer gets
+          ONE final turn. After that song is
+          marked Done, all of that singer's
+          remaining queued songs are closed
+          out too so the singer falls off the
+          rotation instead of looping back.
         */
 
         const remainingSingerRequests =
@@ -3372,40 +3381,101 @@
               singerKey(request) === finishedSingerKey
           );
 
+
+        const finalThree =
+          getFinalThree(data);
+
+
+        const isFinalThreeSinger =
+          finalThree.length === 3 &&
+          finalThree.includes(
+            finishedSingerKey
+          );
+
+
         if (remainingSingerRequests.length > 0) {
 
-          const backOfRotationStatus =
-            `waiting_resumed_${Date.now()}`;
+          if (isFinalThreeSinger) {
 
-          for (const request of remainingSingerRequests) {
+            for (const request of remainingSingerRequests) {
 
-            const moveResponse =
-              await fetch(
+              const closeResponse =
+                await fetch(
 
-                `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+                  `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
 
-                {
-                  method: "PATCH",
+                  {
+                    method: "PATCH",
 
-                  headers: {
-                    "apikey": SUPABASE_KEY,
-                    "Authorization":
-                      `Bearer ${accessToken || SUPABASE_KEY}`,
-                    "Content-Type":
-                      "application/json"
-                  },
+                    headers: {
+                      "apikey": SUPABASE_KEY,
+                      "Authorization":
+                        `Bearer ${accessToken || SUPABASE_KEY}`,
+                      "Content-Type":
+                        "application/json"
+                    },
 
-                  body: JSON.stringify({
-                    status: backOfRotationStatus
-                  })
-                }
+                    body: JSON.stringify({
+                      status: "completed"
+                    })
+                  }
 
-              );
+                );
 
-            if (!moveResponse.ok) {
-              throw new Error(
-                "Song finished, but remaining songs could not be moved to the back."
-              );
+
+              if (!closeResponse.ok) {
+
+                throw new Error(
+                  "Final singer finished, but their remaining queued songs could not be closed."
+                );
+
+              }
+
+            }
+
+          }
+
+
+          else {
+
+            const backOfRotationStatus =
+              `waiting_resumed_${Date.now()}`;
+
+
+            for (const request of remainingSingerRequests) {
+
+              const moveResponse =
+                await fetch(
+
+                  `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+
+                  {
+                    method: "PATCH",
+
+                    headers: {
+                      "apikey": SUPABASE_KEY,
+                      "Authorization":
+                        `Bearer ${accessToken || SUPABASE_KEY}`,
+                      "Content-Type":
+                        "application/json"
+                    },
+
+                    body: JSON.stringify({
+                      status: backOfRotationStatus
+                    })
+                  }
+
+                );
+
+
+              if (!moveResponse.ok) {
+
+                throw new Error(
+                  "Song finished, but remaining songs could not be moved to the back."
+                );
+
+              }
+
             }
 
           }
