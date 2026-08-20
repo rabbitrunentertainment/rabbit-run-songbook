@@ -286,6 +286,16 @@
 
     const MAX_VISIBLE_SINGERS = 6;
 
+    /*
+      SHOW RECRUITING MESSAGE
+      WHEN THERE ARE 0-4
+      UPCOMING SINGERS.
+    */
+
+    const RECRUITING_THRESHOLD = 4;
+
+
+    /* SAFE DISPLAY TEXT */
 
     const escapeHtml = value =>
       String(value ?? "").replace(
@@ -300,6 +310,8 @@
       );
 
 
+    /* SINGER IDENTITY */
+
     function singerKey(request) {
 
       return String(
@@ -310,6 +322,8 @@
 
     }
 
+
+    /* RECRUITING MESSAGE */
 
     function needMoreMessage() {
 
@@ -333,36 +347,322 @@
     }
 
 
+    /* BUILD THE SAME ROTATION AS KJ */
+
+    function buildRotation(data) {
+
+      const active =
+        data.filter(
+          request =>
+            request.status !== "completed"
+        );
+
+
+      const completed =
+        data.filter(
+          request =>
+            request.status === "completed"
+        );
+
+
+      /*
+        FIND LAST COMPLETED TURN
+        FOR EACH SINGER
+      */
+
+      const lastCompletedBySinger =
+        new Map();
+
+
+      completed.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        const completedTime =
+          new Date(
+            request.created_at
+          ).getTime();
+
+
+        const existing =
+          lastCompletedBySinger.get(key);
+
+
+        if (
+          existing === undefined ||
+          completedTime > existing
+        ) {
+
+          lastCompletedBySinger.set(
+            key,
+            completedTime
+          );
+
+        }
+
+      });
+
+
+      /*
+        GROUP ACTIVE REQUESTS
+        BY SINGER
+      */
+
+      const singersByName =
+        new Map();
+
+
+      active.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        if (
+          !singersByName.has(key)
+        ) {
+
+          singersByName.set(
+            key,
+            {
+              key: key,
+
+              name:
+                String(
+                  request.singer_name || ""
+                ).trim(),
+
+              requests: [],
+
+              firstRequestTime:
+                new Date(
+                  request.created_at
+                ).getTime(),
+
+              lastCompletedTime:
+                lastCompletedBySinger.has(key)
+                  ? lastCompletedBySinger.get(key)
+                  : null
+            }
+          );
+
+        }
+
+
+        singersByName
+          .get(key)
+          .requests
+          .push(request);
+
+      });
+
+
+      const singers =
+        Array.from(
+          singersByName.values()
+        );
+
+
+      /*
+        SORT EACH SINGER'S SONGS
+        OLDEST FIRST
+      */
+
+      singers.forEach(singer => {
+
+        singer.requests.sort(
+          (a, b) =>
+            new Date(a.created_at) -
+            new Date(b.created_at)
+        );
+
+      });
+
+
+      /*
+        FIND CURRENT UP NEXT
+      */
+
+      let upNextSinger = null;
+
+
+      for (const singer of singers) {
+
+        const upNextRequest =
+          singer.requests.find(
+            request =>
+              request.status === "up_next"
+          );
+
+
+        if (upNextRequest) {
+
+          upNextSinger = singer;
+
+          upNextSinger.currentRequest =
+            upNextRequest;
+
+          break;
+
+        }
+
+      }
+
+
+      /*
+        EVERY OTHER SINGER'S
+        CURRENT SONG IS THEIR
+        OLDEST ACTIVE REQUEST
+      */
+
+      singers.forEach(singer => {
+
+        if (
+          upNextSinger &&
+          singer.key ===
+          upNextSinger.key
+        ) {
+          return;
+        }
+
+
+        singer.currentRequest =
+          singer.requests[0];
+
+      });
+
+
+      /*
+        REMOVE UP NEXT FROM
+        WAITING ROTATION
+      */
+
+      let waiting =
+        singers.filter(
+          singer =>
+            !upNextSinger ||
+            singer.key !==
+            upNextSinger.key
+        );
+
+
+      /*
+        EXACT SAME SORT AS KJ
+
+        NEW SINGERS FIRST.
+
+        REPEAT SINGERS GO
+        TO THE BACK.
+
+        REPEAT SINGER WHO
+        SANG LONGEST AGO
+        COMES FIRST.
+      */
+
+      waiting.sort(
+        (a, b) => {
+
+          const aHasSung =
+            a.lastCompletedTime !== null;
+
+          const bHasSung =
+            b.lastCompletedTime !== null;
+
+
+          if (
+            aHasSung !== bHasSung
+          ) {
+
+            return aHasSung ? 1 : -1;
+
+          }
+
+
+          if (
+            !aHasSung &&
+            !bHasSung
+          ) {
+
+            return (
+              a.firstRequestTime -
+              b.firstRequestTime
+            );
+
+          }
+
+
+          return (
+            a.lastCompletedTime -
+            b.lastCompletedTime
+          );
+
+        }
+      );
+
+
+      return {
+        upNextSinger,
+        waiting
+      };
+
+    }
+
+
+    /* LOAD ROTATION */
+
     async function loadRotation() {
 
       const rotation =
-        document.getElementById("rotation");
+        document.getElementById(
+          "rotation"
+        );
 
       const rotationTitle =
-        document.getElementById("rotationTitle");
+        document.getElementById(
+          "rotationTitle"
+        );
 
       const upNextBox =
-        document.getElementById("upNextBox");
+        document.getElementById(
+          "upNextBox"
+        );
 
       const upNextName =
-        document.getElementById("upNextName");
+        document.getElementById(
+          "upNextName"
+        );
 
 
       try {
 
-        const response = await fetch(
+        const response =
+          await fetch(
 
-          `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
+            `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
 
-          {
-            headers: {
-              "apikey": SUPABASE_KEY,
-              "Authorization":
-                `Bearer ${SUPABASE_KEY}`
+            {
+              headers: {
+                "apikey":
+                  SUPABASE_KEY,
+
+                "Authorization":
+                  `Bearer ${SUPABASE_KEY}`
+              }
             }
-          }
 
-        );
+          );
 
 
         if (!response.ok) {
@@ -378,16 +678,16 @@
           await response.json();
 
 
-        /* ACTIVE REQUESTS */
-
         const active =
-          data.filter(request =>
-            request.status !== "completed"
+          data.filter(
+            request =>
+              request.status !==
+              "completed"
           );
 
 
         /*
-          NOBODY AT ALL
+          ABSOLUTELY NOBODY
         */
 
         if (active.length === 0) {
@@ -402,23 +702,34 @@
             needMoreMessage();
 
           return;
+
         }
 
 
         /*
-          FIND UP NEXT
+          BUILD SAME QUEUE
+          AS KJ PAGE
         */
 
-        const upNextRequest =
-          active.find(request =>
-            request.status === "up_next"
-          );
+        const queue =
+          buildRotation(data);
 
 
-        if (upNextRequest) {
+        const upNextSinger =
+          queue.upNextSinger;
+
+        const waiting =
+          queue.waiting;
+
+
+        /*
+          SHOW UP NEXT
+        */
+
+        if (upNextSinger) {
 
           upNextName.textContent =
-            upNextRequest.singer_name;
+            upNextSinger.name;
 
           upNextBox.style.display =
             "block";
@@ -427,183 +738,18 @@
 
         else {
 
+          /*
+            Normally the KJ page will
+            automatically choose Up Next.
+
+            If TV refreshes during that
+            tiny window, don't invent one.
+          */
+
           upNextBox.style.display =
             "none";
 
         }
-
-
-        /*
-          COMPLETED HISTORY
-        */
-
-        const lastCompletedBySinger =
-          new Map();
-
-
-        data.forEach(request => {
-
-          if (
-            request.status !== "completed"
-          ) {
-            return;
-          }
-
-
-          const key =
-            singerKey(request);
-
-
-          if (!key) {
-            return;
-          }
-
-
-          const completedTime =
-            new Date(
-              request.created_at
-            ).getTime();
-
-
-          const existing =
-            lastCompletedBySinger.get(key);
-
-
-          if (
-            existing === undefined ||
-            completedTime > existing
-          ) {
-
-            lastCompletedBySinger.set(
-              key,
-              completedTime
-            );
-
-          }
-
-        });
-
-
-        /*
-          ONE ENTRY PER ACTIVE SINGER
-        */
-
-        const singersByName =
-          new Map();
-
-
-        active.forEach(request => {
-
-          const key =
-            singerKey(request);
-
-
-          if (!key) {
-            return;
-          }
-
-
-          if (
-            !singersByName.has(key)
-          ) {
-
-            singersByName.set(
-              key,
-              {
-                key: key,
-
-                name:
-                  String(
-                    request.singer_name || ""
-                  ).trim(),
-
-                firstRequestTime:
-                  new Date(
-                    request.created_at
-                  ).getTime(),
-
-                lastCompletedTime:
-                  lastCompletedBySinger.has(key)
-                    ? lastCompletedBySinger.get(key)
-                    : null
-              }
-            );
-
-          }
-
-        });
-
-
-        let singers =
-          Array.from(
-            singersByName.values()
-          );
-
-
-        /*
-          REMOVE UP NEXT FROM UPCOMING
-        */
-
-        if (upNextRequest) {
-
-          const upNextKey =
-            singerKey(
-              upNextRequest
-            );
-
-
-          singers =
-            singers.filter(
-              singer =>
-                singer.key !== upNextKey
-            );
-
-        }
-
-
-        /*
-          SORT ROTATION
-        */
-
-        singers.sort(
-          (a, b) => {
-
-            const aHasSung =
-              a.lastCompletedTime !== null;
-
-            const bHasSung =
-              b.lastCompletedTime !== null;
-
-
-            if (
-              aHasSung !== bHasSung
-            ) {
-
-              return aHasSung ? 1 : -1;
-
-            }
-
-
-            if (
-              !aHasSung &&
-              !bHasSung
-            ) {
-
-              return (
-                a.firstRequestTime -
-                b.firstRequestTime
-              );
-
-            }
-
-
-            return (
-              a.lastCompletedTime -
-              b.lastCompletedTime
-            );
-
-          }
-        );
 
 
         rotationTitle.textContent =
@@ -611,27 +757,24 @@
 
 
         /*
-          FIRST SIX UPCOMING SINGERS
+          SHOW UP TO SIX
+          UPCOMING SINGERS
         */
 
         const visibleSingers =
-          singers.slice(
+          waiting.slice(
             0,
             MAX_VISIBLE_SINGERS
           );
 
 
         const hiddenCount =
-          singers.length -
+          waiting.length -
           visibleSingers.length;
 
 
         let rotationHtml = "";
 
-
-        /*
-          BUILD SINGER ROWS
-        */
 
         rotationHtml +=
 
@@ -657,7 +800,8 @@
 
 
         /*
-          MORE THAN SIX WAITING
+          7 OR MORE UPCOMING:
+          SHOW EXTRA COUNT
         */
 
         if (hiddenCount > 0) {
@@ -682,15 +826,16 @@
 
 
         /*
-          FEWER THAN SIX WAITING
+          0-4 UPCOMING:
+          SHOW RECRUITING MESSAGE
 
-          USE THE EMPTY SPACE TO
-          RECRUIT MORE SINGERS.
+          5 OR 6 UPCOMING:
+          NO MESSAGE.
         */
 
         else if (
-          visibleSingers.length <
-          MAX_VISIBLE_SINGERS
+          waiting.length <=
+          RECRUITING_THRESHOLD
         ) {
 
           rotationHtml +=
@@ -717,8 +862,12 @@
     }
 
 
+    /* START */
+
     loadRotation();
 
+
+    /* REFRESH EVERY 5 SECONDS */
 
     setInterval(
       loadRotation,
