@@ -709,7 +709,8 @@
       return (
         request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
-        !isPaused(request)
+        !isPaused(request) &&
+        request.status !== "final3_hold"
       );
 
     }

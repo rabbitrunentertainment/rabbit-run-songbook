@@ -1120,22 +1120,88 @@
         }
 
 
+        /*
+          SAVE THE CHOSEN FINAL 3.
+        */
+
         await saveFinalThreeSetting(
           values
         );
 
-        finalThreeEditing = false;
+
+        /*
+          FINAL 3 MEANS THE NIGHT IS CLOSED
+          TO NEW LIVE REQUESTS.
+        */
+
+        await setLiveRequestsOpen(
+          false
+        );
 
 
         /*
-          If one of the chosen Final 3
-          is currently Up Next, release
-          that Up Next status first.
+          IGNORE EVERYBODY EXCEPT THE
+          THREE CHOSEN FINAL SINGERS.
 
-          loadRequests() will then choose
-          the first NON-final singer.
-          If only the Final 3 remain,
-          Final Singer 1 becomes Up Next.
+          We use final3_hold instead of
+          completed so Clear Final 3 can
+          bring them back if needed.
+        */
+
+        const data =
+          await fetchRequests();
+
+
+        const nonFinalRequests =
+          data.filter(
+            request =>
+              isActive(request) &&
+              !values.includes(
+                singerKey(request)
+              )
+          );
+
+
+        for (
+          const request
+          of nonFinalRequests
+        ) {
+
+          const holdResponse =
+            await fetch(
+
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+
+              {
+                method: "PATCH",
+
+                headers:
+                  apiHeaders(true),
+
+                body: JSON.stringify({
+                  status: "final3_hold"
+                })
+              }
+
+            );
+
+
+          if (!holdResponse.ok) {
+
+            throw new Error(
+              "Could not close out the non-final singers."
+            );
+
+          }
+
+        }
+
+
+        /*
+          RESET UP NEXT.
+
+          loadRequests() will immediately
+          choose Final Singer 1 first.
         */
 
         const resetResponse =
@@ -1166,9 +1232,12 @@
         }
 
 
+        finalThreeEditing = false;
+
         await loadRequests();
 
       }
+
 
       catch (error) {
 
@@ -1182,7 +1251,6 @@
 
     }
 
-
     async function clearFinalThree() {
 
       try {
@@ -1191,11 +1259,47 @@
           []
         );
 
+
+        /*
+          RESTORE ANY SINGERS THAT WERE
+          HIDDEN ONLY BECAUSE FINAL 3
+          MODE WAS ACTIVE.
+        */
+
+        const restoreResponse =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/requests?status=eq.final3_hold`,
+
+            {
+              method: "PATCH",
+
+              headers:
+                apiHeaders(true),
+
+              body: JSON.stringify({
+                status: "waiting"
+              })
+            }
+
+          );
+
+
+        if (!restoreResponse.ok) {
+
+          throw new Error(
+            "Could not restore singers after clearing Final 3."
+          );
+
+        }
+
+
         finalThreeEditing = false;
 
         await loadRequests();
 
       }
+
 
       catch (error) {
 
@@ -1208,7 +1312,6 @@
       }
 
     }
-
 
 
     const LIVE_REQUESTS_SETTING =
@@ -1855,7 +1958,8 @@
       return (
         request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
-        !isPaused(request)
+        !isPaused(request) &&
+        request.status !== "final3_hold"
       );
 
     }
