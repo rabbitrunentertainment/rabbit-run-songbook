@@ -13,33 +13,45 @@
       color: white;
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 18px;
+      padding: 16px;
     }
 
     h1 {
       text-align: center;
-      font-size: 32px;
+      font-size: 30px;
       margin: 0 0 2px;
     }
 
     .subtitle {
       text-align: center;
       color: #d8b4fe;
-      margin-bottom: 16px;
-      font-size: 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
     }
 
     #requests {
-      max-width: 900px;
+      max-width: 1100px;
       margin: auto;
     }
 
     .request {
       background: #1f2937;
       border: 2px solid #7c3aed;
-      border-radius: 10px;
-      padding: 10px 12px;
-      margin-bottom: 8px;
+      border-radius: 9px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+
+      display: grid;
+      grid-template-columns:
+        minmax(110px, 0.8fr)
+        minmax(180px, 1.6fr)
+        minmax(140px, 1.3fr)
+        85px
+        75px
+        auto;
+
+      gap: 10px;
+      align-items: center;
     }
 
     .request.up-next {
@@ -47,62 +59,89 @@
     }
 
     .singer {
-      font-size: 19px;
+      font-size: 16px;
       font-weight: bold;
-      line-height: 1.1;
+      overflow-wrap: anywhere;
     }
 
     .song {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
-      margin-top: 3px;
     }
 
     .artist {
       color: #cbd5e1;
-      margin-top: 2px;
       font-size: 14px;
-    }
-
-    .status-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 5px;
     }
 
     .status {
       color: #f9a8d4;
       font-weight: bold;
       text-transform: uppercase;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .time {
       color: #cbd5e1;
-      font-size: 13px;
+      font-size: 12px;
+    }
+
+    .warnings {
+      grid-column: 1 / -1;
     }
 
     .warning {
       color: #fbbf24;
       font-weight: bold;
-      margin-top: 3px;
-      font-size: 13px;
+      font-size: 12px;
+      margin-top: 2px;
     }
 
     .controls {
       display: flex;
-      gap: 7px;
-      margin-top: 7px;
+      gap: 6px;
+      justify-content: flex-end;
     }
 
     button {
       border: none;
-      border-radius: 7px;
-      padding: 7px 12px;
+      border-radius: 6px;
+      padding: 7px 10px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 750px) {
+
+      .request {
+        display: block;
+        padding: 10px;
+      }
+
+      .singer {
+        font-size: 18px;
+      }
+
+      .song {
+        margin-top: 4px;
+      }
+
+      .artist,
+      .status,
+      .time {
+        margin-top: 3px;
+      }
+
+      .controls {
+        justify-content: flex-start;
+        margin-top: 7px;
+      }
+
+      .warnings {
+        margin-top: 4px;
+      }
     }
   </style>
 </head>
@@ -269,7 +308,7 @@
         }
 
 
-        /* BUILD REQUEST CARDS */
+        /* BUILD COMPACT REQUEST ROWS */
 
         container.innerHTML =
           activeRequests.map(request => {
@@ -307,60 +346,25 @@
                   ${escapeHtml(currentName)}
                 </div>
 
-
-                ${
-                  nameChanged
-
-                    ? `
-                      <div class="warning">
-                        ⚠️ Originally:
-                        ${escapeHtml(originalName)}
-                      </div>
-                    `
-
-                    : ""
-                }
-
-
-                ${
-                  sameDeviceMismatch
-
-                    ? `
-                      <div class="warning">
-                        ⚠️ NAME MISMATCH - SAME DEVICE
-                      </div>
-                    `
-
-                    : ""
-                }
-
-
                 <div class="song">
                   ${escapeHtml(request.song_title)}
                 </div>
-
 
                 <div class="artist">
                   ${escapeHtml(request.artist)}
                 </div>
 
-
-                <div class="status-row">
-
-                  <div class="status">
-                    ${
-                      isUpNext
-                        ? "UP NEXT"
-                        : "WAITING"
-                    }
-                  </div>
-
-                  <div class="time">
-                    ${formatTime(request.created_at)}
-                  </div>
-
+                <div class="status">
+                  ${
+                    isUpNext
+                      ? "UP NEXT"
+                      : "WAITING"
+                  }
                 </div>
 
+                <div class="time">
+                  ${formatTime(request.created_at)}
+                </div>
 
                 <div class="controls">
 
@@ -373,7 +377,6 @@
                     Up Next
                   </button>
 
-
                   <button
                     onclick="finishRequest(
                       ${request.id}
@@ -383,6 +386,44 @@
                   </button>
 
                 </div>
+
+
+                ${
+                  nameChanged || sameDeviceMismatch
+
+                    ? `
+                      <div class="warnings">
+
+                        ${
+                          nameChanged
+
+                            ? `
+                              <div class="warning">
+                                ⚠️ Originally:
+                                ${escapeHtml(originalName)}
+                              </div>
+                            `
+
+                            : ""
+                        }
+
+                        ${
+                          sameDeviceMismatch
+
+                            ? `
+                              <div class="warning">
+                                ⚠️ NAME MISMATCH - SAME DEVICE
+                              </div>
+                            `
+
+                            : ""
+                        }
+
+                      </div>
+                    `
+
+                    : ""
+                }
 
               </div>
 
@@ -494,4 +535,5 @@
   </script>
 
 </body>
+
 </html>
