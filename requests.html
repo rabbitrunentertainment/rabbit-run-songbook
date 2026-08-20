@@ -13,19 +13,20 @@
       color: white;
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 30px;
+      padding: 18px;
     }
 
     h1 {
       text-align: center;
-      font-size: 42px;
-      margin-bottom: 5px;
+      font-size: 32px;
+      margin: 0 0 2px;
     }
 
     .subtitle {
       text-align: center;
       color: #d8b4fe;
-      margin-bottom: 30px;
+      margin-bottom: 16px;
+      font-size: 14px;
     }
 
     #requests {
@@ -36,9 +37,9 @@
     .request {
       background: #1f2937;
       border: 2px solid #7c3aed;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 14px;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
     }
 
     .request.up-next {
@@ -46,53 +47,62 @@
     }
 
     .singer {
-      font-size: 24px;
+      font-size: 19px;
       font-weight: bold;
+      line-height: 1.1;
     }
 
     .song {
-      font-size: 20px;
-      margin-top: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 3px;
     }
 
     .artist {
       color: #cbd5e1;
-      margin-top: 4px;
+      margin-top: 2px;
+      font-size: 14px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 5px;
     }
 
     .status {
       color: #f9a8d4;
-      margin-top: 8px;
       font-weight: bold;
       text-transform: uppercase;
+      font-size: 13px;
     }
 
     .time {
       color: #cbd5e1;
-      margin-top: 5px;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .warning {
       color: #fbbf24;
       font-weight: bold;
-      margin-top: 6px;
-      font-size: 14px;
+      margin-top: 3px;
+      font-size: 13px;
     }
 
     .controls {
       display: flex;
-      gap: 10px;
-      margin-top: 14px;
+      gap: 7px;
+      margin-top: 7px;
     }
 
     button {
       border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
+      border-radius: 7px;
+      padding: 7px 12px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -335,17 +345,20 @@
                 </div>
 
 
-                <div class="status">
-                  ${
-                    isUpNext
-                      ? "UP NEXT"
-                      : "WAITING"
-                  }
-                </div>
+                <div class="status-row">
 
+                  <div class="status">
+                    ${
+                      isUpNext
+                        ? "UP NEXT"
+                        : "WAITING"
+                    }
+                  </div>
 
-                <div class="time">
-                  ${formatTime(request.created_at)}
+                  <div class="time">
+                    ${formatTime(request.created_at)}
+                  </div>
+
                 </div>
 
 
