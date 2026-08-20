@@ -34,6 +34,14 @@
       margin: auto;
     }
 
+    .section-title {
+      max-width: 1100px;
+      margin: 22px auto 8px;
+      color: #d8b4fe;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
     .request {
       background: #1f2937;
       border: 2px solid #7c3aed;
@@ -59,6 +67,12 @@
       background: #29203a;
     }
 
+    .request.paused {
+      border-color: #64748b;
+      background: #18202d;
+      opacity: .9;
+    }
+
     .singer {
       font-size: 16px;
       font-weight: bold;
@@ -82,6 +96,10 @@
       font-size: 12px;
     }
 
+    .paused .status {
+      color: #fbbf24;
+    }
+
     .time {
       color: #cbd5e1;
       font-size: 12px;
@@ -102,6 +120,7 @@
       display: flex;
       gap: 6px;
       justify-content: flex-end;
+      flex-wrap: wrap;
     }
 
     button {
@@ -114,13 +133,19 @@
       white-space: nowrap;
     }
 
-    .up-next-button {
+    .up-next-button,
+    .done-button {
       background: #e5e7eb;
       color: #111827;
     }
 
-    .done-button {
-      background: #e5e7eb;
+    .pause-button {
+      background: #fbbf24;
+      color: #111827;
+    }
+
+    .resume-button {
+      background: #d8b4fe;
       color: #111827;
     }
 
@@ -134,6 +159,18 @@
       color: #d8b4fe;
       font-size: 12px;
       margin-top: 2px;
+    }
+
+    .paused-note {
+      max-width: 1100px;
+      margin: 0 auto 8px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    #pausedRequests {
+      max-width: 1100px;
+      margin: auto;
     }
 
     @media (max-width: 750px) {
@@ -177,6 +214,23 @@
 
   <div id="requests">
     Loading requests...
+  </div>
+
+  <div
+    id="pausedSection"
+    style="display:none;"
+  >
+
+    <div class="section-title">
+      ⏸ Paused Singers
+    </div>
+
+    <div class="paused-note">
+      Saved for later and hidden from the active rotation.
+    </div>
+
+    <div id="pausedRequests"></div>
+
   </div>
 
 
@@ -223,9 +277,6 @@
 
     /* =========================
        SINGER IDENTITY
-
-       Rotation uses singer name,
-       NOT device ID.
        ========================= */
 
     function singerKey(request) {
@@ -235,6 +286,72 @@
       )
         .trim()
         .toLowerCase();
+
+    }
+
+
+    /* =========================
+       STATUS HELPERS
+       ========================= */
+
+    function isPaused(request) {
+
+      return request.status === "paused";
+
+    }
+
+
+    function isCompleted(request) {
+
+      return request.status === "completed";
+
+    }
+
+
+    function isActive(request) {
+
+      return (
+        !isCompleted(request) &&
+        !isPaused(request)
+      );
+
+    }
+
+
+    /*
+      WHEN A PAUSED SINGER IS RESUMED,
+      WE STORE THE RESUME TIME INSIDE
+      THE STATUS.
+
+      THIS LETS THEM GO TO THE BACK
+      WITHOUT NEEDING A NEW DATABASE
+      COLUMN.
+    */
+
+    function resumedTime(request) {
+
+      const status =
+        String(request.status || "");
+
+      if (
+        !status.startsWith(
+          "waiting_resumed_"
+        )
+      ) {
+        return null;
+      }
+
+      const value =
+        Number(
+          status.replace(
+            "waiting_resumed_",
+            ""
+          )
+        );
+
+      return Number.isFinite(value)
+        ? value
+        : null;
 
     }
 
@@ -278,7 +395,7 @@
 
 
     /* =========================
-       FIND DEVICE NAME MISMATCHES
+       DEVICE NAME MISMATCHES
        ========================= */
 
     function findMismatchedDevices(data) {
@@ -340,23 +457,17 @@
 
 
     /* =========================
-       BUILD ROTATION
+       BUILD ACTIVE ROTATION
        ========================= */
 
     function buildRotation(data) {
 
       const active =
-        data.filter(
-          request =>
-            request.status !== "completed"
-        );
+        data.filter(isActive);
 
 
       const completed =
-        data.filter(
-          request =>
-            request.status === "completed"
-        );
+        data.filter(isCompleted);
 
 
       /*
@@ -448,17 +559,39 @@
               lastCompletedTime:
                 lastCompletedBySinger.has(key)
                   ? lastCompletedBySinger.get(key)
-                  : null
+                  : null,
+
+              resumedAt:
+                null
             }
           );
 
         }
 
 
-        singersByName
-          .get(key)
-          .requests
-          .push(request);
+        const singer =
+          singersByName.get(key);
+
+
+        singer.requests.push(request);
+
+
+        const resume =
+          resumedTime(request);
+
+
+        if (
+          resume !== null &&
+          (
+            singer.resumedAt === null ||
+            resume > singer.resumedAt
+          )
+        ) {
+
+          singer.resumedAt =
+            resume;
+
+        }
 
       });
 
@@ -497,13 +630,15 @@
         const upNextRequest =
           singer.requests.find(
             request =>
-              request.status === "up_next"
+              request.status ===
+              "up_next"
           );
 
 
         if (upNextRequest) {
 
           upNextSinger = singer;
+
           upNextSinger.currentRequest =
             upNextRequest;
 
@@ -516,8 +651,8 @@
 
       /*
         EVERY OTHER SINGER'S
-        CURRENT SONG IS THEIR
-        OLDEST ACTIVE REQUEST
+        NEXT SONG IS THEIR
+        OLDEST ACTIVE SONG
       */
 
       singers.forEach(singer => {
@@ -537,19 +672,6 @@
       });
 
 
-      /*
-        SORT THE WAITING SINGERS
-
-        NEW SINGERS FIRST.
-
-        REPEAT SINGERS CYCLE
-        TO THE BACK.
-
-        AMONG REPEAT SINGERS,
-        THE PERSON WHO SANG
-        LONGEST AGO COMES FIRST.
-      */
-
       let waiting =
         singers.filter(
           singer =>
@@ -559,8 +681,56 @@
         );
 
 
+      /*
+        ROTATION ORDER
+
+        1. NEW SINGERS
+        2. REPEAT SINGERS
+        3. RESUMED SINGERS GO LAST
+      */
+
       waiting.sort(
         (a, b) => {
+
+          const aResumed =
+            a.resumedAt !== null;
+
+          const bResumed =
+            b.resumedAt !== null;
+
+
+          /*
+            RESUMED SINGERS
+            ALWAYS GO BEHIND
+            CURRENT ROTATION
+          */
+
+          if (
+            aResumed !== bResumed
+          ) {
+
+            return aResumed ? 1 : -1;
+
+          }
+
+
+          /*
+            IF BOTH WERE RESUMED,
+            EARLIER RESUME GOES FIRST
+          */
+
+          if (
+            aResumed &&
+            bResumed
+          ) {
+
+            return (
+              a.resumedAt -
+              b.resumedAt
+            );
+
+          }
+
 
           const aHasSung =
             a.lastCompletedTime !== null;
@@ -600,11 +770,6 @@
       );
 
 
-      /*
-        UP NEXT ALWAYS FIRST
-        ON KJ SCREEN
-      */
-
       if (upNextSinger) {
 
         return [
@@ -621,10 +786,7 @@
 
 
     /* =========================
-       MAKE ONE REQUEST UP NEXT
-
-       FIRST RESET ANY EXISTING
-       UP NEXT REQUESTS TO WAITING.
+       SET ONE REQUEST UP NEXT
        ========================= */
 
     async function setUpNext(id) {
@@ -668,7 +830,7 @@
 
       /*
         SET SELECTED SONG
-        TO UP NEXT
+        UP NEXT
       */
 
       const response =
@@ -707,17 +869,13 @@
 
 
     /* =========================
-       AUTOMATICALLY CHOOSE
-       UP NEXT IF NONE EXISTS
+       AUTOMATIC UP NEXT
        ========================= */
 
     async function ensureUpNext(data) {
 
       const active =
-        data.filter(
-          request =>
-            request.status !== "completed"
-        );
+        data.filter(isActive);
 
 
       if (active.length === 0) {
@@ -728,7 +886,8 @@
       const existingUpNext =
         active.find(
           request =>
-            request.status === "up_next"
+            request.status ===
+            "up_next"
         );
 
 
@@ -762,6 +921,80 @@
 
 
     /* =========================
+       PAUSED SINGERS
+       ========================= */
+
+    function buildPausedSingers(data) {
+
+      const paused =
+        data.filter(isPaused);
+
+
+      const singers =
+        new Map();
+
+
+      paused.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        if (!singers.has(key)) {
+
+          singers.set(
+            key,
+            {
+              key: key,
+
+              name:
+                String(
+                  request.singer_name || ""
+                ).trim(),
+
+              requests: []
+            }
+          );
+
+        }
+
+
+        singers
+          .get(key)
+          .requests
+          .push(request);
+
+      });
+
+
+      const result =
+        Array.from(
+          singers.values()
+        );
+
+
+      result.forEach(singer => {
+
+        singer.requests.sort(
+          (a, b) =>
+            new Date(a.created_at) -
+            new Date(b.created_at)
+        );
+
+      });
+
+
+      return result;
+
+    }
+
+
+    /* =========================
        LOAD KJ SCREEN
        ========================= */
 
@@ -772,6 +1005,16 @@
           "requests"
         );
 
+      const pausedSection =
+        document.getElementById(
+          "pausedSection"
+        );
+
+      const pausedContainer =
+        document.getElementById(
+          "pausedRequests"
+        );
+
 
       try {
 
@@ -780,9 +1023,7 @@
 
 
         /*
-          IF NOBODY IS UP NEXT,
-          PICK THE FIRST SINGER
-          AUTOMATICALLY.
+          AUTO PICK UP NEXT
         */
 
         const changed =
@@ -797,25 +1038,6 @@
         }
 
 
-        const activeRequests =
-          data.filter(
-            request =>
-              request.status !==
-              "completed"
-          );
-
-
-        if (
-          activeRequests.length === 0
-        ) {
-
-          container.innerHTML =
-            "No song requests yet.";
-
-          return;
-        }
-
-
         const mismatchedDevices =
           findMismatchedDevices(data);
 
@@ -825,217 +1047,362 @@
 
 
         /*
-          BUILD KJ ROWS IN THE
-          SAME ROTATION ORDER
+          ACTIVE ROTATION
         */
 
-        container.innerHTML =
-          rotation.map(singer => {
+        if (rotation.length === 0) {
 
-            const request =
-              singer.currentRequest;
+          container.innerHTML =
+            "No active singers right now.";
 
+        }
 
-            if (!request) {
-              return "";
-            }
+        else {
 
+          container.innerHTML =
+            rotation.map(singer => {
 
-            const currentName =
-              String(
-                request.singer_name || ""
-              ).trim();
+              const request =
+                singer.currentRequest;
 
 
-            const originalName =
-              String(
-                request.original_name || ""
-              ).trim();
+              if (!request) {
+                return "";
+              }
 
 
-            const nameChanged =
-              originalName &&
-              originalName.toLowerCase() !==
-              currentName.toLowerCase();
+              const currentName =
+                String(
+                  request.singer_name || ""
+                ).trim();
 
 
-            const sameDeviceMismatch =
-              request.singer_id &&
-              mismatchedDevices.has(
-                request.singer_id
-              );
+              const originalName =
+                String(
+                  request.original_name || ""
+                ).trim();
 
 
-            const isUpNext =
-              request.status ===
-              "up_next";
+              const nameChanged =
+                originalName &&
+                originalName.toLowerCase() !==
+                currentName.toLowerCase();
 
 
-            const extraSongCount =
-              singer.requests.length - 1;
+              const sameDeviceMismatch =
+                request.singer_id &&
+                mismatchedDevices.has(
+                  request.singer_id
+                );
 
 
-            return `
-
-              <div
-                class="request
-                ${isUpNext ? "up-next" : ""}"
-              >
-
-                <div class="singer">
-                  ${escapeHtml(
-                    currentName
-                  )}
-                </div>
+              const isUpNext =
+                request.status ===
+                "up_next";
 
 
-                <div class="song">
-                  ${escapeHtml(
-                    request.song_title
-                  )}
-                </div>
+              const extraSongCount =
+                singer.requests.length - 1;
 
 
-                <div class="artist">
-                  ${escapeHtml(
-                    request.artist
-                  )}
-                </div>
+              return `
+
+                <div
+                  class="request
+                  ${isUpNext ? "up-next" : ""}"
+                >
+
+                  <div class="singer">
+                    ${escapeHtml(
+                      currentName
+                    )}
+                  </div>
 
 
-                <div class="status">
+                  <div class="song">
+                    ${escapeHtml(
+                      request.song_title
+                    )}
+                  </div>
+
+
+                  <div class="artist">
+                    ${escapeHtml(
+                      request.artist
+                    )}
+                  </div>
+
+
+                  <div class="status">
+
+                    ${
+                      isUpNext
+                        ? "UP NEXT"
+                        : "WAITING"
+                    }
+
+                  </div>
+
+
+                  <div class="time">
+                    ${formatTime(
+                      request.created_at
+                    )}
+                  </div>
+
+
+                  <div class="controls">
+
+                    ${
+                      isUpNext
+
+                        ? `
+                          <button
+                            class="current-button"
+                            disabled
+                          >
+                            Up Next
+                          </button>
+                        `
+
+                        : `
+                          <button
+                            class="up-next-button"
+                            onclick="manualUpNext(
+                              ${request.id}
+                            )"
+                          >
+                            Up Next
+                          </button>
+                        `
+                    }
+
+
+                    <button
+                      class="pause-button"
+                      onclick='pauseSinger(
+                        ${JSON.stringify(
+                          singer.key
+                        )}
+                      )'
+                    >
+                      Pause
+                    </button>
+
+
+                    <button
+                      class="done-button"
+                      onclick="finishRequest(
+                        ${request.id}
+                      )"
+                    >
+                      Done
+                    </button>
+
+                  </div>
+
 
                   ${
-                    isUpNext
-                      ? "UP NEXT"
-                      : "WAITING"
-                  }
-
-                </div>
-
-
-                <div class="time">
-                  ${formatTime(
-                    request.created_at
-                  )}
-                </div>
-
-
-                <div class="controls">
-
-                  ${
-                    isUpNext
+                    extraSongCount > 0
 
                       ? `
-                        <button
-                          class="current-button"
-                          disabled
-                        >
-                          Up Next
-                        </button>
+                        <div class="extra-songs">
+
+                          + ${extraSongCount}
+                          more
+                          ${
+                            extraSongCount === 1
+                              ? "song"
+                              : "songs"
+                          }
+                          waiting for
+                          ${escapeHtml(
+                            currentName
+                          )}
+
+                        </div>
                       `
 
-                      : `
-                        <button
-                          class="up-next-button"
-                          onclick="manualUpNext(
-                            ${request.id}
-                          )"
-                        >
-                          Up Next
-                        </button>
-                      `
+                      : ""
                   }
 
 
-                  <button
-                    class="done-button"
-                    onclick="finishRequest(
-                      ${request.id}
-                    )"
-                  >
-                    Done
-                  </button>
+                  ${
+                    nameChanged ||
+                    sameDeviceMismatch
+
+                      ? `
+                        <div class="warnings">
+
+                          ${
+                            nameChanged
+
+                              ? `
+                                <div class="warning">
+
+                                  ⚠️ Originally:
+                                  ${escapeHtml(
+                                    originalName
+                                  )}
+
+                                </div>
+                              `
+
+                              : ""
+                          }
+
+
+                          ${
+                            sameDeviceMismatch
+
+                              ? `
+                                <div class="warning">
+
+                                  ⚠️ NAME MISMATCH -
+                                  SAME DEVICE
+
+                                </div>
+                              `
+
+                              : ""
+                          }
+
+                        </div>
+                      `
+
+                      : ""
+                  }
 
                 </div>
 
+              `;
 
-                ${
-                  extraSongCount > 0
+            }).join("");
 
-                    ? `
-                      <div class="extra-songs">
+        }
 
-                        + ${extraSongCount}
-                        more
-                        ${
-                          extraSongCount === 1
-                            ? "song"
-                            : "songs"
-                        }
-                        waiting for
-                        ${escapeHtml(
-                          currentName
+
+        /*
+          PAUSED SECTION
+        */
+
+        const pausedSingers =
+          buildPausedSingers(data);
+
+
+        if (
+          pausedSingers.length === 0
+        ) {
+
+          pausedSection.style.display =
+            "none";
+
+          pausedContainer.innerHTML =
+            "";
+
+        }
+
+        else {
+
+          pausedSection.style.display =
+            "block";
+
+
+          pausedContainer.innerHTML =
+            pausedSingers.map(singer => {
+
+              const request =
+                singer.requests[0];
+
+
+              const songCount =
+                singer.requests.length;
+
+
+              return `
+
+                <div class="request paused">
+
+                  <div class="singer">
+                    ${escapeHtml(
+                      singer.name
+                    )}
+                  </div>
+
+
+                  <div class="song">
+                    ${escapeHtml(
+                      request.song_title
+                    )}
+                  </div>
+
+
+                  <div class="artist">
+                    ${escapeHtml(
+                      request.artist
+                    )}
+                  </div>
+
+
+                  <div class="status">
+                    PAUSED
+                  </div>
+
+
+                  <div class="time">
+                    ${songCount}
+                    ${
+                      songCount === 1
+                        ? "song"
+                        : "songs"
+                    }
+                  </div>
+
+
+                  <div class="controls">
+
+                    <button
+                      class="resume-button"
+                      onclick='resumeSinger(
+                        ${JSON.stringify(
+                          singer.key
                         )}
+                      )'
+                    >
+                      Resume
+                    </button>
 
-                      </div>
-                    `
-
-                    : ""
-                }
-
-
-                ${
-                  nameChanged ||
-                  sameDeviceMismatch
-
-                    ? `
-                      <div class="warnings">
-
-                        ${
-                          nameChanged
-
-                            ? `
-                              <div class="warning">
-
-                                ⚠️ Originally:
-                                ${escapeHtml(
-                                  originalName
-                                )}
-
-                              </div>
-                            `
-
-                            : ""
-                        }
+                  </div>
 
 
-                        ${
-                          sameDeviceMismatch
+                  ${
+                    songCount > 1
 
-                            ? `
-                              <div class="warning">
+                      ? `
+                        <div class="extra-songs">
 
-                                ⚠️ NAME MISMATCH -
-                                SAME DEVICE
+                          + ${songCount - 1}
+                          more
+                          ${
+                            songCount - 1 === 1
+                              ? "song"
+                              : "songs"
+                          }
+                          saved for later
 
-                              </div>
-                            `
+                        </div>
+                      `
 
-                            : ""
-                        }
+                      : ""
+                  }
 
-                      </div>
-                    `
+                </div>
 
-                    : ""
-                }
+              `;
 
-              </div>
+            }).join("");
 
-            `;
-
-          }).join("");
+        }
 
       }
 
@@ -1053,7 +1420,7 @@
 
 
     /* =========================
-       MANUAL UP NEXT OVERRIDE
+       MANUAL UP NEXT
        ========================= */
 
     async function manualUpNext(id) {
@@ -1080,14 +1447,197 @@
 
 
     /* =========================
+       PAUSE SINGER
+
+       PAUSES ALL REMAINING
+       REQUESTS FOR THAT SINGER.
+       ========================= */
+
+    async function pauseSinger(key) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+
+        const singerRequests =
+          data.filter(
+            request =>
+              isActive(request) &&
+              singerKey(request) === key
+          );
+
+
+        if (
+          singerRequests.length === 0
+        ) {
+          return;
+        }
+
+
+        for (
+          const request of singerRequests
+        ) {
+
+          const response =
+            await fetch(
+
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+
+              {
+                method: "PATCH",
+
+                headers: {
+                  "apikey":
+                    SUPABASE_KEY,
+
+                  "Authorization":
+                    `Bearer ${SUPABASE_KEY}`,
+
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  status: "paused"
+                })
+              }
+
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Could not pause singer."
+            );
+
+          }
+
+        }
+
+
+        /*
+          IF THEY WERE UP NEXT,
+          LOADREQUESTS WILL
+          AUTOMATICALLY ADVANCE.
+        */
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not pause this singer."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       RESUME SINGER
+
+       RESTORES ALL THEIR SONGS
+       AND PUTS THEM AT THE BACK.
+       ========================= */
+
+    async function resumeSinger(key) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+
+        const singerRequests =
+          data.filter(
+            request =>
+              isPaused(request) &&
+              singerKey(request) === key
+          );
+
+
+        if (
+          singerRequests.length === 0
+        ) {
+          return;
+        }
+
+
+        const resumeStatus =
+          `waiting_resumed_${Date.now()}`;
+
+
+        for (
+          const request of singerRequests
+        ) {
+
+          const response =
+            await fetch(
+
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+
+              {
+                method: "PATCH",
+
+                headers: {
+                  "apikey":
+                    SUPABASE_KEY,
+
+                  "Authorization":
+                    `Bearer ${SUPABASE_KEY}`,
+
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  status: resumeStatus
+                })
+              }
+
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Could not resume singer."
+            );
+
+          }
+
+        }
+
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not resume this singer."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
        DONE
-
-       MARK CURRENT SONG
-       COMPLETED.
-
-       THEN LOADREQUESTS()
-       AUTOMATICALLY CHOOSES
-       THE NEXT SINGER.
        ========================= */
 
     async function finishRequest(id) {
@@ -1128,13 +1678,8 @@
 
 
         /*
-          RELOAD.
-
-          SINCE THE OLD UP NEXT
-          IS NOW COMPLETED,
-          LOADREQUESTS WILL
-          AUTOMATICALLY SELECT
-          THE NEXT SINGER.
+          AUTOMATICALLY ADVANCE
+          TO NEXT AVAILABLE SINGER
         */
 
         await loadRequests();
