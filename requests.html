@@ -480,6 +480,24 @@
 
     @media (max-width: 750px) {
 
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .wishlist-control {
+        order: 999;
+        width: 100%;
+        margin: 18px auto 28px;
+        justify-content: center;
+      }
+
+      .wishlist-panel {
+        order: 998;
+        width: calc(100% - 20px);
+        margin: 12px auto 8px;
+      }
+
       .wishlist-item {
         display: block;
       }
