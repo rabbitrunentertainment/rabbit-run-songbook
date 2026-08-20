@@ -37,6 +37,7 @@
       padding: 8px 340px 0;
     }
 
+    /* DESKTOP LOGO */
     .logo {
       position: fixed;
       top: 115px;
@@ -196,15 +197,37 @@
       font-size: 13px;
     }
 
+
+    /* =========================
+       MOBILE
+       ========================= */
+
     @media (max-width: 700px) {
+
       header {
         min-height: 0;
         padding: 90px 0 0;
       }
 
+      /*
+        IMPORTANT:
+        On mobile the logo is NOT fixed.
+
+        It stays with the header and
+        scrolls normally with the page.
+      */
+
       .logo {
-        width: min(220px, 55vw);
-        max-height: 90px;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 120px;
+        height: 120px;
+        max-height: none;
+        object-fit: contain;
+        transform: none;
+        transform-origin: center;
+        z-index: 1;
       }
 
       .up-next-box {
@@ -227,8 +250,10 @@
         grid-template-columns: 42px 1fr;
       }
     }
+
   </style>
 </head>
+
 
 <body>
 
@@ -242,9 +267,14 @@
         alt="Rabbit Run Entertainment"
       >
 
-      <div id="venueName" class="venue-name"></div>
+      <div
+        id="venueName"
+        class="venue-name"
+      ></div>
 
-      <h1>🎤 Karaoke Rotation</h1>
+      <h1>
+        🎤 Karaoke Rotation
+      </h1>
 
     </header>
 
@@ -331,20 +361,28 @@
     const VENUE_NAME_SETTING =
       "VENUE_NAME";
 
+
     function getVenueName(data) {
-      const settings = data
-        .filter(request =>
-          request.singer_name === SETTINGS_SINGER &&
-          request.song_title === VENUE_NAME_SETTING
-        )
-        .sort((a, b) =>
-          new Date(b.created_at) - new Date(a.created_at)
-        );
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === VENUE_NAME_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
 
       return settings.length > 0
         ? String(settings[0].artist || "").trim()
         : "";
+
     }
+
 
     function getTvDisplayCount(data) {
 
@@ -374,12 +412,6 @@
 
     }
 
-
-    /*
-      SHOW RECRUITING MESSAGE
-      WHEN THERE ARE 0-4
-      UPCOMING SINGERS.
-    */
 
     const RECRUITING_THRESHOLD = 4;
 
@@ -414,7 +446,9 @@
       try {
 
         const value =
-          JSON.parse(settings[0].artist || "[]");
+          JSON.parse(
+            settings[0].artist || "[]"
+          );
 
         return Array.isArray(value)
           ? value.map(String)
@@ -478,14 +512,20 @@
             positions.has(b.key);
 
           if (aSaved && bSaved) {
+
             return (
               positions.get(a.key) -
               positions.get(b.key)
             );
+
           }
 
           if (aSaved !== bSaved) {
-            return aSaved ? -1 : 1;
+
+            return aSaved
+              ? -1
+              : 1;
+
           }
 
           return (
@@ -570,15 +610,6 @@
     }
 
 
-    /*
-      RESUMED SINGERS HAVE A
-      TIMESTAMP STORED IN STATUS.
-
-      EXAMPLE:
-
-      waiting_resumed_123456789
-    */
-
     function resumedTime(request) {
 
       const status =
@@ -639,22 +670,11 @@
 
 
     /* =========================
-       BUILD SAME ROTATION AS KJ
+       BUILD ROTATION
        ========================= */
 
     function buildRotation(data) {
 
-
-      /*
-        IMPORTANT:
-
-        COMPLETED = NOT ACTIVE
-        PAUSED = NOT ACTIVE
-
-        THIS IS THE CHANGE THAT
-        MAKES PAUSED SINGERS
-        DISAPPEAR FROM THE TV.
-      */
 
       const active =
         data.filter(isActive);
@@ -663,11 +683,6 @@
       const completed =
         data.filter(isCompleted);
 
-
-      /*
-        FIND LAST COMPLETED TURN
-        FOR EACH SINGER
-      */
 
       const lastCompletedBySinger =
         new Map();
@@ -708,11 +723,6 @@
 
       });
 
-
-      /*
-        GROUP ACTIVE REQUESTS
-        BY SINGER
-      */
 
       const singersByName =
         new Map();
@@ -769,11 +779,6 @@
         singer.requests.push(request);
 
 
-        /*
-          FIND RESUME TIME FOR
-          THIS SINGER IF PRESENT
-        */
-
         const resume =
           resumedTime(request);
 
@@ -800,11 +805,6 @@
         );
 
 
-      /*
-        SORT EACH SINGER'S SONGS
-        OLDEST FIRST
-      */
-
       singers.forEach(singer => {
 
         singer.requests.sort(
@@ -815,10 +815,6 @@
 
       });
 
-
-      /*
-        FIND CURRENT UP NEXT
-      */
 
       let upNextSinger = null;
 
@@ -835,7 +831,8 @@
 
         if (upNextRequest) {
 
-          upNextSinger = singer;
+          upNextSinger =
+            singer;
 
           upNextSinger.currentRequest =
             upNextRequest;
@@ -846,12 +843,6 @@
 
       }
 
-
-      /*
-        EVERY OTHER SINGER'S
-        CURRENT SONG IS THEIR
-        OLDEST ACTIVE REQUEST
-      */
 
       singers.forEach(singer => {
 
@@ -870,11 +861,6 @@
       });
 
 
-      /*
-        REMOVE UP NEXT FROM
-        WAITING ROTATION
-      */
-
       let waiting =
         singers.filter(
           singer =>
@@ -883,16 +869,6 @@
             upNextSinger.key
         );
 
-
-      /*
-        SAME SORT AS KJ:
-
-        - NEW SINGERS FIRST
-        - REPEAT SINGERS AFTER THEM
-        - RESUMED SINGERS GO TO
-          THE BACK OF THE CURRENT
-          ROTATION
-      */
 
       waiting.sort(
         (a, b) => {
@@ -904,24 +880,16 @@
             b.resumedAt !== null;
 
 
-          /*
-            RESUMED SINGER GOES
-            BEHIND CURRENT ROTATION
-          */
-
           if (
             aResumed !== bResumed
           ) {
 
-            return aResumed ? 1 : -1;
+            return aResumed
+              ? 1
+              : -1;
 
           }
 
-
-          /*
-            IF BOTH WERE RESUMED,
-            FIRST RESUMED GOES FIRST
-          */
 
           if (
             aResumed &&
@@ -943,24 +911,16 @@
             b.lastCompletedTime !== null;
 
 
-          /*
-            NEW SINGERS BEFORE
-            REPEAT SINGERS
-          */
-
           if (
             aHasSung !== bHasSung
           ) {
 
-            return aHasSung ? 1 : -1;
+            return aHasSung
+              ? 1
+              : -1;
 
           }
 
-
-          /*
-            BOTH NEW:
-            OLDEST REQUEST FIRST
-          */
 
           if (
             !aHasSung &&
@@ -975,12 +935,6 @@
           }
 
 
-          /*
-            BOTH REPEAT:
-            WHOEVER SANG LONGEST
-            AGO GOES FIRST
-          */
-
           return (
             a.lastCompletedTime -
             b.lastCompletedTime
@@ -989,11 +943,6 @@
         }
       );
 
-
-      /*
-        APPLY KJ MANUAL UP / DOWN
-        ORDER AFTER NORMAL SORT.
-      */
 
       waiting =
         applyManualOrder(
@@ -1046,11 +995,13 @@
 
             {
               headers: {
+
                 "apikey":
                   SUPABASE_KEY,
 
                 "Authorization":
                   `Bearer ${SUPABASE_KEY}`
+
               }
             }
 
@@ -1070,34 +1021,22 @@
         const data =
           await response.json();
 
-        document.getElementById(
-          "venueName"
-        ).textContent = getVenueName(data);
 
+        document
+          .getElementById(
+            "venueName"
+          )
+          .textContent =
+            getVenueName(data);
 
-        /*
-          READ THE KJ'S CURRENT
-          2 / 4 / 6 TV SETTING
-        */
 
         const tvDisplayCount =
           getTvDisplayCount(data);
 
 
-        /*
-          ONLY ACTIVE REQUESTS COUNT.
-
-          PAUSED REQUESTS ARE
-          COMPLETELY IGNORED HERE.
-        */
-
         const active =
           data.filter(isActive);
 
-
-        /*
-          ABSOLUTELY NOBODY ACTIVE
-        */
 
         if (active.length === 0) {
 
@@ -1115,11 +1054,6 @@
         }
 
 
-        /*
-          BUILD SAME QUEUE
-          AS KJ PAGE
-        */
-
         const queue =
           buildRotation(data);
 
@@ -1130,10 +1064,6 @@
         const waiting =
           queue.waiting;
 
-
-        /*
-          SHOW UP NEXT
-        */
 
         if (upNextSinger) {
 
@@ -1147,16 +1077,6 @@
 
         else {
 
-          /*
-            KJ PAGE NORMALLY
-            AUTOMATICALLY CHOOSES
-            UP NEXT.
-
-            DURING THE TINY WINDOW
-            BEFORE THAT HAPPENS,
-            DON'T INVENT ONE.
-          */
-
           upNextBox.style.display =
             "none";
 
@@ -1166,11 +1086,6 @@
         rotationTitle.textContent =
           "Upcoming Singers";
 
-
-        /*
-          SHOW THE NUMBER SELECTED
-          ON THE KJ PAGE: 2, 4, OR 6.
-        */
 
         const visibleSingers =
           waiting.slice(
@@ -1210,13 +1125,6 @@
           ).join("");
 
 
-        /*
-          IF THE KJ CHOOSES TO SHOW
-          FEWER PEOPLE THAN ARE WAITING,
-          TELL THE CROWD HOW MANY MORE
-          ARE STILL IN THE REAL QUEUE.
-        */
-
         if (hiddenCount > 0) {
 
           rotationHtml += `
@@ -1237,14 +1145,6 @@
 
         }
 
-
-        /*
-          RECRUITING USES THE REAL
-          ACTIVE WAITING COUNT, NOT
-          THE 2 / 4 / 6 DISPLAY CHOICE.
-
-          PAUSED SINGERS DO NOT COUNT.
-        */
 
         if (
           waiting.length <=
