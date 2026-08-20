@@ -26,32 +26,40 @@
     .wrap {
       width: min(1200px, 94vw);
       margin: auto;
-      padding: 30px 20px 50px;
+      padding: 20px 20px 35px;
     }
 
     header {
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: min(250px, 40vw);
+      max-height: 150px;
+      object-fit: contain;
+      margin-bottom: 5px;
+      filter: drop-shadow(0 0 18px rgba(166,66,255,.3));
     }
 
     h1 {
-      font-size: clamp(36px, 5vw, 64px);
+      font-size: clamp(32px, 4vw, 54px);
       margin: 0;
     }
 
     .subtitle {
       color: #d8b4fe;
-      font-size: clamp(16px, 2vw, 22px);
-      margin-top: 6px;
+      font-size: clamp(15px, 2vw, 20px);
+      margin-top: 4px;
     }
 
     .up-next-box {
       border: 3px solid #d42fc5;
       background: rgba(212, 47, 197, 0.12);
       border-radius: 18px;
-      padding: 20px;
+      padding: 16px;
       text-align: center;
-      margin-bottom: 28px;
+      margin-bottom: 20px;
       box-shadow: 0 0 24px rgba(212, 47, 197, 0.18);
     }
 
@@ -63,72 +71,105 @@
     }
 
     .up-next-name {
-      font-size: clamp(38px, 6vw, 72px);
+      font-size: clamp(34px, 5vw, 62px);
       font-weight: bold;
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
     .rotation-title {
       text-align: center;
-      font-size: 25px;
-      margin-bottom: 14px;
+      font-size: 24px;
+      margin-bottom: 12px;
       color: #d8b4fe;
+      font-weight: bold;
     }
 
     #rotation {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .rotation-row {
       display: grid;
-      grid-template-columns: 70px 1fr;
+      grid-template-columns: 65px 1fr;
       align-items: center;
-
       background: rgba(31, 41, 55, 0.92);
       border: 2px solid #7c3aed;
       border-radius: 12px;
-      padding: 13px 18px;
+      padding: 10px 16px;
     }
 
     .position {
       color: #d8b4fe;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: bold;
     }
 
     .name {
-      font-size: clamp(22px, 3vw, 34px);
+      font-size: clamp(21px, 2.5vw, 31px);
       font-weight: bold;
     }
 
     .empty {
       text-align: center;
       color: #b9b8c7;
-      font-size: 24px;
-      padding: 50px 20px;
+      font-size: 22px;
+      padding: 35px 20px;
+    }
+
+    .qr-section {
+      margin: 22px auto 0;
+      text-align: center;
+    }
+
+    .qr-title {
+      font-size: clamp(20px, 2.5vw, 28px);
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .qr-subtitle {
+      color: #d8b4fe;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .qr {
+      width: min(180px, 30vw);
+      height: auto;
+      background: white;
+      padding: 6px;
+      border-radius: 10px;
     }
 
     footer {
       text-align: center;
       color: #b9b8c7;
-      margin-top: 30px;
-      font-size: 15px;
+      margin-top: 14px;
+      font-size: 14px;
     }
 
     @media (max-width: 600px) {
 
       .wrap {
-        padding: 20px 12px 40px;
+        padding: 15px 12px 30px;
+      }
+
+      .logo {
+        width: min(220px, 65vw);
       }
 
       .rotation-row {
-        grid-template-columns: 45px 1fr;
-        padding: 11px 13px;
+        grid-template-columns: 42px 1fr;
+        padding: 10px 12px;
       }
 
       .position {
         font-size: 17px;
+      }
+
+      .qr {
+        width: min(170px, 48vw);
       }
     }
   </style>
@@ -139,10 +180,19 @@
   <div class="wrap">
 
     <header>
+
+      <img
+        class="logo"
+        src="Rabbit Run logo with effects-clear bkgd.png"
+        alt="Rabbit Run Entertainment"
+      >
+
       <h1>🎤 Karaoke Rotation</h1>
+
       <div class="subtitle">
         Rabbit Run Entertainment
       </div>
+
     </header>
 
 
@@ -170,9 +220,30 @@
 
 
     <div id="rotation">
+
       <div class="empty">
         Loading rotation...
       </div>
+
+    </div>
+
+
+    <div class="qr-section">
+
+      <div class="qr-title">
+        Want to Sing? 🎤
+      </div>
+
+      <div class="qr-subtitle">
+        Scan to Search & Request Songs
+      </div>
+
+      <img
+        class="qr"
+        src="Rabbit_Run_Songbook_QR_with_Logo (1).png"
+        alt="Scan to open the Rabbit Run Karaoke Song Book"
+      >
+
     </div>
 
 
@@ -192,8 +263,6 @@
       "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
 
 
-    /* SAFE DISPLAY TEXT */
-
     const escapeHtml = value =>
       String(value ?? "").replace(
         /[&<>"']/g,
@@ -206,8 +275,6 @@
         }[character])
       );
 
-
-    /* LOAD ROTATION */
 
     async function loadRotation() {
 
@@ -253,8 +320,6 @@
           await response.json();
 
 
-        /* ACTIVE REQUESTS ONLY */
-
         const active =
           data.filter(request =>
             request.status !== "completed"
@@ -274,8 +339,6 @@
           return;
         }
 
-
-        /* FIND UP NEXT */
 
         const upNextRequest =
           active.find(request =>
@@ -301,28 +364,11 @@
         }
 
 
-        /*
-          BUILD SINGER ROTATION
-
-          Only the singer's oldest active
-          request determines their first
-          position in the rotation.
-
-          singer_id is used when available.
-          Name is the fallback.
-        */
-
         const singers = [];
         const seenSingers = new Set();
 
 
         active.forEach(request => {
-
-          /*
-            Do not repeat the person
-            already marked UP NEXT
-            in the upcoming list.
-          */
 
           if (
             upNextRequest &&
@@ -353,6 +399,7 @@
 
 
           singers.push({
+
             name:
               String(
                 request.singer_name || ""
@@ -360,6 +407,7 @@
 
             created_at:
               request.created_at
+
           });
 
         });
@@ -375,8 +423,6 @@
           return;
         }
 
-
-        /* DISPLAY ROTATION */
 
         rotation.innerHTML =
           singers.map(
@@ -413,12 +459,8 @@
     }
 
 
-    /* START */
-
     loadRotation();
 
-
-    /* REFRESH EVERY 5 SECONDS */
 
     setInterval(
       loadRotation,
