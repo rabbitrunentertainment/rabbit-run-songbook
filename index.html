@@ -40,7 +40,7 @@ body {
 
 
 /* =========================
-   TOP SECTION
+   HEADER
    ========================= */
 
 header {
@@ -62,9 +62,38 @@ h1 {
 .tag {
   font-size:clamp(20px,4vw,28px);
   color:#e17ce1;
-  margin:0 0 32px;
+  margin:0 0 24px;
   font-style:italic;
   font-weight:bold;
+}
+
+
+/* =========================
+   ROTATION INSTRUCTIONS
+   ========================= */
+
+.rotation-intro {
+  text-align:center;
+  margin:4px auto 18px;
+}
+
+.rotation-intro h2 {
+  margin:0 0 6px;
+  font-size:clamp(25px,5vw,34px);
+  color:#f07ae8;
+  text-shadow:
+    0 0 12px rgba(212,47,197,.35);
+}
+
+.rotation-intro p {
+  margin:0;
+  color:#f1f1f7;
+  font-size:clamp(15px,3vw,18px);
+  line-height:1.45;
+}
+
+.rotation-intro strong {
+  color:#8bbcff;
 }
 
 
@@ -75,8 +104,8 @@ h1 {
 .searchbox {
   position:sticky;
   top:0;
-  padding:14px 0 16px;
-  background:linear-gradient(#050711 70%,transparent);
+  padding:10px 0 14px;
+  background:transparent;
   z-index:3;
 }
 
@@ -257,6 +286,29 @@ input {
 
 </header>
 
+
+<!-- =========================
+     ROTATION INSTRUCTIONS
+     ========================= -->
+
+<section class="rotation-intro">
+
+  <h2>
+    🎤 Pick It. Sing It. Hop In!
+  </h2>
+
+  <p>
+    Search for your song, tap
+    <strong>“Request This Song”</strong>,
+    and you're in the rotation!
+  </p>
+
+</section>
+
+
+<!-- =========================
+     SEARCH
+     ========================= -->
 
 <div class="searchbox">
 
