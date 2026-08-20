@@ -106,7 +106,6 @@
     Loading requests...
   </div>
 
-
   <script>
 
     const SUPABASE_URL =
@@ -242,7 +241,7 @@
           );
 
 
-        /* ACTIVE REQUESTS ONLY */
+        /* ACTIVE REQUESTS */
 
         const activeRequests =
           data.filter(
@@ -392,7 +391,7 @@
     }
 
 
-    /* MARK REQUEST UP NEXT */
+    /* UP NEXT */
 
     async function updateStatus(
       id,
@@ -472,7 +471,7 @@
     loadRequests();
 
 
-    /* REFRESH EVERY 5 SECONDS */
+    /* AUTO REFRESH EVERY 5 SECONDS */
 
     setInterval(
       loadRequests,
