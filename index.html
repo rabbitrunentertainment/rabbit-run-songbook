@@ -735,12 +735,10 @@ function render() {
         </span>
 
         <button
-          ${liveRequestsOpen
-            ? `onclick='requestSong(
-                ${JSON.stringify(song.title)},
-                ${JSON.stringify(song.artist)}
-              )'`
-            : 'disabled'}
+          class="live-song-request-button"
+          type="button"
+          data-title="${encodeURIComponent(song.title)}"
+          data-artist="${encodeURIComponent(song.artist)}"
         >
           ${liveRequestsOpen
             ? 'Request This Song'
@@ -1091,6 +1089,61 @@ async function submitWishlistSong() {
 wishlistButton.addEventListener(
   'click',
   submitWishlistSong
+);
+
+
+/* =========================
+   SAFE LIVE REQUEST BUTTONS
+
+   Uses one click listener instead of
+   inline onclick code, so song titles
+   containing quotes/apostrophes cannot
+   break the button.
+   ========================= */
+
+results.addEventListener(
+  'click',
+  event => {
+
+    const button =
+      event.target.closest(
+        '.live-song-request-button'
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    if (!liveRequestsOpen) {
+
+      alert(
+        "Tonight's live karaoke rotation is closed to new requests."
+      );
+
+      return;
+    }
+
+
+    const title =
+      decodeURIComponent(
+        button.dataset.title || ""
+      );
+
+
+    const artist =
+      decodeURIComponent(
+        button.dataset.artist || ""
+      );
+
+
+    requestSong(
+      title,
+      artist
+    );
+
+  }
 );
 
 
