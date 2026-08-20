@@ -330,7 +330,70 @@
       margin-left: 8px;
     }
 
+
+    .final-three-control {
+      max-width: 1100px;
+      margin: 0 auto 14px;
+      padding: 10px;
+      border: 2px solid #7c3aed;
+      border-radius: 10px;
+      background: #1f2937;
+    }
+
+    .final-three-title {
+      text-align: center;
+      color: #f9a8d4;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .final-three-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .final-three-grid select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 7px;
+      border: 1px solid #64748b;
+      background: #111827;
+      color: white;
+      font-size: 14px;
+    }
+
+    .final-three-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .final-three-button {
+      background: #d42fc5;
+      color: white;
+    }
+
+    .clear-final-three-button {
+      background: #374151;
+      color: white;
+    }
+
+    .final-three-status {
+      text-align: center;
+      margin-top: 8px;
+      color: #d8b4fe;
+      font-size: 12px;
+      min-height: 16px;
+    }
+
     @media (max-width: 750px) {
+
+      .final-three-grid {
+        grid-template-columns: 1fr;
+      }
 
       .request {
         display: block;
@@ -421,6 +484,56 @@
     >
       OPEN
     </button>
+  </div>
+
+
+  <div class="final-three-control">
+
+    <div class="final-three-title">
+      🎤 FINAL 3 SINGERS
+    </div>
+
+    <div class="final-three-grid">
+
+      <select id="finalSinger1">
+        <option value="">Final Singer 1</option>
+      </select>
+
+      <select id="finalSinger2">
+        <option value="">Final Singer 2</option>
+      </select>
+
+      <select id="finalSinger3">
+        <option value="">Final Singer 3</option>
+      </select>
+
+    </div>
+
+    <div class="final-three-actions">
+
+      <button
+        class="final-three-button"
+        onclick="saveFinalThree()"
+      >
+        Set Final 3
+      </button>
+
+      <button
+        class="clear-final-three-button"
+        onclick="clearFinalThree()"
+      >
+        Clear Final 3
+      </button>
+
+    </div>
+
+    <div
+      id="finalThreeStatus"
+      class="final-three-status"
+    >
+      Choose the final three singers in order.
+    </div>
+
   </div>
 
   <div class="tv-display-control">
@@ -592,6 +705,409 @@
 
     const VENUE_NAME_SETTING =
       "VENUE_NAME";
+
+    const FINAL_THREE_SETTING =
+      "FINAL_THREE";
+
+
+    function getFinalThree(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === FINAL_THREE_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return [];
+      }
+
+      try {
+
+        const value =
+          JSON.parse(
+            settings[0].artist || "[]"
+          );
+
+        return Array.isArray(value)
+          ? value
+              .map(String)
+              .filter(Boolean)
+              .slice(0, 3)
+          : [];
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Could not read Final 3 setting.",
+          error
+        );
+
+        return [];
+
+      }
+
+    }
+
+
+    async function saveFinalThreeSetting(
+      finalThree
+    ) {
+
+      const deleteResponse =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(FINAL_THREE_SETTING)}`,
+
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+
+        );
+
+
+      if (!deleteResponse.ok) {
+
+        throw new Error(
+          "Could not clear old Final 3 setting."
+        );
+
+      }
+
+
+      if (finalThree.length === 0) {
+        return;
+      }
+
+
+      const response =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests`,
+
+          {
+            method: "POST",
+
+            headers:
+              apiHeaders(true),
+
+            body: JSON.stringify({
+
+              singer_name:
+                SETTINGS_SINGER,
+
+              song_title:
+                FINAL_THREE_SETTING,
+
+              artist:
+                JSON.stringify(finalThree),
+
+              status:
+                "completed"
+
+            })
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `Could not save Final 3: ${await response.text()}`
+        );
+
+      }
+
+    }
+
+
+    function updateFinalThreeControls(data) {
+
+      const activeKeys =
+        new Set(
+          data
+            .filter(isActive)
+            .map(singerKey)
+            .filter(Boolean)
+        );
+
+      const singerNames =
+        new Map();
+
+      data
+        .filter(isActive)
+        .forEach(request => {
+
+          const key =
+            singerKey(request);
+
+          if (
+            key &&
+            !singerNames.has(key)
+          ) {
+
+            singerNames.set(
+              key,
+              String(
+                request.singer_name || ""
+              ).trim()
+            );
+
+          }
+
+        });
+
+
+      const activeSingers =
+        Array.from(activeKeys)
+          .map(key => ({
+            key,
+            name:
+              singerNames.get(key) || key
+          }))
+          .sort(
+            (a, b) =>
+              a.name.localeCompare(b.name)
+          );
+
+
+      const savedFinalThree =
+        getFinalThree(data);
+
+
+      const selects = [
+
+        document.getElementById(
+          "finalSinger1"
+        ),
+
+        document.getElementById(
+          "finalSinger2"
+        ),
+
+        document.getElementById(
+          "finalSinger3"
+        )
+
+      ];
+
+
+      selects.forEach(
+        (select, index) => {
+
+          if (!select) {
+            return;
+          }
+
+          const selectedValue =
+            savedFinalThree[index] || "";
+
+
+          select.innerHTML =
+            `<option value="">Final Singer ${index + 1}</option>` +
+
+            activeSingers
+              .map(
+                singer => `
+
+                  <option
+                    value="${escapeHtml(singer.key)}"
+                  >
+                    ${escapeHtml(singer.name)}
+                  </option>
+
+                `
+              )
+              .join("");
+
+
+          select.value =
+            selectedValue;
+
+        }
+      );
+
+
+      const status =
+        document.getElementById(
+          "finalThreeStatus"
+        );
+
+
+      if (!status) {
+        return;
+      }
+
+
+      if (savedFinalThree.length === 3) {
+
+        const names =
+          savedFinalThree.map(
+            key =>
+              singerNames.get(key) || key
+          );
+
+
+        status.textContent =
+          `Final 3 set: ${names.join(" → ")}`;
+
+      }
+
+      else {
+
+        status.textContent =
+          "Choose the final three singers in order.";
+
+      }
+
+    }
+
+
+    async function saveFinalThree() {
+
+      try {
+
+        const values = [
+
+          document.getElementById(
+            "finalSinger1"
+          ).value,
+
+          document.getElementById(
+            "finalSinger2"
+          ).value,
+
+          document.getElementById(
+            "finalSinger3"
+          ).value
+
+        ];
+
+
+        if (
+          values.some(
+            value => !value
+          )
+        ) {
+
+          alert(
+            "Choose all three final singers."
+          );
+
+          return;
+
+        }
+
+
+        if (
+          new Set(values).size !== 3
+        ) {
+
+          alert(
+            "Choose three different singers."
+          );
+
+          return;
+
+        }
+
+
+        await saveFinalThreeSetting(
+          values
+        );
+
+
+        /*
+          If one of the chosen Final 3
+          is currently Up Next, release
+          that Up Next status first.
+
+          loadRequests() will then choose
+          the first NON-final singer.
+          If only the Final 3 remain,
+          Final Singer 1 becomes Up Next.
+        */
+
+        const resetResponse =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/requests?status=eq.up_next`,
+
+            {
+              method: "PATCH",
+
+              headers:
+                apiHeaders(true),
+
+              body: JSON.stringify({
+                status: "waiting"
+              })
+            }
+
+          );
+
+
+        if (!resetResponse.ok) {
+
+          throw new Error(
+            "Final 3 saved, but Up Next could not be reset."
+          );
+
+        }
+
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not save the Final 3."
+        );
+
+      }
+
+    }
+
+
+    async function clearFinalThree() {
+
+      try {
+
+        await saveFinalThreeSetting(
+          []
+        );
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not clear the Final 3."
+        );
+
+      }
+
+    }
+
 
 
     const LIVE_REQUESTS_SETTING =
@@ -1709,6 +2225,66 @@
         );
 
 
+      /*
+        FINAL 3
+
+        When Final 3 is set, all other
+        singers stay in their normal order.
+
+        The selected final singers are
+        moved to the END in exactly the
+        order chosen by the KJ.
+      */
+
+      const finalThree =
+        getFinalThree(data);
+
+
+      if (finalThree.length === 3) {
+
+        const finalPositions =
+          new Map(
+            finalThree.map(
+              (key, index) => [
+                key,
+                index
+              ]
+            )
+          );
+
+
+        const normalWaiting =
+          waiting.filter(
+            singer =>
+              !finalPositions.has(
+                singer.key
+              )
+          );
+
+
+        const finalWaiting =
+          waiting
+            .filter(
+              singer =>
+                finalPositions.has(
+                  singer.key
+                )
+            )
+            .sort(
+              (a, b) =>
+                finalPositions.get(a.key) -
+                finalPositions.get(b.key)
+            );
+
+
+        waiting = [
+          ...normalWaiting,
+          ...finalWaiting
+        ];
+
+      }
+
+
       if (upNextSinger) {
 
         return [
@@ -1968,6 +2544,10 @@
 
         updateTvDisplayButtons(
           getTvDisplayCount(data)
+        );
+
+        updateFinalThreeControls(
+          data
         );
 
 
