@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -7,6 +8,7 @@
 <title>Rabbit Run Entertainment | Karaoke Song Book</title>
 
 <style>
+
 :root {
   --pink:#d42fc5;
   --purple:#7b39d9;
@@ -72,9 +74,11 @@ input {
   padding:18px 20px;
   border-radius:18px;
   border:2px solid transparent;
+
   background:
     linear-gradient(#0c1020,#0c1020) padding-box,
     linear-gradient(90deg,var(--pink),var(--blue)) border-box;
+
   color:white;
   font-size:19px;
   outline:none;
@@ -113,11 +117,12 @@ input {
 
 .song button {
   margin-top:12px;
-  padding:9px 14px;
+  padding:10px 15px;
   border:0;
   border-radius:8px;
   cursor:pointer;
   font-weight:bold;
+  font-size:14px;
 }
 
 .note {
@@ -126,14 +131,17 @@ input {
   margin-top:30px;
   font-size:14px;
 }
+
 </style>
 </head>
+
 
 <body>
 
 <main class="wrap">
 
 <header>
+
   <img
     class="logo"
     src="rabbit-run-logo.png"
@@ -141,36 +149,59 @@ input {
   >
 
   <h1>Karaoke Song Book</h1>
-  <p class="tag">Keepin' the Party Hoppin'</p>
+
+  <p class="tag">
+    Keepin' the Party Hoppin'
+  </p>
+
 </header>
 
+
 <div class="searchbox">
+
   <input
     id="q"
     type="search"
     placeholder="Search by artist or song title..."
     autocomplete="off"
   >
+
 </div>
+
 
 <div id="status" class="status">
   Loading song book…
 </div>
 
-<section id="results" class="results"></section>
+
+<section
+  id="results"
+  class="results">
+</section>
+
 
 <p class="note">
-  Don't see what you're looking for? Ask us. We may have another version available.
+  Don't see what you're looking for?
+  Ask us. We may have another version available.
 </p>
 
 </main>
 
+
 <script>
+
 let songs = [];
 
-const q = document.getElementById('q');
-const results = document.getElementById('results');
-const status = document.getElementById('status');
+
+const q =
+  document.getElementById('q');
+
+const results =
+  document.getElementById('results');
+
+const status =
+  document.getElementById('status');
+
 
 const SUPABASE_URL =
   "https://cpprxqlevftbgpjjfgnz.supabase.co";
@@ -179,116 +210,192 @@ const SUPABASE_KEY =
   "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
 
 
-/* DEVICE ID */
+/* =========================
+   DEVICE ID
+   ========================= */
 
 let singerId =
-  localStorage.getItem("rabbitRunSingerId");
+  localStorage.getItem(
+    "rabbitRunSingerId"
+  );
+
 
 if (!singerId) {
-  singerId = crypto.randomUUID();
+
+  singerId =
+    Date.now().toString(36) +
+    "-" +
+    Math.random()
+      .toString(36)
+      .substring(2);
+
 
   localStorage.setItem(
     "rabbitRunSingerId",
     singerId
   );
+
 }
 
 
-/* REMEMBER LAST SINGER NAME */
+/* =========================
+   REMEMBER CURRENT NAME
+   ========================= */
 
 let rememberedSingerName =
-  localStorage.getItem("rabbitRunSingerName") || "";
+  localStorage.getItem(
+    "rabbitRunSingerName"
+  ) || "";
 
 
-/* REMEMBER ORIGINAL SINGER NAME */
+/* =========================
+   REMEMBER ORIGINAL NAME
+   ========================= */
 
 let originalSingerName =
-  localStorage.getItem("rabbitRunOriginalSingerName") || "";
+  localStorage.getItem(
+    "rabbitRunOriginalSingerName"
+  ) || "";
 
 
-/* SAFE DISPLAY TEXT */
+/* =========================
+   SAFE DISPLAY TEXT
+   ========================= */
 
-const esc = s =>
-  String(s).replace(/[&<>"']/g, m => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  }[m]));
+const escapeHtml = value =>
+  String(value ?? "").replace(
+    /[&<>"']/g,
+    character => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[character])
+  );
 
 
-/* LOAD SONG BOOK */
+/* =========================
+   LOAD SONG BOOK
+   ========================= */
 
 fetch('songs.json')
+
   .then(response => {
+
     if (!response.ok) {
-      throw new Error('Could not load songs.json');
+
+      throw new Error(
+        'Could not load songs.json'
+      );
+
     }
 
     return response.json();
+
   })
+
   .then(data => {
+
     songs = data;
 
     status.textContent =
       `${songs.length.toLocaleString()} songs ready to search`;
+
   })
+
   .catch(error => {
-    console.error(error);
+
+    console.error(
+      "Song book error:",
+      error
+    );
 
     status.textContent =
       'Could not load song book.';
+
   });
 
 
-/* SEARCH */
+/* =========================
+   SEARCH SONGS
+   ========================= */
 
 function render() {
 
   const term =
-    q.value.trim().toLowerCase();
+    q.value
+      .trim()
+      .toLowerCase();
+
 
   results.innerHTML = '';
 
+
   if (term.length < 2) {
 
-    status.textContent = songs.length
-      ? `${songs.length.toLocaleString()} songs ready to search`
-      : 'Loading song book...';
+    status.textContent =
+      songs.length
+
+        ? `${songs.length.toLocaleString()} songs ready to search`
+
+        : 'Loading song book...';
 
     return;
+
   }
 
+
   const found = [];
+
 
   for (const song of songs) {
 
     const searchable =
-      `${song.artist} ${song.title}`.toLowerCase();
+      `${song.artist} ${song.title}`
+        .toLowerCase();
 
-    if (searchable.includes(term)) {
+
+    if (
+      searchable.includes(term)
+    ) {
 
       found.push(song);
 
-      if (found.length >= 100) {
+
+      if (
+        found.length >= 100
+      ) {
+
         break;
+
       }
+
     }
+
   }
 
-  status.textContent = found.length
-    ? `Showing ${found.length}${found.length === 100 ? '+' : ''} matches`
-    : 'No matches found';
+
+  status.textContent =
+    found.length
+
+      ? `Showing ${found.length}${found.length === 100 ? '+' : ''} matches`
+
+      : 'No matches found';
+
 
   results.innerHTML =
     found.map(song => `
 
       <div class="song">
 
-        <b>${esc(song.title)}</b>
+        <b>
+          ${escapeHtml(song.title)}
+        </b>
 
-        <span>${esc(song.artist)}</span>
+        <span>
+          ${escapeHtml(song.artist)}
+        </span>
 
         <button
           onclick='requestSong(
@@ -302,10 +409,13 @@ function render() {
       </div>
 
     `).join('');
+
 }
 
 
-/* SEND REQUEST TO SUPABASE */
+/* =========================
+   SEND REQUEST TO SUPABASE
+   ========================= */
 
 async function submitRequest(
   singerName,
@@ -313,90 +423,137 @@ async function submitRequest(
   artist
 ) {
 
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/requests`,
-    {
-      method:'POST',
+  const response =
+    await fetch(
 
-      headers:{
-        'apikey':SUPABASE_KEY,
-        'Authorization':`Bearer ${SUPABASE_KEY}`,
-        'Content-Type':'application/json'
-      },
+      `${SUPABASE_URL}/rest/v1/requests`,
 
-      body:JSON.stringify({
-        singer_name:singerName,
-        song_title:songTitle,
-        artist:artist,
-        status:'waiting',
-        singer_id:singerId,
-        original_name:originalSingerName
-      })
-    }
-  );
+      {
+
+        method:'POST',
+
+        headers: {
+
+          'apikey':
+            SUPABASE_KEY,
+
+          'Authorization':
+            `Bearer ${SUPABASE_KEY}`,
+
+          'Content-Type':
+            'application/json'
+
+        },
+
+
+        body:JSON.stringify({
+
+          singer_name:
+            singerName,
+
+          song_title:
+            songTitle,
+
+          artist:
+            artist,
+
+          status:
+            'waiting',
+
+          singer_id:
+            singerId,
+
+          original_name:
+            originalSingerName
+
+        })
+
+      }
+
+    );
+
 
   if (!response.ok) {
 
     const errorText =
       await response.text();
 
+
     console.error(
-      'Supabase request failed:',
+      "Supabase request failed:",
       response.status,
       errorText
     );
 
+
     throw new Error(
       'Request failed'
     );
+
   }
 
+
   return true;
+
 }
 
 
-/* CUSTOMER REQUEST BUTTON */
+/* =========================
+   REQUEST SONG
+   ========================= */
 
 async function requestSong(
   title,
   artist
 ) {
 
-  const singerName = prompt(
-    'What is your name?',
-    rememberedSingerName
-  );
+  const singerName =
+    prompt(
+      'What is your name?',
+      rememberedSingerName
+    );
+
 
   if (!singerName) {
     return;
   }
 
+
   const cleanSingerName =
     singerName.trim();
+
 
   if (!cleanSingerName) {
     return;
   }
 
 
-  /* SAVE ORIGINAL NAME ONLY ONCE */
+  /*
+    ORIGINAL NAME
+    IS SAVED ONLY ONCE
+  */
 
   if (!originalSingerName) {
 
     originalSingerName =
       cleanSingerName;
 
+
     localStorage.setItem(
       "rabbitRunOriginalSingerName",
       originalSingerName
     );
+
   }
 
 
-  /* REMEMBER MOST RECENT NAME */
+  /*
+    REMEMBER MOST RECENT NAME
+  */
 
   rememberedSingerName =
     cleanSingerName;
+
 
   localStorage.setItem(
     "rabbitRunSingerName",
@@ -412,37 +569,57 @@ async function requestSong(
       artist
     );
 
+
     alert(
       `${title} has been added to the request list!`
     );
 
-  } catch (error) {
+  }
 
-    console.error(error);
+
+  catch (error) {
+
+    console.error(
+      error
+    );
+
 
     alert(
       'Sorry! Your request could not be sent.'
     );
+
   }
+
 }
 
 
-/* SEARCH DELAY */
+/* =========================
+   SEARCH DELAY
+   ========================= */
 
 let timer;
+
 
 q.addEventListener(
   'input',
   () => {
 
-    clearTimeout(timer);
+    clearTimeout(
+      timer
+    );
+
 
     timer =
-      setTimeout(render,100);
+      setTimeout(
+        render,
+        100
+      );
+
   }
 );
 
 </script>
 
 </body>
+
 </html>
