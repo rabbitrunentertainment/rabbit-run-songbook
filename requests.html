@@ -97,12 +97,19 @@
         return;
       }
 
+      const formatTime = (timestamp) => {
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+};
       container.innerHTML = data.map(request => `
         <div class="request">
           <div class="singer">${request.singer_name}</div>
           <div class="song">${request.song_title}</div>
           <div class="artist">${request.artist || ""}</div>
           <div class="status">${request.status || "waiting"}</div>
+          <div class="time">${formatTime(request.created_at)}</div>
         </div>
       `).join("");
     }
