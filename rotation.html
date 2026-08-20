@@ -53,12 +53,17 @@
 
     .venue-name {
       min-height: 72px;
-      color: #f9a8d4;
+      color: #ffffff;
       font-size: clamp(32px, 4vw, 48px);
       font-weight: bold;
       letter-spacing: .08em;
       text-transform: uppercase;
       margin-bottom: 6px;
+      text-shadow:
+        0 0 6px #f472e8,
+        0 0 14px #d42fc5,
+        0 0 26px #7b39d9,
+        0 0 38px #2f7eea;
     }
 
     h1 {
@@ -163,6 +168,59 @@
       font-size: clamp(15px, 1.7vw, 20px);
     }
 
+    .closing-banner {
+      text-align: center;
+      padding: 34px 24px;
+      margin-top: 12px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(212,47,197,.32),
+          rgba(47,126,234,.30)
+        );
+      border: 4px solid #f472e8;
+      border-radius: 18px;
+      box-shadow:
+        0 0 18px rgba(244,114,232,.75),
+        0 0 42px rgba(47,126,234,.50),
+        inset 0 0 24px rgba(255,255,255,.08);
+    }
+
+    .closing-banner-main {
+      font-size: clamp(34px, 4.8vw, 62px);
+      line-height: 1.05;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 14px;
+      text-shadow:
+        0 0 8px #d42fc5,
+        0 0 18px #d42fc5,
+        0 0 30px #2f7eea;
+    }
+
+    .closing-banner-sub {
+      color: #ffffff;
+      font-size: clamp(20px, 2.4vw, 30px);
+      line-height: 1.35;
+      font-weight: 700;
+      text-shadow:
+        0 0 10px rgba(212,47,197,.8);
+    }
+
+    @media (max-width: 700px) {
+      .closing-banner {
+        padding: 24px 14px;
+      }
+
+      .closing-banner-main {
+        font-size: clamp(30px, 9vw, 46px);
+      }
+
+      .closing-banner-sub {
+        font-size: clamp(18px, 5vw, 24px);
+      }
+    }
+
     .qr-section {
       text-align: center;
       align-self: end;
@@ -214,12 +272,12 @@
 
   .logo {
     position: static;
-    width: 130px;
-    height: 130px;
+    width: 145px;
+    height: 145px;
     max-height: none;
     object-fit: contain;
     transform: none;
-    margin: 0 auto 8px 0;
+    margin: 0 auto 8px auto;
     z-index: auto;
   }
 
@@ -715,20 +773,74 @@
     }
 
 
-    function closingMessage() {
+    function closingMessage(remainingFinalCount) {
+
+      let headline = "";
+      let subtext = "";
+
+
+      if (remainingFinalCount >= 3) {
+
+        headline =
+          "🐇 We’re Down to the Final 3! 🎤";
+
+        subtext =
+          "Thanks for coming out and singing with us!<br>" +
+          "We had a hoppin’ good time!<br>" +
+          "Tip your bartenders • Be safe • See you next time!";
+
+      }
+
+
+      else if (remainingFinalCount === 2) {
+
+        headline =
+          "🎤 Only 2 Singers Left!";
+
+        subtext =
+          "We’re winding down the night!<br>" +
+          "Thanks for singing with us!<br>" +
+          "Tip your bartenders • Be safe • See you next time!";
+
+      }
+
+
+      else if (remainingFinalCount === 1) {
+
+        headline =
+          "🎤 Last Singer of the Night!";
+
+        subtext =
+          "One more trip to the mic!<br>" +
+          "Thanks for coming out and singing with us!<br>" +
+          "Tip your bartenders • Be safe • See you next time!";
+
+      }
+
+
+      else {
+
+        headline =
+          "🐇 That’s a Wrap!";
+
+        subtext =
+          "Thanks for coming out and singing with us!<br>" +
+          "We had a hoppin’ good time!<br>" +
+          "Tip your bartenders • Be safe • See you next time!";
+
+      }
+
 
       return `
 
-        <div class="need-more">
+        <div class="closing-banner">
 
-          <div class="need-more-main">
-            🐇 We’re Down to the Final 3!
+          <div class="closing-banner-main">
+            ${headline}
           </div>
 
-          <div class="need-more-sub">
-            Thanks for coming out and singing with us!
-            We had a hoppin’ good time! 🎤
-            Tip your bartenders, be safe, and we’ll see you next time!
+          <div class="closing-banner-sub">
+            ${subtext}
           </div>
 
         </div>
@@ -1121,7 +1233,7 @@
               "🎤 FINAL 3 COMPLETE 🎤";
 
             rotation.innerHTML =
-              closingMessage();
+              closingMessage(0);
 
           }
 
@@ -1173,9 +1285,28 @@
           getFinalThree(data);
 
 
+        const activeSingerKeys =
+          new Set(
+            active
+              .map(singerKey)
+              .filter(Boolean)
+          );
+
+
+        const remainingFinalCount =
+          finalThree.filter(
+            key =>
+              activeSingerKeys.has(key)
+          ).length;
+
+
         rotationTitle.textContent =
           finalThree.length === 3
-            ? "🎤 FINAL 3 SINGERS 🎤"
+            ? (
+                remainingFinalCount > 0
+                  ? `🎤 FINAL ${remainingFinalCount} ${remainingFinalCount === 1 ? "SINGER" : "SINGERS"} 🎤`
+                  : "🎤 FINAL 3 COMPLETE 🎤"
+              )
             : "Upcoming Singers";
 
 
@@ -1241,7 +1372,9 @@
         if (finalThree.length === 3) {
 
           rotationHtml +=
-            closingMessage();
+            closingMessage(
+              remainingFinalCount
+            );
 
         }
 
