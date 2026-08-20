@@ -178,7 +178,6 @@
     }
 
     @media (max-width: 700px) {
-
       .content {
         grid-template-columns: 1fr;
       }
@@ -284,6 +283,7 @@
     const SUPABASE_KEY =
       "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
 
+
     const MAX_VISIBLE_SINGERS = 6;
 
     /*
@@ -295,7 +295,9 @@
     const RECRUITING_THRESHOLD = 4;
 
 
-    /* SAFE DISPLAY TEXT */
+    /* =========================
+       SAFE DISPLAY TEXT
+       ========================= */
 
     const escapeHtml = value =>
       String(value ?? "").replace(
@@ -310,7 +312,9 @@
       );
 
 
-    /* SINGER IDENTITY */
+    /* =========================
+       SINGER IDENTITY
+       ========================= */
 
     function singerKey(request) {
 
@@ -323,7 +327,79 @@
     }
 
 
-    /* RECRUITING MESSAGE */
+    /* =========================
+       STATUS HELPERS
+       ========================= */
+
+    function isCompleted(request) {
+
+      return request.status === "completed";
+
+    }
+
+
+    function isPaused(request) {
+
+      return request.status === "paused";
+
+    }
+
+
+    function isActive(request) {
+
+      return (
+        !isCompleted(request) &&
+        !isPaused(request)
+      );
+
+    }
+
+
+    /*
+      RESUMED SINGERS HAVE A
+      TIMESTAMP STORED IN STATUS.
+
+      EXAMPLE:
+
+      waiting_resumed_123456789
+    */
+
+    function resumedTime(request) {
+
+      const status =
+        String(request.status || "");
+
+
+      if (
+        !status.startsWith(
+          "waiting_resumed_"
+        )
+      ) {
+
+        return null;
+
+      }
+
+
+      const value =
+        Number(
+          status.replace(
+            "waiting_resumed_",
+            ""
+          )
+        );
+
+
+      return Number.isFinite(value)
+        ? value
+        : null;
+
+    }
+
+
+    /* =========================
+       RECRUITING MESSAGE
+       ========================= */
 
     function needMoreMessage() {
 
@@ -347,22 +423,30 @@
     }
 
 
-    /* BUILD THE SAME ROTATION AS KJ */
+    /* =========================
+       BUILD SAME ROTATION AS KJ
+       ========================= */
 
     function buildRotation(data) {
 
+
+      /*
+        IMPORTANT:
+
+        COMPLETED = NOT ACTIVE
+        PAUSED = NOT ACTIVE
+
+        THIS IS THE CHANGE THAT
+        MAKES PAUSED SINGERS
+        DISAPPEAR FROM THE TV.
+      */
+
       const active =
-        data.filter(
-          request =>
-            request.status !== "completed"
-        );
+        data.filter(isActive);
 
 
       const completed =
-        data.filter(
-          request =>
-            request.status === "completed"
-        );
+        data.filter(isCompleted);
 
 
       /*
@@ -454,17 +538,43 @@
               lastCompletedTime:
                 lastCompletedBySinger.has(key)
                   ? lastCompletedBySinger.get(key)
-                  : null
+                  : null,
+
+              resumedAt: null
             }
           );
 
         }
 
 
-        singersByName
-          .get(key)
-          .requests
-          .push(request);
+        const singer =
+          singersByName.get(key);
+
+
+        singer.requests.push(request);
+
+
+        /*
+          FIND RESUME TIME FOR
+          THIS SINGER IF PRESENT
+        */
+
+        const resume =
+          resumedTime(request);
+
+
+        if (
+          resume !== null &&
+          (
+            singer.resumedAt === null ||
+            resume > singer.resumedAt
+          )
+        ) {
+
+          singer.resumedAt =
+            resume;
+
+        }
 
       });
 
@@ -503,7 +613,8 @@
         const upNextRequest =
           singer.requests.find(
             request =>
-              request.status === "up_next"
+              request.status ===
+              "up_next"
           );
 
 
@@ -559,20 +670,56 @@
 
 
       /*
-        EXACT SAME SORT AS KJ
+        SAME SORT AS KJ:
 
-        NEW SINGERS FIRST.
-
-        REPEAT SINGERS GO
-        TO THE BACK.
-
-        REPEAT SINGER WHO
-        SANG LONGEST AGO
-        COMES FIRST.
+        - NEW SINGERS FIRST
+        - REPEAT SINGERS AFTER THEM
+        - RESUMED SINGERS GO TO
+          THE BACK OF THE CURRENT
+          ROTATION
       */
 
       waiting.sort(
         (a, b) => {
+
+          const aResumed =
+            a.resumedAt !== null;
+
+          const bResumed =
+            b.resumedAt !== null;
+
+
+          /*
+            RESUMED SINGER GOES
+            BEHIND CURRENT ROTATION
+          */
+
+          if (
+            aResumed !== bResumed
+          ) {
+
+            return aResumed ? 1 : -1;
+
+          }
+
+
+          /*
+            IF BOTH WERE RESUMED,
+            FIRST RESUMED GOES FIRST
+          */
+
+          if (
+            aResumed &&
+            bResumed
+          ) {
+
+            return (
+              a.resumedAt -
+              b.resumedAt
+            );
+
+          }
+
 
           const aHasSung =
             a.lastCompletedTime !== null;
@@ -580,6 +727,11 @@
           const bHasSung =
             b.lastCompletedTime !== null;
 
+
+          /*
+            NEW SINGERS BEFORE
+            REPEAT SINGERS
+          */
 
           if (
             aHasSung !== bHasSung
@@ -589,6 +741,11 @@
 
           }
 
+
+          /*
+            BOTH NEW:
+            OLDEST REQUEST FIRST
+          */
 
           if (
             !aHasSung &&
@@ -602,6 +759,12 @@
 
           }
 
+
+          /*
+            BOTH REPEAT:
+            WHOEVER SANG LONGEST
+            AGO GOES FIRST
+          */
 
           return (
             a.lastCompletedTime -
@@ -620,7 +783,9 @@
     }
 
 
-    /* LOAD ROTATION */
+    /* =========================
+       LOAD ROTATION
+       ========================= */
 
     async function loadRotation() {
 
@@ -671,6 +836,7 @@
             "Could not load rotation.";
 
           return;
+
         }
 
 
@@ -678,16 +844,19 @@
           await response.json();
 
 
+        /*
+          ONLY ACTIVE REQUESTS COUNT.
+
+          PAUSED REQUESTS ARE
+          COMPLETELY IGNORED HERE.
+        */
+
         const active =
-          data.filter(
-            request =>
-              request.status !==
-              "completed"
-          );
+          data.filter(isActive);
 
 
         /*
-          ABSOLUTELY NOBODY
+          ABSOLUTELY NOBODY ACTIVE
         */
 
         if (active.length === 0) {
@@ -739,11 +908,13 @@
         else {
 
           /*
-            Normally the KJ page will
-            automatically choose Up Next.
+            KJ PAGE NORMALLY
+            AUTOMATICALLY CHOOSES
+            UP NEXT.
 
-            If TV refreshes during that
-            tiny window, don't invent one.
+            DURING THE TINY WINDOW
+            BEFORE THAT HAPPENS,
+            DON'T INVENT ONE.
           */
 
           upNextBox.style.display =
@@ -829,8 +1000,11 @@
           0-4 UPCOMING:
           SHOW RECRUITING MESSAGE
 
-          5 OR 6 UPCOMING:
-          NO MESSAGE.
+          PAUSED SINGERS ARE NOT
+          INCLUDED IN waiting.length.
+
+          5 OR MORE UPCOMING:
+          NO RECRUITING MESSAGE.
         */
 
         else if (
@@ -862,12 +1036,16 @@
     }
 
 
-    /* START */
+    /* =========================
+       START
+       ========================= */
 
     loadRotation();
 
 
-    /* REFRESH EVERY 5 SECONDS */
+    /* =========================
+       REFRESH EVERY 5 SECONDS
+       ========================= */
 
     setInterval(
       loadRotation,
