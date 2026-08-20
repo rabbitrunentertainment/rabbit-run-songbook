@@ -37,27 +37,28 @@
       padding: 8px 340px 0;
     }
 
- .logo {
-  position: absolute;
-  top: 18px;
-  right: 25px;
-  width: 190px;
-  height: 190px;
-  object-fit: contain;
-  transform: scale(1.35);
-  transform-origin: center;
-  filter: drop-shadow(0 0 16px rgba(166,66,255,.3));
-}
+    .logo {
+      position: fixed;
+      top: 115px;
+      right: 55px;
+      width: 190px;
+      height: 190px;
+      object-fit: contain;
+      transform: scale(1.35);
+      transform-origin: center;
+      filter: drop-shadow(0 0 16px rgba(166,66,255,.3));
+      z-index: 10;
+    }
 
-.venue-name {
-  min-height: 72px;
-  color: #f9a8d4;
-  font-size: clamp(32px, 4vw, 48px);
-  font-weight: bold;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
+    .venue-name {
+      min-height: 72px;
+      color: #f9a8d4;
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: bold;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
 
     h1 {
       font-size: clamp(30px, 3.8vw, 50px);
