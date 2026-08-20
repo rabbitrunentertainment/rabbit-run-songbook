@@ -59,6 +59,12 @@
       margin-top: 8px;
       font-weight: bold;
     }
+    .warning {
+  color: #fbbf24;
+  font-weight: bold;
+  margin-top: 6px;
+  font-size: 14px;
+}
   </style>
 </head>
 
@@ -103,11 +109,33 @@
     minute: "2-digit"
   });
 };
+      const namesByDevice = {};
+
+data.forEach(request => {
+  if (!request.singer_id) return;
+
+  if (!namesByDevice[request.singer_id]) {
+    namesByDevice[request.singer_id] = new Set();
+  }
+
+  namesByDevice[request.singer_id].add(
+    request.singer_name.trim().toLowerCase()
+  );
+});
+
+const mismatchedDevices = new Set(
+  Object.entries(namesByDevice)
+    .filter(([id, names]) => names.size > 1)
+    .map(([id]) => id)
+);
 container.innerHTML = data
   .filter(request => request.status !== "completed")
   .map(request => `
     <div class="request">
       <div class="singer">${request.singer_name}</div>
+      ${mismatchedDevices.has(request.singer_id)
+  ? '<div class="warning">⚠️ NAME MISMATCH - SAME DEVICE</div>'
+  : ''}
       <div class="song">${request.song_title}</div>
       <div class="artist">${request.artist || ""}</div>
       <div class="status">${request.status || "waiting"}</div>
