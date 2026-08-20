@@ -35,8 +35,8 @@
     }
 
     .logo {
-      width: min(220px, 30vw);
-      max-height: 110px;
+      width: min(260px, 34vw);
+      max-height: 130px;
       object-fit: contain;
       filter: drop-shadow(0 0 16px rgba(166,66,255,.3));
     }
@@ -88,7 +88,7 @@
 
     #rotation {
       display: grid;
-      gap: 6px;
+      gap: 7px;
       align-self: start;
     }
 
@@ -99,26 +99,50 @@
       background: rgba(31,41,55,.92);
       border: 2px solid #7c3aed;
       border-radius: 10px;
-      padding: 8px 14px;
-      min-height: 48px;
+      padding: 10px 14px;
+      min-height: 52px;
     }
 
     .position {
       color: #d8b4fe;
-      font-size: 19px;
+      font-size: 20px;
       font-weight: bold;
     }
 
     .name {
-      font-size: clamp(20px, 2.4vw, 30px);
+      font-size: clamp(21px, 2.5vw, 31px);
       font-weight: bold;
+    }
+
+    .more-waiting {
+      text-align: center;
+      color: #d8b4fe;
+      font-size: 17px;
+      font-weight: bold;
+      padding: 6px 0 2px;
     }
 
     .empty {
       text-align: center;
-      color: #b9b8c7;
-      font-size: 22px;
-      padding: 35px 20px;
+      padding: 50px 20px;
+    }
+
+    .empty-main {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .empty-need {
+      color: #f9a8d4;
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .empty-sub {
+      color: #d8b4fe;
+      font-size: clamp(16px, 2vw, 22px);
     }
 
     .qr-section {
@@ -211,7 +235,10 @@
     </div>
 
 
-    <div class="rotation-title">
+    <div
+      id="rotationTitle"
+      class="rotation-title"
+    >
       Upcoming Singers
     </div>
 
@@ -263,6 +290,10 @@
     const SUPABASE_KEY =
       "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
 
+    const MAX_VISIBLE_SINGERS = 6;
+
+
+    /* SAFE DISPLAY TEXT */
 
     const escapeHtml = value =>
       String(value ?? "").replace(
@@ -277,15 +308,25 @@
       );
 
 
+    /*
+      ROTATION IDENTITY
+
+      IMPORTANT:
+      Rotation uses the singer NAME,
+      not the device ID.
+
+      That means Kristina and Matt can
+      submit from the same phone and still
+      appear as separate singers.
+    */
+
     function singerKey(request) {
 
-      if (request.singer_id) {
-        return `device:${request.singer_id}`;
-      }
-
-      return `name:${String(
+      return String(
         request.singer_name || ""
-      ).trim().toLowerCase()}`;
+      )
+        .trim()
+        .toLowerCase();
 
     }
 
@@ -294,6 +335,9 @@
 
       const rotation =
         document.getElementById("rotation");
+
+      const rotationTitle =
+        document.getElementById("rotationTitle");
 
       const upNextBox =
         document.getElementById("upNextBox");
@@ -335,7 +379,7 @@
 
 
         /*
-          ACTIVE SONG REQUESTS
+          ACTIVE REQUESTS
         */
 
         const active =
@@ -344,18 +388,44 @@
           );
 
 
+        /*
+          EMPTY ROTATION
+        */
+
         if (active.length === 0) {
 
           upNextBox.style.display =
             "none";
 
-          rotation.innerHTML =
-            `<div class="empty">
-              No singers in the rotation yet.
-            </div>`;
+          rotationTitle.style.display =
+            "none";
+
+          rotation.innerHTML = `
+
+            <div class="empty">
+
+              <div class="empty-main">
+                🐇 Don't leave the mic hangin'!
+              </div>
+
+              <div class="empty-need">
+                We need singers!
+              </div>
+
+              <div class="empty-sub">
+                Scan the QR code and hop into the rotation.
+              </div>
+
+            </div>
+
+          `;
 
           return;
         }
+
+
+        rotationTitle.style.display =
+          "block";
 
 
         /*
@@ -387,12 +457,8 @@
 
 
         /*
-          FIND EACH SINGER'S MOST RECENT
-          COMPLETED TURN
-
-          A singer who has already sung
-          receives a later rotation position
-          than singers who have not yet sung.
+          FIND EACH SINGER'S
+          MOST RECENT COMPLETED TURN
         */
 
         const lastCompletedBySinger =
@@ -410,6 +476,11 @@
 
           const key =
             singerKey(request);
+
+
+          if (!key) {
+            return;
+          }
 
 
           const completedTime =
@@ -438,11 +509,10 @@
 
 
         /*
-          BUILD ONE ROTATION ENTRY
-          PER ACTIVE SINGER
+          ONE ENTRY PER ACTIVE SINGER
         */
 
-        const singersByKey =
+        const singersByName =
           new Map();
 
 
@@ -452,11 +522,16 @@
             singerKey(request);
 
 
+          if (!key) {
+            return;
+          }
+
+
           if (
-            !singersByKey.has(key)
+            !singersByName.has(key)
           ) {
 
-            singersByKey.set(
+            singersByName.set(
               key,
               {
                 key: key,
@@ -485,13 +560,14 @@
 
         let singers =
           Array.from(
-            singersByKey.values()
+            singersByName.values()
           );
 
 
         /*
-          REMOVE UP NEXT SINGER
-          FROM UPCOMING LIST
+          UP NEXT IS DISPLAYED SEPARATELY,
+          SO REMOVE THAT SINGER FROM THE
+          UPCOMING LIST.
         */
 
         if (upNextRequest) {
@@ -512,15 +588,16 @@
 
 
         /*
-          SORT ROTATION
+          ROTATION ORDER
 
-          1. Singers who have NOT sung yet
-             stay ahead, ordered by their
-             first request.
+          Singers who haven't sung yet
+          come first by original request.
 
-          2. Singers who HAVE sung cycle
-             behind them, ordered by their
-             most recent completed turn.
+          Singers who already had a turn
+          cycle behind them.
+
+          Among repeat singers, whoever
+          sang longest ago comes first.
         */
 
         singers.sort(
@@ -565,22 +642,54 @@
 
 
         /*
-          DISPLAY
+          IF UP NEXT IS THE ONLY SINGER
         */
 
         if (singers.length === 0) {
 
-          rotation.innerHTML =
-            `<div class="empty">
-              No other singers waiting.
-            </div>`;
+          rotation.innerHTML = `
+
+            <div class="empty">
+
+              <div class="empty-main">
+                🐇 Don't leave the mic hangin'!
+              </div>
+
+              <div class="empty-need">
+                We need more singers!
+              </div>
+
+              <div class="empty-sub">
+                Scan the QR code and hop into the rotation.
+              </div>
+
+            </div>
+
+          `;
 
           return;
         }
 
 
+        /*
+          SHOW ONLY FIRST SIX
+        */
+
+        const visibleSingers =
+          singers.slice(
+            0,
+            MAX_VISIBLE_SINGERS
+          );
+
+
+        const hiddenCount =
+          singers.length -
+          visibleSingers.length;
+
+
         rotation.innerHTML =
-          singers.map(
+
+          visibleSingers.map(
             (singer, index) => `
 
               <div class="rotation-row">
@@ -598,9 +707,31 @@
               </div>
 
             `
-          ).join("");
+          ).join("")
+
+          +
+
+          (
+            hiddenCount > 0
+
+              ? `
+                <div class="more-waiting">
+                  + ${hiddenCount}
+                  more
+                  ${
+                    hiddenCount === 1
+                      ? "singer"
+                      : "singers"
+                  }
+                  waiting 🎤
+                </div>
+              `
+
+              : ""
+          );
 
       }
+
 
       catch (error) {
 
@@ -616,8 +747,12 @@
     }
 
 
+    /* START */
+
     loadRotation();
 
+
+    /* REFRESH EVERY 5 SECONDS */
 
     setInterval(
       loadRotation,
