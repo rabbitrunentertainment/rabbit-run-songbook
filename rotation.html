@@ -168,6 +168,58 @@
       font-size: clamp(15px, 1.7vw, 20px);
     }
 
+    /* =========================
+       ZERO-SINGER WELCOME ONLY
+       ========================= */
+
+    .empty-welcome {
+      text-align: center;
+      padding: 28px 20px;
+      margin-bottom: 12px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(47,126,234,.18),
+          rgba(212,47,197,.16)
+        );
+      border: 2px solid #3b82f6;
+      border-radius: 16px;
+      box-shadow:
+        0 0 18px rgba(59,130,246,.35),
+        inset 0 0 18px rgba(255,255,255,.03);
+    }
+
+    .empty-welcome-main {
+      font-size: clamp(30px, 4vw, 52px);
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.05;
+      margin-bottom: 8px;
+      text-shadow:
+        0 0 10px #3b82f6,
+        0 0 20px #7c3aed;
+    }
+
+    .empty-welcome-hook {
+      font-size: clamp(20px, 2.4vw, 30px);
+      font-weight: 800;
+      color: #f9a8d4;
+      margin-bottom: 12px;
+    }
+
+    .empty-welcome-steps {
+      font-size: clamp(16px, 1.8vw, 22px);
+      line-height: 1.5;
+      color: #e5e7eb;
+    }
+
+    .empty-welcome-tag {
+      margin-top: 12px;
+      color: #93c5fd;
+      font-size: clamp(18px, 2vw, 24px);
+      font-weight: 800;
+    }
+
     .closing-banner {
       text-align: center;
       padding: 34px 24px;
@@ -763,6 +815,37 @@
        RECRUITING MESSAGE
        ========================= */
 
+    function emptyWelcomeMessage() {
+
+      return `
+
+        <div class="empty-welcome">
+
+          <div class="empty-welcome-main">
+            🎤 THE MIC IS WAITING...
+          </div>
+
+          <div class="empty-welcome-hook">
+            Be the first one in the rotation!
+          </div>
+
+          <div class="empty-welcome-steps">
+            Scan the QR code • Search the song book • Pick your song • Enter your name
+            <br>
+            <strong>That’s it. You’re in.</strong>
+          </div>
+
+          <div class="empty-welcome-tag">
+            🐇 Pick It. Sing It. Hop In!
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+
     function needMoreMessage() {
 
       return `
@@ -1310,9 +1393,10 @@
           else {
 
             rotationTitle.textContent =
-              "Who's Singing Next?";
+              "Welcome to Karaoke!";
 
             rotation.innerHTML =
+              emptyWelcomeMessage() +
               needMoreMessage();
 
           }
