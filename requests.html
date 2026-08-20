@@ -1,473 +1,301 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Rabbit Run Karaoke Rotation</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at 15% 0%, #32104b 0, transparent 35%),
-        radial-gradient(circle at 85% 10%, #09285c 0, transparent 38%),
-        #050711;
-      color: white;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    .wrap {
-      width: min(1200px, 94vw);
-      margin: auto;
-      padding: 20px 20px 35px;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .logo {
-      width: min(250px, 40vw);
-      max-height: 150px;
-      object-fit: contain;
-      margin-bottom: 5px;
-      filter: drop-shadow(0 0 18px rgba(166,66,255,.3));
-    }
-
-    h1 {
-      font-size: clamp(32px, 4vw, 54px);
-      margin: 0;
-    }
-
-    .subtitle {
-      color: #d8b4fe;
-      font-size: clamp(15px, 2vw, 20px);
-      margin-top: 4px;
-    }
-
-    .up-next-box {
-      border: 3px solid #d42fc5;
-      background: rgba(212, 47, 197, 0.12);
-      border-radius: 18px;
+color: white;
+font-family: Arial, sans-serif;
+margin: 0;
+      padding: 18px;
       padding: 16px;
-      text-align: center;
-      margin-bottom: 20px;
-      box-shadow: 0 0 24px rgba(212, 47, 197, 0.18);
-    }
+}
 
-    .up-next-label {
-      color: #f9a8d4;
-      font-size: 18px;
-      font-weight: bold;
-      letter-spacing: 0.12em;
-    }
+h1 {
+text-align: center;
+      font-size: 32px;
+      font-size: 30px;
+margin: 0 0 2px;
+}
 
-    .up-next-name {
-      font-size: clamp(34px, 5vw, 62px);
-      font-weight: bold;
-      margin-top: 4px;
-    }
-
-    .rotation-title {
-      text-align: center;
-      font-size: 24px;
-      margin-bottom: 12px;
-      color: #d8b4fe;
-      font-weight: bold;
-    }
-
-    #rotation {
-      display: grid;
-      gap: 8px;
-    }
-
-    .rotation-row {
-      display: grid;
-      grid-template-columns: 65px 1fr;
-      align-items: center;
-      background: rgba(31, 41, 55, 0.92);
-      border: 2px solid #7c3aed;
-      border-radius: 12px;
-      padding: 10px 16px;
-    }
-
-    .position {
-      color: #d8b4fe;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    .name {
-      font-size: clamp(21px, 2.5vw, 31px);
-      font-weight: bold;
-    }
-
-    .empty {
-      text-align: center;
-      color: #b9b8c7;
-      font-size: 22px;
-      padding: 35px 20px;
-    }
-
-    .qr-section {
-      margin: 22px auto 0;
-      text-align: center;
-    }
-
-    .qr-title {
-      font-size: clamp(20px, 2.5vw, 28px);
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .qr-subtitle {
-      color: #d8b4fe;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-
-    .qr {
-      width: min(180px, 30vw);
-      height: auto;
-      background: white;
-      padding: 6px;
-      border-radius: 10px;
-    }
-
-    footer {
-      text-align: center;
-      color: #b9b8c7;
-      margin-top: 14px;
+.subtitle {
+text-align: center;
+color: #d8b4fe;
+      margin-bottom: 16px;
       font-size: 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+}
+
+#requests {
+      max-width: 900px;
+      max-width: 1100px;
+margin: auto;
+}
+
+.request {
+background: #1f2937;
+border: 2px solid #7c3aed;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-radius: 9px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+
+      display: grid;
+      grid-template-columns:
+        minmax(110px, 0.8fr)
+        minmax(180px, 1.6fr)
+        minmax(140px, 1.3fr)
+        85px
+        75px
+        auto;
+
+      gap: 10px;
+      align-items: center;
+}
+
+.request.up-next {
+border-width: 3px;
+}
+
+.singer {
+      font-size: 19px;
+      font-size: 16px;
+font-weight: bold;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+}
+
+.song {
+      font-size: 16px;
+      font-size: 15px;
+font-weight: bold;
+      margin-top: 3px;
+}
+
+.artist {
+color: #cbd5e1;
+      margin-top: 2px;
+font-size: 14px;
+}
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 5px;
     }
 
-    @media (max-width: 600px) {
+.status {
+color: #f9a8d4;
+font-weight: bold;
+text-transform: uppercase;
+      font-size: 13px;
+      font-size: 12px;
+}
 
-      .wrap {
-        padding: 15px 12px 30px;
-      }
-
-      .logo {
-        width: min(220px, 65vw);
-      }
-
-      .rotation-row {
-        grid-template-columns: 42px 1fr;
-        padding: 10px 12px;
-      }
-
-      .position {
-        font-size: 17px;
-      }
-
-      .qr {
-        width: min(170px, 48vw);
-      }
+.time {
+color: #cbd5e1;
+      font-size: 13px;
+      font-size: 12px;
     }
-  </style>
+
+    .warnings {
+      grid-column: 1 / -1;
+}
+
+.warning {
+color: #fbbf24;
+font-weight: bold;
+      margin-top: 3px;
+      font-size: 13px;
+      font-size: 12px;
+      margin-top: 2px;
+}
+
+.controls {
+display: flex;
+      gap: 7px;
+      margin-top: 7px;
+      gap: 6px;
+      justify-content: flex-end;
+}
+
+button {
+border: none;
+      border-radius: 7px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      padding: 7px 10px;
+font-weight: bold;
+cursor: pointer;
+      font-size: 13px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 750px) {
+
+      .request {
+        display: block;
+        padding: 10px;
+      }
+
+      .singer {
+        font-size: 18px;
+      }
+
+      .song {
+        margin-top: 4px;
+      }
+
+      .artist,
+      .status,
+      .time {
+        margin-top: 3px;
+      }
+
+      .controls {
+        justify-content: flex-start;
+        margin-top: 7px;
+      }
+
+      .warnings {
+        margin-top: 4px;
+      }
+}
+</style>
 </head>
+@@ -269,7 +308,7 @@ <h1>🎤 Song Requests</h1>
+}
 
-<body>
 
-  <div class="wrap">
+        /* BUILD REQUEST CARDS */
+        /* BUILD COMPACT REQUEST ROWS */
 
-    <header>
+container.innerHTML =
+activeRequests.map(request => {
+@@ -307,60 +346,25 @@ <h1>🎤 Song Requests</h1>
+                 ${escapeHtml(currentName)}
+               </div>
 
-      <img
-        class="logo"
-        src="Rabbit Run logo with effects-clear bkgd.png"
-        alt="Rabbit Run Entertainment"
-      >
 
-      <h1>🎤 Karaoke Rotation</h1>
+                ${
+                  nameChanged
 
-      <div class="subtitle">
-        Rabbit Run Entertainment
-      </div>
+                    ? `
+                      <div class="warning">
+                        ⚠️ Originally:
+                        ${escapeHtml(originalName)}
+                      </div>
+                    `
 
-    </header>
+                    : ""
+                }
 
 
-    <div
-      id="upNextBox"
-      class="up-next-box"
-      style="display:none;"
-    >
+                ${
+                  sameDeviceMismatch
 
-      <div class="up-next-label">
-        UP NEXT
-      </div>
+                    ? `
+                      <div class="warning">
+                        ⚠️ NAME MISMATCH - SAME DEVICE
+                      </div>
+                    `
 
-      <div
-        id="upNextName"
-        class="up-next-name"
-      ></div>
+                    : ""
+                }
 
-    </div>
 
+               <div class="song">
+                 ${escapeHtml(request.song_title)}
+               </div>
 
-    <div class="rotation-title">
-      Upcoming Singers
-    </div>
 
+               <div class="artist">
+                 ${escapeHtml(request.artist)}
+               </div>
 
-    <div id="rotation">
 
-      <div class="empty">
-        Loading rotation...
-      </div>
+                <div class="status-row">
 
-    </div>
+                  <div class="status">
+                    ${
+                      isUpNext
+                        ? "UP NEXT"
+                        : "WAITING"
+                    }
+                  </div>
 
+                  <div class="time">
+                    ${formatTime(request.created_at)}
+                  </div>
 
-    <div class="qr-section">
+                <div class="status">
+                  ${
+                    isUpNext
+                      ? "UP NEXT"
+                      : "WAITING"
+                  }
+               </div>
 
-      <div class="qr-title">
-        Want to Sing? 🎤
-      </div>
-
-      <div class="qr-subtitle">
-        Scan to Search & Request Songs
-      </div>
-
-      <img
-        class="qr"
-        src="Rabbit_Run_Songbook_QR_with_Logo (1).png"
-        alt="Scan to open the Rabbit Run Karaoke Song Book"
-      >
-
-    </div>
-
-
-    <footer>
-      Keepin' the Party Hoppin'
-    </footer>
-
-  </div>
-
-
-  <script>
-
-    const SUPABASE_URL =
-      "https://cpprxqlevftbgpjjfgnz.supabase.co";
-
-    const SUPABASE_KEY =
-      "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
-
-
-    const escapeHtml = value =>
-      String(value ?? "").replace(
-        /[&<>"']/g,
-        character => ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;"
-        }[character])
-      );
-
-
-    async function loadRotation() {
-
-      const rotation =
-        document.getElementById("rotation");
-
-      const upNextBox =
-        document.getElementById("upNextBox");
-
-      const upNextName =
-        document.getElementById("upNextName");
-
-
-      try {
-
-        const response = await fetch(
-
-          `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
-
-          {
-            headers: {
-              "apikey": SUPABASE_KEY,
-              "Authorization":
-                `Bearer ${SUPABASE_KEY}`
-            }
-          }
-
-        );
-
-
-        if (!response.ok) {
-
-          rotation.innerHTML =
-            `<div class="empty">
-              Could not load rotation.
-            </div>`;
-
-          return;
-        }
-
-
-        const data =
-          await response.json();
-
-
-        const active =
-          data.filter(request =>
-            request.status !== "completed"
-          );
-
-
-        if (active.length === 0) {
-
-          upNextBox.style.display =
-            "none";
-
-          rotation.innerHTML =
-            `<div class="empty">
-              No singers in the rotation yet.
-            </div>`;
-
-          return;
-        }
-
-
-        const upNextRequest =
-          active.find(request =>
-            request.status === "up_next"
-          );
-
-
-        if (upNextRequest) {
-
-          upNextName.textContent =
-            upNextRequest.singer_name;
-
-          upNextBox.style.display =
-            "block";
-
-        }
-
-        else {
-
-          upNextBox.style.display =
-            "none";
-
-        }
-
-
-        const singers = [];
-        const seenSingers = new Set();
-
-
-        active.forEach(request => {
-
-          if (
-            upNextRequest &&
-            request.id === upNextRequest.id
-          ) {
-            return;
-          }
-
-
-          const singerKey =
-            request.singer_id
-
-              ? `device:${request.singer_id}`
-
-              : `name:${String(
-                  request.singer_name || ""
-                )
-                  .trim()
-                  .toLowerCase()}`;
-
-
-          if (seenSingers.has(singerKey)) {
-            return;
-          }
-
-
-          seenSingers.add(singerKey);
-
-
-          singers.push({
-
-            name:
-              String(
-                request.singer_name || ""
-              ).trim(),
-
-            created_at:
-              request.created_at
-
-          });
-
-        });
-
-
-        if (singers.length === 0) {
-
-          rotation.innerHTML =
-            `<div class="empty">
-              No other singers waiting.
-            </div>`;
-
-          return;
-        }
-
-
-        rotation.innerHTML =
-          singers.map(
-            (singer, index) => `
-
-              <div class="rotation-row">
-
-                <div class="position">
-                  ${index + 1}.
+                <div class="time">
+                  ${formatTime(request.created_at)}
                 </div>
 
-                <div class="name">
-                  ${escapeHtml(singer.name)}
-                </div>
+               <div class="controls">
 
-              </div>
-
-            `
-          ).join("");
-
-      }
-
-      catch (error) {
-
-        console.error(error);
-
-        rotation.innerHTML =
-          `<div class="empty">
-            Could not load rotation.
-          </div>`;
-
-      }
-
-    }
+@@ -373,7 +377,6 @@ <h1>🎤 Song Requests</h1>
+                   Up Next
+                 </button>
 
 
-    loadRotation();
+                 <button
+                   onclick="finishRequest(
+                     ${request.id}
+@@ -384,6 +387,44 @@ <h1>🎤 Song Requests</h1>
+
+               </div>
 
 
-    setInterval(
-      loadRotation,
-      5000
-    );
+                ${
+                  nameChanged || sameDeviceMismatch
 
-  </script>
+                    ? `
+                      <div class="warnings">
+
+                        ${
+                          nameChanged
+
+                            ? `
+                              <div class="warning">
+                                ⚠️ Originally:
+                                ${escapeHtml(originalName)}
+                              </div>
+                            `
+
+                            : ""
+                        }
+
+                        ${
+                          sameDeviceMismatch
+
+                            ? `
+                              <div class="warning">
+                                ⚠️ NAME MISMATCH - SAME DEVICE
+                              </div>
+                            `
+
+                            : ""
+                        }
+
+                      </div>
+                    `
+
+                    : ""
+                }
+
+             </div>
+
+           `;
+@@ -494,4 +535,5 @@ <h1>🎤 Song Requests</h1>
+</script>
 
 </body>
 
