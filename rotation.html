@@ -1,1 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Rabbit Run Karaoke Rotation</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 0%, #32104b 0, transparent 35%),
+        radial-gradient(circle at 85% 10%, #09285c 0, transparent 38%),
+        #050711;
+      color: white;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .wrap {
+      width: min(1200px, 94vw);
+      margin: auto;
+      padding: 30px 20px 50px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-size: clamp(36px, 5vw, 64px);
+      margin: 0;
+    }
+
+    .subtitle {
+      color: #d8b4fe;
+      font-size: clamp(16px, 2vw, 22px);
+      margin-top: 6px;
+    }
+
+    .up-next-box {
+      border: 3px solid #d42fc5;
+      background: rgba(212, 47, 197, 0.12);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 28px;
+      box-shadow: 0 0 24px rgba(212, 47, 197, 0.18);
+    }
+
+    .up-next-label {
+      color: #f9a8d4;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+    }
+
+    .up-next-name {
+      font-size: clamp(38px, 6vw, 72px);
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .rotation-title {
+      text-align: center;
+      font-size: 25px;
+      margin-bottom: 14px;
+      color: #d8b4fe;
+    }
+
+    #rotation {
+      display: grid;
+      gap: 10px;
+    }
+
+    .rotation-row {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      align-items: center;
+
+      background: rgba(31, 41, 55, 0.92);
+      border: 2px solid #7c3aed;
+      border-radius: 12px;
+      padding: 13px 18px;
+    }
+
+    .position {
+      color: #d8b4fe;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .name {
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: bold;
+    }
+
+    .empty {
+      text-align: center;
+      color: #b9b8c7;
+      font-size: 24px;
+      padding: 50px 20px;
+    }
+
+    footer {
+      text-align: center;
+      color: #b9b8c7;
+      margin-top: 30px;
+      font-size: 15px;
+    }
+
+    @media (max-width: 600px) {
+
+      .wrap {
+        padding: 20px 12px 40px;
+      }
+
+      .rotation-row {
+        grid-template-columns: 45px 1fr;
+        padding: 11px 13px;
+      }
+
+      .position {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrap">
+
+    <header>
+      <h1>🎤 Karaoke Rotation</h1>
+      <div class="subtitle">
+        Rabbit Run Entertainment
+      </div>
+    </header>
+
+
+    <div
+      id="upNextBox"
+      class="up-next-box"
+      style="display:none;"
+    >
+
+      <div class="up-next-label">
+        UP NEXT
+      </div>
+
+      <div
+        id="upNextName"
+        class="up-next-name"
+      ></div>
+
+    </div>
+
+
+    <div class="rotation-title">
+      Upcoming Singers
+    </div>
+
+
+    <div id="rotation">
+      <div class="empty">
+        Loading rotation...
+      </div>
+    </div>
+
+
+    <footer>
+      Keepin' the Party Hoppin'
+    </footer>
+
+  </div>
+
+
+  <script>
+
+    const SUPABASE_URL =
+      "https://cpprxqlevftbgpjjfgnz.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
+
+
+    /* SAFE DISPLAY TEXT */
+
+    const escapeHtml = value =>
+      String(value ?? "").replace(
+        /[&<>"']/g,
+        character => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        }[character])
+      );
+
+
+    /* LOAD ROTATION */
+
+    async function loadRotation() {
+
+      const rotation =
+        document.getElementById("rotation");
+
+      const upNextBox =
+        document.getElementById("upNextBox");
+
+      const upNextName =
+        document.getElementById("upNextName");
+
+
+      try {
+
+        const response = await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
+
+          {
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization":
+                `Bearer ${SUPABASE_KEY}`
+            }
+          }
+
+        );
+
+
+        if (!response.ok) {
+
+          rotation.innerHTML =
+            `<div class="empty">
+              Could not load rotation.
+            </div>`;
+
+          return;
+        }
+
+
+        const data =
+          await response.json();
+
+
+        /* ACTIVE REQUESTS ONLY */
+
+        const active =
+          data.filter(request =>
+            request.status !== "completed"
+          );
+
+
+        if (active.length === 0) {
+
+          upNextBox.style.display =
+            "none";
+
+          rotation.innerHTML =
+            `<div class="empty">
+              No singers in the rotation yet.
+            </div>`;
+
+          return;
+        }
+
+
+        /* FIND UP NEXT */
+
+        const upNextRequest =
+          active.find(request =>
+            request.status === "up_next"
+          );
+
+
+        if (upNextRequest) {
+
+          upNextName.textContent =
+            upNextRequest.singer_name;
+
+          upNextBox.style.display =
+            "block";
+
+        }
+
+        else {
+
+          upNextBox.style.display =
+            "none";
+
+        }
+
+
+        /*
+          BUILD SINGER ROTATION
+
+          Only the singer's oldest active
+          request determines their first
+          position in the rotation.
+
+          singer_id is used when available.
+          Name is the fallback.
+        */
+
+        const singers = [];
+        const seenSingers = new Set();
+
+
+        active.forEach(request => {
+
+          /*
+            Do not repeat the person
+            already marked UP NEXT
+            in the upcoming list.
+          */
+
+          if (
+            upNextRequest &&
+            request.id === upNextRequest.id
+          ) {
+            return;
+          }
+
+
+          const singerKey =
+            request.singer_id
+
+              ? `device:${request.singer_id}`
+
+              : `name:${String(
+                  request.singer_name || ""
+                )
+                  .trim()
+                  .toLowerCase()}`;
+
+
+          if (seenSingers.has(singerKey)) {
+            return;
+          }
+
+
+          seenSingers.add(singerKey);
+
+
+          singers.push({
+            name:
+              String(
+                request.singer_name || ""
+              ).trim(),
+
+            created_at:
+              request.created_at
+          });
+
+        });
+
+
+        if (singers.length === 0) {
+
+          rotation.innerHTML =
+            `<div class="empty">
+              No other singers waiting.
+            </div>`;
+
+          return;
+        }
+
+
+        /* DISPLAY ROTATION */
+
+        rotation.innerHTML =
+          singers.map(
+            (singer, index) => `
+
+              <div class="rotation-row">
+
+                <div class="position">
+                  ${index + 1}.
+                </div>
+
+                <div class="name">
+                  ${escapeHtml(singer.name)}
+                </div>
+
+              </div>
+
+            `
+          ).join("");
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        rotation.innerHTML =
+          `<div class="empty">
+            Could not load rotation.
+          </div>`;
+
+      }
+
+    }
+
+
+    /* START */
+
+    loadRotation();
+
+
+    /* REFRESH EVERY 5 SECONDS */
+
+    setInterval(
+      loadRotation,
+      5000
+    );
+
+  </script>
+
+</body>
+
+</html>
