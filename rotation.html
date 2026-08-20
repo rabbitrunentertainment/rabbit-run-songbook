@@ -30,15 +30,31 @@
     }
 
     header {
+      position: relative;
       text-align: center;
       margin-bottom: 10px;
+      min-height: 112px;
+      padding: 8px 250px 0;
     }
 
     .logo {
-      width: min(260px, 34vw);
-      max-height: 130px;
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: min(300px, 24vw);
+      max-height: 150px;
       object-fit: contain;
       filter: drop-shadow(0 0 16px rgba(166,66,255,.3));
+    }
+
+    .venue-name {
+      min-height: 28px;
+      color: #f9a8d4;
+      font-size: clamp(18px, 2.2vw, 30px);
+      font-weight: bold;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
     h1 {
@@ -53,7 +69,7 @@
       border-radius: 14px;
       padding: 10px 18px;
       text-align: center;
-      margin: 12px auto;
+      margin: 12px 238px 12px 0;
       box-shadow: 0 0 22px rgba(212,47,197,.2);
     }
 
@@ -178,6 +194,20 @@
     }
 
     @media (max-width: 700px) {
+      header {
+        min-height: 0;
+        padding: 90px 0 0;
+      }
+
+      .logo {
+        width: min(220px, 55vw);
+        max-height: 90px;
+      }
+
+      .up-next-box {
+        margin-right: 0;
+      }
+
       .content {
         grid-template-columns: 1fr;
       }
@@ -208,6 +238,8 @@
         src="Rabbit Run logo with effects-clear bkgd.png"
         alt="Rabbit Run Entertainment"
       >
+
+      <div id="venueName" class="venue-name"></div>
 
       <h1>🎤 Karaoke Rotation</h1>
 
@@ -292,6 +324,24 @@
 
     const DEFAULT_TV_DISPLAY_COUNT = 6;
 
+
+    const VENUE_NAME_SETTING =
+      "VENUE_NAME";
+
+    function getVenueName(data) {
+      const settings = data
+        .filter(request =>
+          request.singer_name === SETTINGS_SINGER &&
+          request.song_title === VENUE_NAME_SETTING
+        )
+        .sort((a, b) =>
+          new Date(b.created_at) - new Date(a.created_at)
+        );
+
+      return settings.length > 0
+        ? String(settings[0].artist || "").trim()
+        : "";
+    }
 
     function getTvDisplayCount(data) {
 
@@ -1016,6 +1066,10 @@
 
         const data =
           await response.json();
+
+        document.getElementById(
+          "venueName"
+        ).textContent = getVenueName(data);
 
 
         /*

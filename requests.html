@@ -195,6 +195,31 @@
       flex-wrap: wrap;
     }
 
+    .venue-control {
+      max-width: 1100px;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .venue-control input {
+      width: min(320px, 70vw);
+      padding: 8px 10px;
+      border-radius: 7px;
+      border: 1px solid #64748b;
+      background: #111827;
+      color: white;
+      font-size: 14px;
+    }
+
+    .venue-save-button {
+      background: #d42fc5;
+      color: white;
+    }
+
     .tv-display-label {
       color: #d8b4fe;
       font-size: 13px;
@@ -353,6 +378,12 @@
         Sign Out
       </button>
     </div>
+
+  <div class="venue-control">
+    <span class="tv-display-label">VENUE:</span>
+    <input id="venueNameInput" type="text" placeholder="Enter venue/location name">
+    <button class="venue-save-button" onclick="saveVenueName()">Save Venue</button>
+  </div>
 
   <div class="tv-display-control">
     <span class="tv-display-label">TV SHOWS:</span>
@@ -518,6 +549,68 @@
 
     const DEFAULT_TV_DISPLAY_COUNT = 6;
 
+
+    const VENUE_NAME_SETTING =
+      "VENUE_NAME";
+
+    function getVenueName(data) {
+      const settings = data
+        .filter(request =>
+          request.singer_name === SETTINGS_SINGER &&
+          request.song_title === VENUE_NAME_SETTING
+        )
+        .sort((a, b) =>
+          new Date(b.created_at) - new Date(a.created_at)
+        );
+
+      return settings.length > 0
+        ? String(settings[0].artist || "").trim()
+        : "";
+    }
+
+    async function saveVenueName() {
+      const input = document.getElementById("venueNameInput");
+      const venueName = input.value.trim();
+
+      try {
+        const deleteResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(VENUE_NAME_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+        );
+
+        if (!deleteResponse.ok) {
+          throw new Error("Could not clear old venue setting.");
+        }
+
+        if (venueName) {
+          const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/requests`,
+            {
+              method: "POST",
+              headers: apiHeaders(true),
+              body: JSON.stringify({
+                singer_name: SETTINGS_SINGER,
+                song_title: VENUE_NAME_SETTING,
+                artist: venueName,
+                status: "completed"
+              })
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Could not save venue: ${await response.text()}`);
+          }
+        }
+
+        input.value = venueName;
+      } catch (error) {
+        console.error(error);
+        alert("Could not save the venue name.");
+      }
+    }
 
     function getTvDisplayCount(data) {
 
@@ -1705,6 +1798,10 @@
         updateTvDisplayButtons(
           getTvDisplayCount(data)
         );
+
+        document.getElementById(
+          "venueNameInput"
+        ).value = getVenueName(data);
 
 
         /*
