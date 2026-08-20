@@ -391,6 +391,17 @@
 
     @media (max-width: 750px) {
 
+      .kj-app {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .final-three-control {
+        order: 999;
+        width: 100%;
+        margin-top: 18px;
+      }
+
       .final-three-grid {
         grid-template-columns: 1fr;
       }
@@ -495,15 +506,15 @@
 
     <div class="final-three-grid">
 
-      <select id="finalSinger1">
+      <select id="finalSinger1" onchange="finalThreeEditing = true;">
         <option value="">Final Singer 1</option>
       </select>
 
-      <select id="finalSinger2">
+      <select id="finalSinger2" onchange="finalThreeEditing = true;">
         <option value="">Final Singer 2</option>
       </select>
 
-      <select id="finalSinger3">
+      <select id="finalSinger3" onchange="finalThreeEditing = true;">
         <option value="">Final Singer 3</option>
       </select>
 
@@ -586,6 +597,7 @@
 
     let accessToken = null;
     let venueInputInitialized = false;
+    let finalThreeEditing = false;
 
 
     async function refreshAuthUI() {
@@ -834,6 +846,15 @@
 
     function updateFinalThreeControls(data) {
 
+      /*
+        DON'T RESET THE DROPDOWNS
+        WHILE THE KJ IS CHOOSING
+        THE FINAL 3.
+      */
+      if (finalThreeEditing) {
+        return;
+      }
+
       const activeKeys =
         new Set(
           data
@@ -1027,6 +1048,8 @@
           values
         );
 
+        finalThreeEditing = false;
+
 
         /*
           If one of the chosen Final 3
@@ -1091,6 +1114,8 @@
         await saveFinalThreeSetting(
           []
         );
+
+        finalThreeEditing = false;
 
         await loadRequests();
 

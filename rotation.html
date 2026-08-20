@@ -354,6 +354,59 @@
     const VENUE_NAME_SETTING =
       "VENUE_NAME";
 
+    const FINAL_THREE_SETTING =
+      "FINAL_THREE";
+
+
+    function getFinalThree(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === FINAL_THREE_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return [];
+      }
+
+      try {
+
+        const value =
+          JSON.parse(
+            settings[0].artist || "[]"
+          );
+
+        return Array.isArray(value)
+          ? value
+              .map(String)
+              .filter(Boolean)
+              .slice(0, 3)
+          : [];
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Could not read Final 3 setting.",
+          error
+        );
+
+        return [];
+
+      }
+
+    }
+
+
 
     function getVenueName(data) {
 
@@ -653,6 +706,29 @@
 
           <div class="need-more-sub">
             Scan the QR code and hop into the rotation.
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+
+    function closingMessage() {
+
+      return `
+
+        <div class="need-more">
+
+          <div class="need-more-main">
+            🐇 That’s a Wrap!
+          </div>
+
+          <div class="need-more-sub">
+            Thanks for coming out and singing with us!
+            We had a hoppin’ good time!
+            See you next time! 🎤
           </div>
 
         </div>
@@ -1139,7 +1215,18 @@
         }
 
 
-        if (
+        const finalThree =
+          getFinalThree(data);
+
+
+        if (finalThree.length === 3) {
+
+          rotationHtml +=
+            closingMessage();
+
+        }
+
+        else if (
           waiting.length <=
           RECRUITING_THRESHOLD
         ) {
