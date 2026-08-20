@@ -122,47 +122,25 @@
       padding: 6px 0 2px;
     }
 
-    .empty {
-      text-align: center;
-      padding: 50px 20px;
-    }
-
-    .empty-main {
-      font-size: clamp(28px, 4vw, 44px);
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .empty-need {
-      color: #f9a8d4;
-      font-size: clamp(24px, 3vw, 34px);
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .empty-sub {
-      color: #d8b4fe;
-      font-size: clamp(16px, 2vw, 22px);
-    }
-
     .need-more {
       text-align: center;
-      padding: 30px 20px;
+      padding: 22px 16px;
+      margin-top: 4px;
       background: rgba(31,41,55,.45);
       border: 2px dashed #7c3aed;
       border-radius: 12px;
     }
 
     .need-more-main {
-      font-size: clamp(24px, 3vw, 36px);
+      font-size: clamp(22px, 2.6vw, 34px);
       font-weight: bold;
       color: #f9a8d4;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
 
     .need-more-sub {
       color: #d8b4fe;
-      font-size: clamp(16px, 2vw, 21px);
+      font-size: clamp(15px, 1.7vw, 20px);
     }
 
     .qr-section {
@@ -266,11 +244,7 @@
     <div class="content">
 
       <div id="rotation">
-
-        <div class="empty">
-          Loading rotation...
-        </div>
-
+        Loading rotation...
       </div>
 
 
@@ -313,8 +287,6 @@
     const MAX_VISIBLE_SINGERS = 6;
 
 
-    /* SAFE DISPLAY TEXT */
-
     const escapeHtml = value =>
       String(value ?? "").replace(
         /[&<>"']/g,
@@ -328,8 +300,6 @@
       );
 
 
-    /* ROTATION USES SINGER NAME */
-
     function singerKey(request) {
 
       return String(
@@ -337,6 +307,28 @@
       )
         .trim()
         .toLowerCase();
+
+    }
+
+
+    function needMoreMessage() {
+
+      return `
+
+        <div class="need-more">
+
+          <div class="need-more-main">
+            🐇 Don't leave the mic hangin'!
+            We need more singers!
+          </div>
+
+          <div class="need-more-sub">
+            Scan the QR code and hop into the rotation.
+          </div>
+
+        </div>
+
+      `;
 
     }
 
@@ -376,9 +368,7 @@
         if (!response.ok) {
 
           rotation.innerHTML =
-            `<div class="empty">
-              Could not load rotation.
-            </div>`;
+            "Could not load rotation.";
 
           return;
         }
@@ -396,41 +386,28 @@
           );
 
 
-        /* ABSOLUTELY NOBODY IN ROTATION */
+        /*
+          NOBODY AT ALL
+        */
 
         if (active.length === 0) {
 
           upNextBox.style.display =
             "none";
 
-          rotationTitle.style.display =
-            "none";
+          rotationTitle.textContent =
+            "Who's Singing Next?";
 
-          rotation.innerHTML = `
-
-            <div class="empty">
-
-              <div class="empty-main">
-                🐇 Don't leave the mic hangin'!
-              </div>
-
-              <div class="empty-need">
-                We need singers!
-              </div>
-
-              <div class="empty-sub">
-                Scan the QR code and hop into the rotation.
-              </div>
-
-            </div>
-
-          `;
+          rotation.innerHTML =
+            needMoreMessage();
 
           return;
         }
 
 
-        /* FIND UP NEXT */
+        /*
+          FIND UP NEXT
+        */
 
         const upNextRequest =
           active.find(request =>
@@ -456,7 +433,9 @@
         }
 
 
-        /* FIND EACH SINGER'S MOST RECENT COMPLETED TURN */
+        /*
+          COMPLETED HISTORY
+        */
 
         const lastCompletedBySinger =
           new Map();
@@ -505,7 +484,9 @@
         });
 
 
-        /* ONE ENTRY PER ACTIVE SINGER */
+        /*
+          ONE ENTRY PER ACTIVE SINGER
+        */
 
         const singersByName =
           new Map();
@@ -559,7 +540,9 @@
           );
 
 
-        /* REMOVE UP NEXT FROM UPCOMING LIST */
+        /*
+          REMOVE UP NEXT FROM UPCOMING
+        */
 
         if (upNextRequest) {
 
@@ -578,7 +561,9 @@
         }
 
 
-        /* SORT ROTATION */
+        /*
+          SORT ROTATION
+        */
 
         singers.sort(
           (a, b) => {
@@ -621,56 +606,13 @@
         );
 
 
-        /*
-          SOMEONE IS UP NEXT
-          BUT NOBODY IS WAITING AFTER THEM
-        */
-
-        if (
-          upNextRequest &&
-          singers.length === 0
-        ) {
-
-          rotationTitle.textContent =
-            "Upcoming Singers";
-
-          rotationTitle.style.display =
-            "block";
-
-          rotation.innerHTML = `
-
-            <div class="need-more">
-
-              <div class="need-more-main">
-                🐇 Don't leave the mic hangin'!
-                We need more singers!
-              </div>
-
-              <div class="need-more-sub">
-                Scan the QR code and hop into the rotation.
-              </div>
-
-            </div>
-
-          `;
-
-          return;
-        }
-
-
-        /*
-          NO UP NEXT SELECTED,
-          BUT THERE ARE SINGERS WAITING
-        */
-
         rotationTitle.textContent =
           "Upcoming Singers";
 
-        rotationTitle.style.display =
-          "block";
 
-
-        /* SHOW FIRST SIX */
+        /*
+          FIRST SIX UPCOMING SINGERS
+        */
 
         const visibleSingers =
           singers.slice(
@@ -684,7 +626,14 @@
           visibleSingers.length;
 
 
-        rotation.innerHTML =
+        let rotationHtml = "";
+
+
+        /*
+          BUILD SINGER ROWS
+        */
+
+        rotationHtml +=
 
           visibleSingers.map(
             (singer, index) => `
@@ -704,28 +653,54 @@
               </div>
 
             `
-          ).join("")
+          ).join("");
 
-          +
 
-          (
-            hiddenCount > 0
+        /*
+          MORE THAN SIX WAITING
+        */
 
-              ? `
-                <div class="more-waiting">
-                  + ${hiddenCount}
-                  more
-                  ${
-                    hiddenCount === 1
-                      ? "singer"
-                      : "singers"
-                  }
-                  waiting 🎤
-                </div>
-              `
+        if (hiddenCount > 0) {
 
-              : ""
-          );
+          rotationHtml += `
+
+            <div class="more-waiting">
+
+              + ${hiddenCount} more
+              ${
+                hiddenCount === 1
+                  ? "singer"
+                  : "singers"
+              }
+              waiting 🎤
+
+            </div>
+
+          `;
+
+        }
+
+
+        /*
+          FEWER THAN SIX WAITING
+
+          USE THE EMPTY SPACE TO
+          RECRUIT MORE SINGERS.
+        */
+
+        else if (
+          visibleSingers.length <
+          MAX_VISIBLE_SINGERS
+        ) {
+
+          rotationHtml +=
+            needMoreMessage();
+
+        }
+
+
+        rotation.innerHTML =
+          rotationHtml;
 
       }
 
@@ -735,21 +710,15 @@
         console.error(error);
 
         rotation.innerHTML =
-          `<div class="empty">
-            Could not load rotation.
-          </div>`;
+          "Could not load rotation.";
 
       }
 
     }
 
 
-    /* START */
-
     loadRotation();
 
-
-    /* REFRESH EVERY 5 SECONDS */
 
     setInterval(
       loadRotation,
