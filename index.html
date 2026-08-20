@@ -52,8 +52,6 @@ if (!singerId) {
 
 let rememberedSingerName =
   localStorage.getItem("rabbitRunSingerName") || "";
-  let originalSingerName =
-  localStorage.getItem("rabbitRunOriginalSingerName") || "";
 const esc = s => String(s).replace(/[&<>"']/g, m => ({
   '&': '&amp;',
   '<': '&lt;',
@@ -112,7 +110,7 @@ async function submitRequest(singerName, songTitle, artist) {
     method: 'POST',
     headers: {
       'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,let
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -120,8 +118,7 @@ async function submitRequest(singerName, songTitle, artist) {
   song_title: songTitle,
   artist: artist,
   status: 'waiting',
-singer_id: singerId,
-original_name: originalSingerName
+  singer_id: singerId
 })
   });
 
@@ -144,10 +141,7 @@ async function requestSong(title, artist) {
     rememberedSingerName = singerName;
     localStorage.setItem("rabbitRunSingerName", singerName);
   }
-if (!originalSingerName) {
-  originalSingerName = singerName;
-  localStorage.setItem("rabbitRunOriginalSingerName", singerName);
-}
+
   try {
     await submitRequest(singerName, title, artist);
     alert(`${title} has been added to the request list!`);
