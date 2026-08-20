@@ -145,6 +145,26 @@
       font-size: clamp(16px, 2vw, 22px);
     }
 
+    .need-more {
+      text-align: center;
+      padding: 30px 20px;
+      background: rgba(31,41,55,.45);
+      border: 2px dashed #7c3aed;
+      border-radius: 12px;
+    }
+
+    .need-more-main {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: bold;
+      color: #f9a8d4;
+      margin-bottom: 8px;
+    }
+
+    .need-more-sub {
+      color: #d8b4fe;
+      font-size: clamp(16px, 2vw, 21px);
+    }
+
     .qr-section {
       text-align: center;
       align-self: end;
@@ -308,17 +328,7 @@
       );
 
 
-    /*
-      ROTATION IDENTITY
-
-      IMPORTANT:
-      Rotation uses the singer NAME,
-      not the device ID.
-
-      That means Kristina and Matt can
-      submit from the same phone and still
-      appear as separate singers.
-    */
+    /* ROTATION USES SINGER NAME */
 
     function singerKey(request) {
 
@@ -378,9 +388,7 @@
           await response.json();
 
 
-        /*
-          ACTIVE REQUESTS
-        */
+        /* ACTIVE REQUESTS */
 
         const active =
           data.filter(request =>
@@ -388,9 +396,7 @@
           );
 
 
-        /*
-          EMPTY ROTATION
-        */
+        /* ABSOLUTELY NOBODY IN ROTATION */
 
         if (active.length === 0) {
 
@@ -424,13 +430,7 @@
         }
 
 
-        rotationTitle.style.display =
-          "block";
-
-
-        /*
-          FIND UP NEXT
-        */
+        /* FIND UP NEXT */
 
         const upNextRequest =
           active.find(request =>
@@ -456,10 +456,7 @@
         }
 
 
-        /*
-          FIND EACH SINGER'S
-          MOST RECENT COMPLETED TURN
-        */
+        /* FIND EACH SINGER'S MOST RECENT COMPLETED TURN */
 
         const lastCompletedBySinger =
           new Map();
@@ -508,9 +505,7 @@
         });
 
 
-        /*
-          ONE ENTRY PER ACTIVE SINGER
-        */
+        /* ONE ENTRY PER ACTIVE SINGER */
 
         const singersByName =
           new Map();
@@ -564,11 +559,7 @@
           );
 
 
-        /*
-          UP NEXT IS DISPLAYED SEPARATELY,
-          SO REMOVE THAT SINGER FROM THE
-          UPCOMING LIST.
-        */
+        /* REMOVE UP NEXT FROM UPCOMING LIST */
 
         if (upNextRequest) {
 
@@ -587,18 +578,7 @@
         }
 
 
-        /*
-          ROTATION ORDER
-
-          Singers who haven't sung yet
-          come first by original request.
-
-          Singers who already had a turn
-          cycle behind them.
-
-          Among repeat singers, whoever
-          sang longest ago comes first.
-        */
+        /* SORT ROTATION */
 
         singers.sort(
           (a, b) => {
@@ -642,24 +622,31 @@
 
 
         /*
-          IF UP NEXT IS THE ONLY SINGER
+          SOMEONE IS UP NEXT
+          BUT NOBODY IS WAITING AFTER THEM
         */
 
-        if (singers.length === 0) {
+        if (
+          upNextRequest &&
+          singers.length === 0
+        ) {
+
+          rotationTitle.textContent =
+            "Upcoming Singers";
+
+          rotationTitle.style.display =
+            "block";
 
           rotation.innerHTML = `
 
-            <div class="empty">
+            <div class="need-more">
 
-              <div class="empty-main">
+              <div class="need-more-main">
                 🐇 Don't leave the mic hangin'!
-              </div>
-
-              <div class="empty-need">
                 We need more singers!
               </div>
 
-              <div class="empty-sub">
+              <div class="need-more-sub">
                 Scan the QR code and hop into the rotation.
               </div>
 
@@ -672,8 +659,18 @@
 
 
         /*
-          SHOW ONLY FIRST SIX
+          NO UP NEXT SELECTED,
+          BUT THERE ARE SINGERS WAITING
         */
+
+        rotationTitle.textContent =
+          "Upcoming Singers";
+
+        rotationTitle.style.display =
+          "block";
+
+
+        /* SHOW FIRST SIX */
 
         const visibleSingers =
           singers.slice(
