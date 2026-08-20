@@ -175,10 +175,19 @@ input {
   font-size:14px;
 }
 
+
+/* =========================
+   SEPARATION BEFORE WISHLIST
+   ========================= */
+
 .note {
   text-align:center;
   color:var(--muted);
-  margin-top140:px;
+
+  /* BIG GAP GOES HERE */
+  margin-top:140px;
+
+  margin-bottom:12px;
   font-size:14px;
 }
 
@@ -189,7 +198,10 @@ input {
 
 .wishlist {
   width:min(380px,100%);
-  margin:140px auto 0;
+
+  /* KEEP BOX CLOSE TO NOTE */
+  margin:12px auto 0;
+
   padding:8px 10px;
 
   background:
@@ -250,6 +262,7 @@ input {
   margin:4px 0 0;
 }
 
+
 @media (max-width:600px) {
 
   .wishlist {
@@ -270,6 +283,11 @@ input {
 
 <main class="wrap">
 
+
+<!-- =========================
+     HEADER
+     ========================= -->
+
 <header>
 
   <img
@@ -278,7 +296,9 @@ input {
     alt="Rabbit Run Entertainment"
   >
 
-  <h1>Karaoke Song Book</h1>
+  <h1>
+    Karaoke Song Book
+  </h1>
 
   <p class="tag">
     Keepin' the Party Hoppin'
@@ -322,26 +342,30 @@ input {
 </div>
 
 
-<div id="status" class="status">
+<div
+  id="status"
+  class="status"
+>
   Loading song book…
 </div>
 
 
 <section
   id="results"
-  class="results">
+  class="results"
+>
 </section>
 
+
+<!-- =========================
+     BOTTOM / WISHLIST AREA
+     ========================= -->
 
 <p class="note">
   Don't see what you're looking for?
   Ask us. We may have another version available.
 </p>
 
-
-<!-- =========================
-     SONG WISHLIST
-     ========================= -->
 
 <section class="wishlist">
 
@@ -389,6 +413,7 @@ input {
   ></p>
 
 </section>
+
 
 </main>
 
@@ -788,8 +813,11 @@ async function requestSong(
 /* =========================
    SONG WISHLIST
 
-   ONLY GOES TO song_wishlist
-   NOT THE KARAOKE ROTATION
+   THIS ONLY GOES TO
+   song_wishlist
+
+   IT DOES NOT GO INTO
+   TONIGHT'S ROTATION
    ========================= */
 
 const wishlistTitle =
