@@ -16,9 +16,12 @@
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 15% 0%, #32104b 0, transparent 35%),
-        radial-gradient(circle at 85% 10%, #09285c 0, transparent 38%),
-        #050711;
+        linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)),
+        url("rabbit-run-show-background.png");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
       color: white;
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -32,54 +35,48 @@
     header {
       position: relative;
       text-align: center;
-      margin: 0 238px 10px 0;
-      min-height: 112px;
+      margin: 0 0 16px;
+      min-height: 0;
       padding: 8px 0 0;
     }
 
-    /* DESKTOP LOGO */
-    .logo {
-      position: fixed;
-      top: 115px;
-      right: 55px;
-      width: 190px;
-      height: 190px;
-      object-fit: contain;
-      transform: scale(1.35);
-      transform-origin: center;
-      filter: drop-shadow(0 0 16px rgba(166,66,255,.3));
-      z-index: 10;
-    }
-
     .venue-name {
-      min-height: 72px;
-      color: #93c5fd;
-      font-size: clamp(32px, 4vw, 48px);
-      font-weight: bold;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      text-shadow:
-        0 0 6px #60a5fa,
-        0 0 14px #3b82f6,
-        0 0 26px #2563eb,
-        0 0 38px #1d4ed8;
+      min-height: 44px;
+      font-size: clamp(24px, 3vw, 38px);
+      font-weight: 800;
+      letter-spacing: .02em;
+      margin: 2px 0 0;
+      text-transform: none;
+      background: linear-gradient(90deg, #60a5fa, #7c3aed, #f472e8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 12px rgba(59,130,246,.18);
     }
 
     h1 {
-      font-size: clamp(30px, 3.8vw, 50px);
+      width: 100%;
+      font-size: clamp(42px, 6vw, 78px);
       margin: 0;
       line-height: 1;
+      font-weight: 900;
+      letter-spacing: .03em;
+      background: linear-gradient(90deg, #ff4fd8, #a855f7, #38bdf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 18px rgba(168,85,247,.20);
     }
 
     .up-next-box {
       border: 3px solid #d42fc5;
-      background: rgba(212,47,197,.13);
+      background: rgba(10,15,28,.48);
       border-radius: 14px;
       padding: 10px 18px;
       text-align: center;
-      margin: 12px 238px 12px 0;
-      box-shadow: 0 0 22px rgba(212,47,197,.2);
+      margin: 12px 0;
+      box-shadow: 0 0 22px rgba(212,47,197,.20);
+      backdrop-filter: blur(2px);
     }
 
     .up-next-label {
@@ -105,10 +102,8 @@
     }
 
     .content {
-      display: grid;
-      grid-template-columns: 1fr 220px;
-      gap: 18px;
-      align-items: end;
+      display: block;
+      width: 100%;
     }
 
     #rotation {
@@ -121,11 +116,12 @@
       display: grid;
       grid-template-columns: 55px 1fr;
       align-items: center;
-      background: rgba(31,41,55,.92);
+      background: rgba(15,23,42,.56);
       border: 2px solid #7c3aed;
       border-radius: 10px;
       padding: 10px 14px;
       min-height: 52px;
+      backdrop-filter: blur(2px);
     }
 
     .position {
@@ -273,41 +269,10 @@
       }
     }
 
-    .qr-section {
-      position: fixed;
-      right: 55px;
-      bottom: 42px;
-      width: 220px;
-      text-align: center;
-      padding-bottom: 4px;
-      z-index: 20;
-    }
-
-    .qr-title {
-      font-size: 21px;
-      font-weight: bold;
-      margin-bottom: 3px;
-    }
-
-    .qr-subtitle {
-      color: #d8b4fe;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .qr {
-      width: 180px;
-      max-width: 100%;
-      height: auto;
-      background: white;
-      padding: 5px;
-      border-radius: 9px;
-    }
-
     footer {
       text-align: center;
-      color: #b9b8c7;
-      margin: 10px 238px 0 0;
+      color: #d1d5db;
+      margin: 12px 0 0;
       font-size: 13px;
     }
 
@@ -321,7 +286,7 @@
   header {
     min-height: 0;
     padding: 0;
-    margin: 0 0 10px 0;
+    margin: 0 0 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -331,33 +296,12 @@
     margin: 10px 0 0;
   }
 
-  .logo {
-    position: static;
-    width: 145px;
-    height: 145px;
-    max-height: none;
-    object-fit: contain;
-    transform: none;
-    margin: 0 auto 8px auto;
-    z-index: auto;
-  }
-
   .up-next-box {
     margin-right: 0;
   }
 
   .content {
     grid-template-columns: 1fr;
-  }
-
-  .qr-section {
-    position: static;
-    width: auto;
-    margin-top: 15px;
-  }
-
-  .qr {
-    width: 160px;
   }
 
   .rotation-row {
@@ -375,20 +319,14 @@
 
     <header>
 
-      <img
-        class="logo"
-        src="Rabbit Run logo with effects-clear bkgd.png"
-        alt="Rabbit Run Entertainment"
-      >
+      <h1>
+        Karaoke TONIGHT!
+      </h1>
 
       <div
         id="venueName"
         class="venue-name"
       ></div>
-
-      <h1>
-        🎤 Karaoke Rotation
-      </h1>
 
     </header>
 
@@ -424,26 +362,6 @@
       <div id="rotation">
         Loading rotation...
       </div>
-
-
-      <div class="qr-section">
-
-        <div class="qr-title">
-          Want to Sing? 🎤
-        </div>
-
-        <div class="qr-subtitle">
-          Scan to Search & Request Songs
-        </div>
-
-        <img
-          class="qr"
-          src="Rabbit_Run_Songbook_QR_with_Logo (1).png"
-          alt="Scan to open the Rabbit Run Karaoke Song Book"
-        >
-
-      </div>
-
     </div>
 
 
