@@ -122,7 +122,7 @@
       text-align: center;
       margin: 8px auto;
       box-shadow: 0 0 22px rgba(212,47,197,.18);
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(.5px);
     }
 
     .up-next-label {
@@ -419,8 +419,8 @@
       border-radius: 18px;
       background:
         linear-gradient(
-          rgba(10,15,28,.26),
-          rgba(10,15,28,.26)
+          rgba(10,15,28,.10),
+          rgba(10,15,28,.10)
         ) padding-box,
         linear-gradient(
           90deg,
@@ -431,10 +431,10 @@
           #00b7ff 100%
         ) border-box;
       box-shadow:
-        0 0 10px rgba(255,0,140,.48),
-        0 0 20px rgba(176,0,255,.30),
-        0 0 28px rgba(0,183,255,.20),
-        inset 0 0 14px rgba(255,255,255,.03);
+        0 0 9px rgba(255,0,140,.42),
+        0 0 18px rgba(176,0,255,.24),
+        0 0 24px rgba(0,183,255,.16),
+        inset 0 0 8px rgba(255,255,255,.015);
       backdrop-filter: blur(2px);
     }
 
@@ -718,6 +718,234 @@
       z-index: 200 !important;
       width: min(92vw, 1240px) !important;
       max-width: calc(100vw - 40px) !important;
+    }
+
+    body {
+      overflow-x: hidden !important;
+    }
+
+
+/* ===== REFINED TV OVERRIDES ===== */
+
+    /* VENUE: electric gold -> orange so it does NOT blend into the title */
+    .venue-name,
+    #venueName {
+      background: linear-gradient(
+        90deg,
+        #FFE600 0%,
+        #FFB000 45%,
+        #FF6A00 100%
+      ) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: #FFE600 !important;
+      filter:
+        drop-shadow(0 0 2px rgba(255,230,0,.55))
+        drop-shadow(0 0 7px rgba(255,106,0,.22)) !important;
+    }
+
+    .venue-emoji {
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      background-clip: initial !important;
+      -webkit-text-fill-color: initial !important;
+      color: initial !important;
+      filter: none !important;
+      text-shadow: none !important;
+    }
+
+    /* Closing headline: gradient fill + thin GOLD outline, not mint fill */
+    .closing-banner-main {
+      line-height: 1.20 !important;
+      padding: .06em .06em .18em !important;
+      overflow: visible !important;
+      -webkit-text-stroke: 0 !important;
+      text-shadow: none !important;
+    }
+
+    .closing-headline-text {
+      display: inline-block;
+      background: linear-gradient(
+        90deg,
+        #ff008c 0%,
+        #ff00d4 24%,
+        #b000ff 52%,
+        #5b2cff 74%,
+        #00b7ff 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      -webkit-text-stroke: 1.25px #FFD400;
+      paint-order: stroke fill;
+      filter: drop-shadow(0 0 2px rgba(255,212,0,.32));
+    }
+
+    .closing-emoji {
+      display: inline-block;
+      margin: 0 .12em;
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      background-clip: initial !important;
+      -webkit-text-fill-color: initial !important;
+      color: initial !important;
+      -webkit-text-stroke: 0 !important;
+      filter: none !important;
+      text-shadow: none !important;
+    }
+
+    /* 6-SINGER VIEW: fit all 6 + footer on one screen */
+    body.show-6 .wrap {
+      padding-top: 4px !important;
+      padding-bottom: 74px !important;
+    }
+
+    body.show-6 header {
+      margin-bottom: 4px !important;
+    }
+
+    body.show-6 h1 {
+      font-size: clamp(62px, 7.8vw, 110px) !important;
+    }
+
+    body.show-6 .venue-name {
+      font-size: clamp(32px, 3.9vw, 50px) !important;
+      min-height: 38px !important;
+      margin-top: 0 !important;
+    }
+
+    body.show-6 .up-next-box {
+      margin-top: 5px !important;
+      margin-bottom: 5px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    body.show-6 .rotation-title {
+      margin: 3px 0 4px !important;
+    }
+
+    body.show-6 #rotation {
+      gap: 4px !important;
+      row-gap: 4px !important;
+    }
+
+    body.show-6 .rotation-row {
+      min-height: 50px !important;
+      padding: 3px 10px !important;
+    }
+
+    body.show-6 .name {
+      font-size: clamp(34px, 3.4vw, 44px) !important;
+      line-height: 1.02 !important;
+    }
+
+    body.show-6 .position {
+      font-size: 20px !important;
+    }
+
+    body.show-6 .more-waiting {
+      padding: 2px 0 0 !important;
+      font-size: 15px !important;
+    }
+
+    body.show-6 {
+      overflow-y: hidden !important;
+    }
+
+    /* 4-SINGER VIEW: remove scrollbar without making names small */
+    body.show-4 .wrap {
+      padding-top: 6px !important;
+      padding-bottom: 78px !important;
+    }
+
+    body.show-4 header {
+      margin-bottom: 6px !important;
+    }
+
+    body.show-4 .up-next-box {
+      margin-top: 6px !important;
+      margin-bottom: 6px !important;
+    }
+
+    body.show-4 .rotation-title {
+      margin: 4px 0 5px !important;
+    }
+
+    body.show-4 #rotation {
+      gap: 7px !important;
+      row-gap: 7px !important;
+    }
+
+    body.show-4 .rotation-row {
+      min-height: 66px !important;
+      padding: 6px 12px !important;
+    }
+
+    body.show-4 .name {
+      font-size: clamp(40px, 4.1vw, 54px) !important;
+      line-height: 1.04 !important;
+    }
+
+    body.show-4 {
+      overflow-y: hidden !important;
+    }
+
+    /* FINAL 3 START ONLY: fit the banner without shrinking its text */
+    body.final-three-start .wrap {
+      padding-top: 3px !important;
+      padding-bottom: 84px !important;
+    }
+
+    body.final-three-start header {
+      margin-bottom: 3px !important;
+    }
+
+    body.final-three-start .up-next-box {
+      margin-top: 4px !important;
+      margin-bottom: 4px !important;
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+    }
+
+    body.final-three-start .rotation-title {
+      margin: 2px 0 4px !important;
+    }
+
+    body.final-three-start #rotation {
+      gap: 5px !important;
+      row-gap: 5px !important;
+    }
+
+    body.final-three-start .rotation-row {
+      min-height: 52px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+
+    body.final-three-start .closing-banner {
+      width: min(94vw, 1380px) !important;
+      max-width: calc(100vw - 34px) !important;
+      padding: 16px 30px !important;
+      margin-top: 1px !important;
+    }
+
+    body.final-three-start {
+      overflow-y: hidden !important;
+    }
+
+    footer {
+      position: fixed !important;
+      left: 50% !important;
+      bottom: 10px !important;
+      transform: translateX(-50%) !important;
+      z-index: 300 !important;
+      width: min(92vw, 1240px) !important;
+      max-width: calc(100vw - 40px) !important;
+      margin: 0 !important;
+      pointer-events: none !important;
     }
 
     body {
@@ -1259,13 +1487,17 @@
     function closingMessage(remainingFinalCount) {
 
       let headline = "";
+      let leftEmoji = "";
+      let rightEmoji = "";
       let subtext = "";
 
 
       if (remainingFinalCount >= 3) {
 
         headline =
-          "🐇 We’re Down to the Final 3! 🎤";
+          "We’re Down to the Final 3!";
+        leftEmoji = "🐇";
+        rightEmoji = "🎤";
 
         subtext =
           "Thanks for coming out and singing with us!<br>" +
@@ -1278,7 +1510,8 @@
       else if (remainingFinalCount === 2) {
 
         headline =
-          "🎤 Only 2 Singers Left!";
+          "Only 2 Singers Left!";
+        leftEmoji = "🎤";
 
         subtext =
           "We’re winding down the night!<br>" +
@@ -1291,7 +1524,8 @@
       else if (remainingFinalCount === 1) {
 
         headline =
-          "🎤 Last Singer of the Night!";
+          "Last Singer of the Night!";
+        leftEmoji = "🎤";
 
         subtext =
           "One more trip to the mic!<br>" +
@@ -1304,7 +1538,8 @@
       else {
 
         headline =
-          "🐇 That’s a Wrap!";
+          "That’s a Wrap!";
+        leftEmoji = "🐇";
 
         subtext =
           "Thanks for coming out and singing with us!<br>" +
@@ -1319,7 +1554,19 @@
         <div class="closing-banner ${remainingFinalCount === 0 ? "wrap-complete" : ""}">
 
           <div class="closing-banner-main">
-            ${headline}
+            ${
+              leftEmoji
+                ? `<span class="closing-emoji">${leftEmoji}</span>`
+                : ""
+            }
+            <span class="closing-headline-text">
+              ${headline}
+            </span>
+            ${
+              rightEmoji
+                ? `<span class="closing-emoji">${rightEmoji}</span>`
+                : ""
+            }
           </div>
 
           <div class="closing-banner-sub">
@@ -1871,12 +2118,19 @@
           await response.json();
 
 
-        document
-          .getElementById(
+        const venueElement =
+          document.getElementById(
             "venueName"
-          )
-          .textContent =
-            getVenueName(data);
+          );
+
+        const venueText =
+          getVenueName(data);
+
+        venueElement.innerHTML =
+          escapeHtml(venueText).replace(
+            /🐇/g,
+            '<span class="venue-emoji">🐇</span>'
+          );
 
 
         const tvDisplayCount =
@@ -1926,6 +2180,10 @@
           document.body.classList.toggle(
             "final-three-active",
             finalThree.length === 3
+          );
+
+          document.body.classList.remove(
+            "final-three-start"
           );
 
           if (finalThree.length === 3) {
@@ -2020,6 +2278,12 @@
         document.body.classList.toggle(
           "final-three-active",
           finalThreePhase
+        );
+
+        document.body.classList.toggle(
+          "final-three-start",
+          finalThreePhase &&
+          remainingFinalCount === 3
         );
 
 
