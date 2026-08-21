@@ -44,7 +44,7 @@
       z-index: 2;
       width: min(1400px, 96vw);
       margin: auto;
-      padding: 14px 20px 20px;
+      padding: 10px 20px 8px;
     }
 
     header {
@@ -108,7 +108,7 @@
       border-radius: 14px;
       padding: 10px 18px;
       text-align: center;
-      margin: 12px auto;
+      margin: 8px auto;
       box-shadow: 0 0 22px rgba(212,47,197,.18);
       backdrop-filter: blur(2px);
     }
@@ -444,7 +444,7 @@
     }
 
     footer {
-      margin: 18px auto 4px;
+      margin: 8px auto 2px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -574,7 +574,21 @@
   }
 }
 
-  </style>
+  
+    /* Keep the TV show screen inside one viewport so no side scrollbar appears. */
+    @media (min-width: 701px) and (max-height: 950px) {
+      .wrap {
+        transform: scale(.97);
+        transform-origin: top center;
+        width: min(1440px, 99vw);
+      }
+
+      body {
+        overflow-y: hidden;
+      }
+    }
+
+</style>
 </head>
 
 
