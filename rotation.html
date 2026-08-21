@@ -135,19 +135,90 @@
 
     #rotation {
       display: grid;
-      gap: 7px;
+      gap: 8px;
       align-self: start;
+      width: 100%;
+      margin: 0 auto;
+      justify-items: center;
+    }
+
+    #rotation .rotation-row {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /*
+      Singer list sizing changes based on
+      the KJ's TV SHOWS 2 / 4 / 6 setting.
+
+      Up Next is NOT changed.
+    */
+
+    #rotation.display-6 {
+      max-width: 980px;
+    }
+
+    #rotation.display-6 .rotation-row {
+      min-height: 46px;
+      padding: 7px 12px;
+      grid-template-columns: 48px 1fr;
+    }
+
+    #rotation.display-6 .position {
+      font-size: 18px;
+    }
+
+    #rotation.display-6 .name {
+      font-size: clamp(22px, 2.2vw, 30px);
+    }
+
+
+    #rotation.display-4 {
+      max-width: 1060px;
+    }
+
+    #rotation.display-4 .rotation-row {
+      min-height: 58px;
+      padding: 10px 14px;
+      grid-template-columns: 52px 1fr;
+    }
+
+    #rotation.display-4 .position {
+      font-size: 20px;
+    }
+
+    #rotation.display-4 .name {
+      font-size: clamp(28px, 3vw, 38px);
+    }
+
+
+    #rotation.display-2 {
+      max-width: 1140px;
+    }
+
+    #rotation.display-2 .rotation-row {
+      min-height: 72px;
+      padding: 14px 18px;
+      grid-template-columns: 58px 1fr;
+    }
+
+    #rotation.display-2 .position {
+      font-size: 22px;
+    }
+
+    #rotation.display-2 .name {
+      font-size: clamp(34px, 4vw, 48px);
     }
 
     .rotation-row {
       display: grid;
-      grid-template-columns: 55px 1fr;
+      grid-template-columns: 48px 1fr;
       align-items: center;
       background: rgba(15,23,42,.54);
       border: 2px solid rgba(124,58,237,.90);
       border-radius: 10px;
-      padding: 10px 14px;
-      min-height: 52px;
+      padding: 8px 12px;
+      min-height: 46px;
       backdrop-filter: blur(2px);
     }
 
@@ -160,6 +231,8 @@
     .name {
       font-size: clamp(21px, 2.5vw, 31px);
       font-weight: bold;
+      text-align: center;
+      padding-right: 48px;
     }
 
     .more-waiting {
@@ -1321,6 +1394,23 @@
 
         const tvDisplayCount =
           getTvDisplayCount(data);
+
+
+        /*
+          SIZE THE SINGER LIST
+          ACCORDING TO TV SHOWS 2 / 4 / 6.
+          THIS DOES NOT TOUCH UP NEXT.
+        */
+
+        rotation.classList.remove(
+          "display-2",
+          "display-4",
+          "display-6"
+        );
+
+        rotation.classList.add(
+          `display-${tvDisplayCount}`
+        );
 
 
         const active =
