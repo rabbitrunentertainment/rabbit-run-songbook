@@ -620,6 +620,110 @@
 }
 
   
+
+/* ===== TV SHOW SCREEN FINAL OVERRIDES ===== */
+
+    /* VENUE: electric aqua -> electric blue */
+    .venue,
+    #venue,
+    .venue-name,
+    #venueName {
+      background: linear-gradient(90deg, #00F5FF 0%, #00A8FF 100%) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: #00F5FF;
+      filter: drop-shadow(0 0 5px rgba(0,245,255,.24));
+    }
+
+    /* Closing headline readability + descender fix */
+    .closing-banner-main {
+      line-height: 1.18 !important;
+      padding: 0.08em 0.08em 0.16em !important;
+      overflow: visible !important;
+
+      /* Keep existing gradient text but add a thin mint outline */
+      -webkit-text-stroke: 1.5px #5CFFB0;
+      paint-order: stroke fill;
+      text-shadow:
+        0 0 2px rgba(92,255,176,.85),
+        0 0 8px rgba(92,255,176,.30);
+    }
+
+    .closing-banner {
+      overflow: visible !important;
+    }
+
+    /* 6 singer view: fit on one TV screen */
+    body.show-6 .rotation-row {
+      min-height: 62px !important;
+      padding-top: 5px !important;
+      padding-bottom: 5px !important;
+    }
+
+    body.show-6 #rotation {
+      row-gap: 7px !important;
+      gap: 7px !important;
+    }
+
+    body.show-6 .rotation-name {
+      font-size: clamp(31px, 3.4vw, 48px) !important;
+      line-height: 1.05 !important;
+    }
+
+    body.show-6 .wrap {
+      padding-bottom: 92px !important;
+    }
+
+    /* 4 singer view: keep large, remove page overflow */
+    body.show-4 .rotation-row {
+      min-height: 76px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    body.show-4 #rotation {
+      row-gap: 9px !important;
+      gap: 9px !important;
+    }
+
+    body.show-4 .wrap {
+      padding-bottom: 92px !important;
+    }
+
+    /* Final 3: fit banner without shrinking its text */
+    body.final-three-active .closing-banner {
+      width: min(94vw, 1380px) !important;
+      max-width: calc(100vw - 42px) !important;
+      padding-top: 20px !important;
+      padding-bottom: 20px !important;
+      margin-top: 2px !important;
+    }
+
+    body.final-three-active #rotation {
+      row-gap: 8px !important;
+      gap: 8px !important;
+    }
+
+    body.final-three-active .wrap {
+      padding-bottom: 96px !important;
+    }
+
+    /* Footer: fixed to TV viewport bottom */
+    footer {
+      position: fixed !important;
+      left: 50% !important;
+      bottom: 14px !important;
+      transform: translateX(-50%) !important;
+      z-index: 200 !important;
+      width: min(92vw, 1240px) !important;
+      max-width: calc(100vw - 40px) !important;
+    }
+
+    body {
+      overflow-x: hidden !important;
+    }
+
 </style>
 </head>
 
