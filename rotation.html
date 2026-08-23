@@ -114,30 +114,30 @@
 
 
     .up-next-box {
-      width: var(--up-next-width, min(54%, 760px));
+      width: var(--up-next-width, min(60%, 900px));
       max-width: calc(100vw - 48px);
-      border: 4px solid rgba(212,47,197,.95);
-      background: rgba(10,15,28,.46);
-      border-radius: 14px;
-      padding: 10px 18px;
+      border: 5px solid rgba(255,0,190,.96);
+      background: rgba(10,15,28,.68);
+      border-radius: 15px;
+      padding: 11px 20px;
       text-align: center;
       margin: 8px auto;
       box-shadow:
-        0 0 10px rgba(255,0,212,.42),
-        0 0 24px rgba(176,0,255,.30),
-        0 0 34px rgba(0,183,255,.16);
+        0 0 8px rgba(255,196,0,.96),
+        0 0 18px rgba(255,174,0,.76),
+        0 0 32px rgba(255,148,0,.44);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
     }
 
     .up-next-label {
-      color: #ff4fd8;
-      font-size: 16px;
-      font-weight: bold;
-      letter-spacing: .15em;
+      color: #ff63df;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: .16em;
       text-shadow:
-        0 0 5px rgba(255,0,212,.75),
-        0 0 10px rgba(176,0,255,.35);
+        0 0 6px rgba(255,0,212,.95),
+        0 0 12px rgba(176,0,255,.48);
     }
 
     .up-next-name {
@@ -156,22 +156,26 @@
     }
 
     body.show-6 .up-next-box {
-      padding: 7px 15px;
-      border-width: 3px;
+      padding: 8px 16px;
+      border-width: 4px;
     }
 
     body.show-4 .up-next-box {
-      padding: 9px 17px;
-      border-width: 4px;
+      padding: 11px 19px;
+      border-width: 5px;
     }
 
     body.show-2 .up-next-box {
-      padding: 14px 22px;
-      border-width: 4px;
+      padding: 16px 24px;
+      border-width: 6px;
+    }
+
+    body.show-4 .up-next-label {
+      font-size: 18px;
     }
 
     body.show-2 .up-next-label {
-      font-size: 18px;
+      font-size: 19px;
     }
 
     .rotation-title {
@@ -2054,18 +2058,18 @@
 
       const extraSpace =
         tvDisplayCount === 2
-          ? 128
+          ? 118
           : tvDisplayCount === 4
-            ? 116
-            : 106;
+            ? 108
+            : 100;
 
 
       const minimumWidth =
         tvDisplayCount === 2
-          ? 420
+          ? 400
           : tvDisplayCount === 4
-            ? 380
-            : 340;
+            ? 360
+            : 325;
 
 
       const maximumWidth =
@@ -2153,26 +2157,26 @@
       */
       const extraSpace =
         tvDisplayCount === 2
-          ? 180
+          ? 210
           : tvDisplayCount === 4
-            ? 150
-            : 130;
+            ? 185
+            : 165;
 
 
       const minimumWidth =
         tvDisplayCount === 2
-          ? 430
+          ? 680
           : tvDisplayCount === 4
-            ? 380
-            : 340;
+            ? 600
+            : 520;
 
 
       const maximumWidth =
         tvDisplayCount === 2
-          ? 900
+          ? 980
           : tvDisplayCount === 4
-            ? 820
-            : 760;
+            ? 900
+            : 820;
 
 
       const desiredWidth =
