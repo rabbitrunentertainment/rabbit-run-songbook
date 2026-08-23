@@ -549,7 +549,38 @@
         margin-top: 4px;
       }
     }
-  </style>
+  
+
+    /* =========================
+       BOTTOM KJ CONTROLS
+       ========================= */
+
+    .bottom-kj-controls {
+      max-width: 1100px;
+      margin: 28px auto 0;
+      width: 100%;
+    }
+
+    .bottom-kj-controls .final-three-control {
+      margin: 0 auto 12px;
+    }
+
+    .bottom-kj-controls .wishlist-control {
+      margin: 0 auto 10px;
+    }
+
+    .bottom-kj-controls .wishlist-panel {
+      margin: 10px auto 20px;
+    }
+
+    @media (max-width: 750px) {
+      .bottom-kj-controls {
+        width: 100%;
+        margin-top: 20px;
+      }
+    }
+
+</style>
 </head>
 
 <body>
@@ -740,6 +771,46 @@
        FINAL 3 MOBILE POSITION
        ========================= */
 
+    function ensureBottomControlsContainer() {
+
+      const kjApp =
+        document.getElementById(
+          "kjApp"
+        );
+
+      if (!kjApp) {
+        return null;
+      }
+
+      let bottomControls =
+        document.getElementById(
+          "bottomKjControls"
+        );
+
+      if (!bottomControls) {
+
+        bottomControls =
+          document.createElement(
+            "div"
+          );
+
+        bottomControls.id =
+          "bottomKjControls";
+
+        bottomControls.className =
+          "bottom-kj-controls";
+
+        kjApp.appendChild(
+          bottomControls
+        );
+
+      }
+
+      return bottomControls;
+
+    }
+
+
     function positionFinalThreeForScreen() {
 
       const finalThree =
@@ -747,54 +818,47 @@
           ".final-three-control"
         );
 
-      const kjApp =
-        document.getElementById(
-          "kjApp"
-        );
-
-      const tvControl =
-        document.querySelector(
-          ".tv-display-control"
-        );
+      const bottomControls =
+        ensureBottomControlsContainer();
 
 
       if (
         !finalThree ||
-        !kjApp ||
-        !tvControl
+        !bottomControls
       ) {
         return;
       }
 
 
       /*
-        MOBILE:
-        physically move Final 3
-        to the very bottom of KJ.
+        FINAL 3 ALWAYS LIVES AT THE BOTTOM
+        OF THE KJ PAGE.
+
+        It stays above Song Wishlist.
       */
+      const wishlistControl =
+        document.querySelector(
+          ".wishlist-control"
+        );
+
 
       if (
-        window.innerWidth <= 750
+        wishlistControl &&
+        wishlistControl.parentElement ===
+        bottomControls
       ) {
 
-        kjApp.appendChild(
-          finalThree
+        bottomControls.insertBefore(
+          finalThree,
+          wishlistControl
         );
 
       }
 
-
-      /*
-        DESKTOP:
-        put Final 3 back above
-        the TV display control.
-      */
-
       else {
 
-        kjApp.insertBefore(
-          finalThree,
-          tvControl
+        bottomControls.appendChild(
+          finalThree
         );
 
       }
@@ -933,68 +997,30 @@
           "wishlistPanel"
         );
 
-      const kjApp =
-        document.getElementById(
-          "kjApp"
-        );
-
-      const tvControl =
-        document.querySelector(
-          ".tv-display-control"
-        );
+      const bottomControls =
+        ensureBottomControlsContainer();
 
 
       if (
         !control ||
         !panel ||
-        !kjApp ||
-        !tvControl
+        !bottomControls
       ) {
         return;
       }
 
 
-      if (
-        window.innerWidth <= 750
-      ) {
+      /*
+        SONG WISHLIST ALWAYS LIVES UNDER
+        FINAL 3 AT THE BOTTOM OF THE KJ PAGE.
+      */
+      bottomControls.appendChild(
+        control
+      );
 
-        /*
-          MOBILE:
-          panel first, button LAST,
-          so Song Wishlist is at the
-          very bottom center.
-        */
-
-        kjApp.appendChild(
-          panel
-        );
-
-        kjApp.appendChild(
-          control
-        );
-
-      }
-
-
-      else {
-
-        /*
-          DESKTOP:
-          restore original placement
-          above TV SHOWS.
-        */
-
-        kjApp.insertBefore(
-          control,
-          tvControl
-        );
-
-        kjApp.insertBefore(
-          panel,
-          tvControl
-        );
-
-      }
+      bottomControls.appendChild(
+        panel
+      );
 
     }
 
