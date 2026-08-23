@@ -3828,7 +3828,9 @@
        RESUME SINGER
 
        RESTORES ALL THEIR SONGS
-       AND PUTS THEM AT THE BACK.
+       AND PUTS THEM IN THE SECOND
+       WAITING SPOT, AFTER THE PERSON
+       ALREADY FIRST IN LINE.
        ========================= */
 
     async function resumeSinger(key) {
@@ -3854,6 +3856,132 @@
         }
 
 
+        /*
+          Capture the current active rotation BEFORE
+          restoring the paused singer. Up Next stays
+          exactly where it is.
+        */
+        const currentRotation =
+          buildRotation(data);
+
+        const upNextKey =
+          currentRotation.length > 0 &&
+          currentRotation[0].currentRequest &&
+          currentRotation[0].currentRequest.status === "up_next"
+            ? currentRotation[0].key
+            : null;
+
+        const currentWaitingKeys =
+          currentRotation
+            .filter(
+              singer =>
+                singer.key !== upNextKey &&
+                singer.key !== key
+            )
+            .map(
+              singer => singer.key
+            );
+
+
+        /*
+          Restore the paused singer as normal waiting.
+          Do NOT use waiting_resumed_* here because
+          that status is treated as "send to back."
+        */
+        for (
+          const request of singerRequests
+        ) {
+
+          const response =
+            await fetch(
+
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+              {
+                method: "PATCH",
+
+                headers: {
+                  "apikey":
+                    SUPABASE_KEY,
+
+                  "Authorization":
+                    `Bearer ${accessToken || SUPABASE_KEY}`,
+
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  status: "waiting"
+                })
+              }
+
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Could not resume singer."
+            );
+
+          }
+
+        }
+
+
+        /*
+          Save an explicit manual order with the
+          resumed singer SECOND in the waiting list.
+
+          rotation.html reads this same manual order,
+          so the TV will show:
+
+          UP NEXT
+          1st waiting singer
+          Resumed singer
+          Everyone else...
+        */
+        /*
+          Put the resumed singer in the SECOND waiting
+          position, not the first.
+
+          TV order becomes:
+          UP NEXT
+          1st waiting singer
+          1st waiting singer
+          Resumed singer
+          Everyone else...
+        */
+        const resumedOrder = [
+          ...currentWaitingKeys.slice(0, 1),
+          key,
+          ...currentWaitingKeys.slice(1)
+        ];
+
+        await saveManualOrder(
+          resumedOrder
+        );
+
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not resume this singer."
+        );
+
+      }
+
+    }
+
+
+    
         const resumeStatus =
           `waiting_resumed_${Date.now()}`;
 
