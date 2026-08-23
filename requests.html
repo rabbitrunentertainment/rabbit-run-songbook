@@ -710,14 +710,18 @@
 
 
     /* =========================
-       USEFUL KJ CONTROL ORDER
+       KJ WORKFLOW LAYOUT
        ========================= */
 
     .bottom-kj-controls {
+      max-width: 1100px;
+      width: 100%;
+      margin: 22px auto 0;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding-bottom: 24px;
+      padding-bottom: 22px;
+      box-sizing: border-box;
     }
 
     .bottom-kj-controls > * {
@@ -725,28 +729,31 @@
       box-sizing: border-box;
     }
 
-    .bottom-kj-controls .final-three-control {
-      order: 2;
+    .bottom-kj-controls .requests-toggle-control,
+    .bottom-kj-controls .venue-control,
+    .bottom-kj-controls .wishlist-control,
+    .bottom-kj-controls .signed-in-bar {
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    .bottom-kj-controls .wishlist-control {
-      order: 3;
-    }
-
-    .bottom-kj-controls .wishlist-panel {
-      order: 4;
+    .bottom-signout {
+      margin-top: 0;
+      margin-bottom: 0;
+      text-align: center;
     }
 
     @media (min-width: 430px) and (max-width: 900px) {
 
-      #kjApp > h1,
-      #kjApp > h2 {
-        margin-bottom: 2px !important;
-      }
-
       .bottom-kj-controls {
         margin-top: 12px;
         gap: 7px;
+      }
+
+      .bottom-kj-controls .requests-toggle-control,
+      .bottom-kj-controls .venue-control {
+        margin-top: 0;
+        margin-bottom: 0;
       }
 
     }
@@ -788,130 +795,152 @@
 
     <div class="signed-in-bar">
       🔓 KJ controls unlocked
-      <button
-        class="signout-button"
-        onclick="kjSignOut()"
-      >
-        Sign Out
-      </button>
     </div>
 
-  <div class="venue-control">
-    <span class="tv-display-label">VENUE:</span>
-    <input id="venueNameInput" type="text" placeholder="Enter venue/location name" autocomplete="off" onkeydown="event.stopPropagation()" onkeyup="event.stopPropagation()">
-    <button class="venue-save-button" onclick="saveVenueName()">Save Venue</button>
-  </div>
-
-  <div class="requests-toggle-control">
-    <span class="tv-display-label">LIVE REQUESTS:</span>
-    <button
-      id="requestsToggleButton"
-      class="requests-toggle-button open"
-      onclick="toggleLiveRequests()"
-    >
-      OPEN
-    </button>
-  </div>
-
-
-  <div class="final-three-control">
-
-    <div class="final-three-title">
-      🎤 FINAL 3 SINGERS
+    <div class="tv-display-control">
+      <span class="tv-display-label">TV SHOWS:</span>
+      <button id="tvShow2" class="tv-count-button" onclick="setTvDisplayCount(2)">2</button>
+      <button id="tvShow4" class="tv-count-button" onclick="setTvDisplayCount(4)">4</button>
+      <button id="tvShow6" class="tv-count-button" onclick="setTvDisplayCount(6)">6</button>
     </div>
 
-    <div class="final-three-grid">
-
-      <select id="finalSinger1" onchange="finalThreeEditing = true;">
-        <option value="">Final Singer 1</option>
-      </select>
-
-      <select id="finalSinger2" onchange="finalThreeEditing = true;">
-        <option value="">Final Singer 2</option>
-      </select>
-
-      <select id="finalSinger3" onchange="finalThreeEditing = true;">
-        <option value="">Final Singer 3</option>
-      </select>
-
-    </div>
-
-    <div class="final-three-actions">
-
-      <button
-        class="final-three-button"
-        onclick="saveFinalThree()"
-      >
-        Set Final 3
-      </button>
-
-      <button
-        class="clear-final-three-button"
-        onclick="clearFinalThree()"
-      >
-        Clear Final 3
-      </button>
-
+    <div id="requests">
+      Loading requests...
     </div>
 
     <div
-      id="finalThreeStatus"
-      class="final-three-status"
+      id="pausedSection"
+      style="display:none;"
     >
-      Choose the final three singers in order.
+
+      <div class="section-title">
+        ⏸ Paused Singers
+      </div>
+
+      <div class="paused-note">
+        Saved for later and hidden from the active rotation.
+      </div>
+
+      <div id="pausedRequests"></div>
+
     </div>
 
-  </div>
+
+    <div id="bottomKjControls" class="bottom-kj-controls">
+
+      <div class="requests-toggle-control">
+        <span class="tv-display-label">LIVE REQUESTS:</span>
+        <button
+          id="requestsToggleButton"
+          class="requests-toggle-button open"
+          onclick="toggleLiveRequests()"
+        >
+          OPEN
+        </button>
+      </div>
 
 
-  <div class="wishlist-control">
-    <button
-      id="wishlistToggleButton"
-      class="wishlist-toggle-button"
-      onclick="toggleWishlistPanel()"
-    >
-      🎵 Song Wishlist
-    </button>
-  </div>
+      <div class="final-three-control">
 
-  <div
-    id="wishlistPanel"
-    class="wishlist-panel"
-  >
-    <h2>🎵 Song Wishlist</h2>
+        <div class="final-three-title">
+          🎤 FINAL 3 SINGERS
+        </div>
 
-    <div id="wishlistList">
-      Loading wishlist...
+        <div class="final-three-grid">
+
+          <select id="finalSinger1" onchange="finalThreeEditing = true;">
+            <option value="">Final Singer 1</option>
+          </select>
+
+          <select id="finalSinger2" onchange="finalThreeEditing = true;">
+            <option value="">Final Singer 2</option>
+          </select>
+
+          <select id="finalSinger3" onchange="finalThreeEditing = true;">
+            <option value="">Final Singer 3</option>
+          </select>
+
+        </div>
+
+        <div class="final-three-actions">
+
+          <button
+            class="final-three-button"
+            onclick="saveFinalThree()"
+          >
+            Set Final 3
+          </button>
+
+          <button
+            class="clear-final-three-button"
+            onclick="clearFinalThree()"
+          >
+            Clear Final 3
+          </button>
+
+        </div>
+
+        <div
+          id="finalThreeStatus"
+          class="final-three-status"
+        >
+          Choose the final three singers in order.
+        </div>
+
+      </div>
+
+
+      <div class="wishlist-control">
+        <button
+          id="wishlistToggleButton"
+          class="wishlist-toggle-button"
+          onclick="toggleWishlistPanel()"
+        >
+          🎵 Song Wishlist
+        </button>
+      </div>
+
+      <div
+        id="wishlistPanel"
+        class="wishlist-panel"
+      >
+        <h2>🎵 Song Wishlist</h2>
+
+        <div id="wishlistList">
+          Loading wishlist...
+        </div>
+      </div>
+
+
+      <div class="venue-control">
+        <span class="tv-display-label">VENUE:</span>
+        <input
+          id="venueNameInput"
+          type="text"
+          placeholder="Enter venue/location name"
+          autocomplete="off"
+          onkeydown="event.stopPropagation()"
+          onkeyup="event.stopPropagation()"
+        >
+        <button
+          class="venue-save-button"
+          onclick="saveVenueName()"
+        >
+          Save Venue
+        </button>
+      </div>
+
+
+      <div class="signed-in-bar bottom-signout">
+        <button
+          class="signout-button"
+          onclick="kjSignOut()"
+        >
+          Sign Out
+        </button>
+      </div>
+
     </div>
-  </div>
-
-  <div class="tv-display-control">
-    <span class="tv-display-label">TV SHOWS:</span>
-    <button id="tvShow2" class="tv-count-button" onclick="setTvDisplayCount(2)">2</button>
-    <button id="tvShow4" class="tv-count-button" onclick="setTvDisplayCount(4)">4</button>
-    <button id="tvShow6" class="tv-count-button" onclick="setTvDisplayCount(6)">6</button>
-  </div>
-
-  <div id="requests">
-    Loading requests...
-  </div>
-
-  <div
-    id="pausedSection"
-    style="display:none;"
-  >
-
-    <div class="section-title">
-      ⏸ Paused Singers
-    </div>
-
-    <div class="paused-note">
-      Saved for later and hidden from the active rotation.
-    </div>
-
-    <div id="pausedRequests"></div>
-
-  </div>
 
   </div><!-- /kjApp -->
 
@@ -982,134 +1011,124 @@
     }
 
 
-    function moveKjControlsToUsefulPlaces() {
-
-      const bottomControls =
-        ensureBottomControlsContainer();
-
-      if (!bottomControls) {
-        return;
-      }
-
-
-      /*
-        TOP OF KJ PAGE:
-        Keep TV Shows above the singer rotation.
-
-        BOTTOM OF KJ PAGE:
-        Live Requests
-        Final 3
-        Song Wishlist
-        Venue
-        Sign Out
-      */
-
-      const finalThree =
-        document.querySelector(
-          ".final-three-control"
-        );
-
-      const wishlistControl =
-        document.querySelector(
-          ".wishlist-control"
-        );
-
-      const wishlistPanel =
-        document.getElementById(
-          "wishlistPanel"
-        );
-
-
-      /*
-        Locate the existing controls by the text
-        they already contain. This avoids changing
-        any of their IDs, buttons, or event logic.
-      */
-
-      const allElements =
-        Array.from(
-          document.querySelectorAll(
-            "#kjApp *"
-          )
-        );
-
-
-      const liveRequestsControl =
-        allElements.find(
-          el =>
-            el.children.length > 0 &&
-            /LIVE REQUESTS:/i.test(
-              el.textContent || ""
-            ) &&
-            el.querySelector("button")
-        );
-
-
-      const venueInput =
-        document.getElementById(
-          "venueInput"
-        );
-
-      const venueControl =
-        venueInput
-          ? venueInput.parentElement
-          : null;
-
-
-      const signOutButton =
-        Array.from(
-          document.querySelectorAll(
-            "#kjApp button"
-          )
-        ).find(
-          button =>
-            /sign out/i.test(
-              button.textContent || ""
-            )
-        );
-
-      const signOutControl =
-        signOutButton
-          ? signOutButton.parentElement
-          : null;
-
-
-      [
-        liveRequestsControl,
-        finalThree,
-        wishlistControl,
-        wishlistPanel,
-        venueControl,
-        signOutControl
-      ].forEach(
-        element => {
-
-          if (
-            element &&
-            element !== bottomControls &&
-            !bottomControls.contains(element)
-          ) {
-
-            bottomControls.appendChild(
-              element
-            );
-
-          }
-
-        }
-      );
-
-    }
-
-
     function positionFinalThreeForScreen() {
 
-      moveKjControlsToUsefulPlaces();
+      /* Static layout: no repositioning needed. */
+      return;
 
     }
 
 
     positionFinalThreeForScreen();
+
+
+    window.addEventListener(
+      "resize",
+      positionFinalThreeForScreen
+    );
+
+
+
+    async function refreshAuthUI() {
+
+      const {
+        data: { session }
+      } =
+        await supabaseClient.auth.getSession();
+
+      accessToken =
+        session
+          ? session.access_token
+          : null;
+
+      document.getElementById(
+        "authPanel"
+      ).style.display =
+        session ? "none" : "block";
+
+      document.getElementById(
+        "kjApp"
+      ).style.display =
+        session ? "block" : "none";
+
+      if (session) {
+        await loadRequests();
+      }
+
+    }
+
+
+    async function kjSignIn() {
+
+      const email =
+        document.getElementById(
+          "loginEmail"
+        ).value.trim();
+
+      const password =
+        document.getElementById(
+          "loginPassword"
+        ).value;
+
+      const errorBox =
+        document.getElementById(
+          "authError"
+        );
+
+      errorBox.textContent = "";
+
+      const {
+        error
+      } =
+        await supabaseClient.auth
+          .signInWithPassword({
+            email,
+            password
+          });
+
+      if (error) {
+        errorBox.textContent =
+          "Login failed. Check the email and password.";
+        return;
+      }
+
+      document.getElementById(
+        "loginPassword"
+      ).value = "";
+
+      await refreshAuthUI();
+
+    }
+
+
+    async function kjSignOut() {
+
+      await supabaseClient.auth.signOut();
+      accessToken = null;
+      venueInputInitialized = false;
+      await refreshAuthUI();
+
+    }
+
+
+    function apiHeaders(
+      includeJson = false
+    ) {
+
+      const headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization":
+          `Bearer ${accessToken || SUPABASE_KEY}`
+      };
+
+      if (includeJson) {
+        headers["Content-Type"] =
+          "application/json";
+      }
+
+      return headers;
+
+    }
 
 
     /* =========================
@@ -1121,7 +1140,8 @@
 
     function positionWishlistForScreen() {
 
-      moveKjControlsToUsefulPlaces();
+      /* Static layout: no repositioning needed. */
+      return;
 
     }
 
