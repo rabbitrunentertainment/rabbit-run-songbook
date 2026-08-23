@@ -121,7 +121,7 @@
       border-radius: 15px;
       padding: 11px 20px;
       text-align: center;
-      margin: 13px auto 8px;
+      margin: 8px auto;
       box-shadow:
         0 0 8px rgba(255,196,0,.96),
         0 0 18px rgba(255,174,0,.76),
@@ -158,22 +158,22 @@
     body.show-6 .up-next-box {
       padding: 8px 16px;
       border-width: 4px;
-      margin-top: 9px !important;
-      margin-bottom: 6px !important;
+      margin-top: 5px !important;
+      margin-bottom: 4px !important;
     }
 
     body.show-4 .up-next-box {
       padding: 11px 19px;
       border-width: 5px;
-      margin-top: 12px !important;
-      margin-bottom: 7px !important;
+      margin-top: 6px !important;
+      margin-bottom: 4px !important;
     }
 
     body.show-2 .up-next-box {
       padding: 16px 24px;
       border-width: 6px;
-      margin-top: 14px !important;
-      margin-bottom: 8px !important;
+      margin-top: 7px !important;
+      margin-bottom: 5px !important;
     }
 
     body.show-4 .up-next-label {
@@ -189,7 +189,7 @@
       color: #d8b4fe;
       font-size: 21px;
       font-weight: bold;
-      margin: 16px 0 8px;
+      margin: 8px 0 6px;
     }
 
     .content {
@@ -859,7 +859,7 @@
     }
 
     body.show-6 .rotation-title {
-      margin: 8px 0 4px !important;
+      margin: 3px 0 4px !important;
     }
 
     body.show-6 #rotation {
@@ -906,7 +906,7 @@
     }
 
     body.show-4 .rotation-title {
-      margin: 10px 0 5px !important;
+      margin: 4px 0 5px !important;
     }
 
     body.show-4 #rotation {
@@ -946,7 +946,7 @@
     }
 
     body.final-three-start .rotation-title {
-      margin: 6px 0 4px !important;
+      margin: 2px 0 4px !important;
     }
 
     body.final-three-start #rotation {
@@ -1015,6 +1015,50 @@ body {
   max-width: 100%;
 }
 
+body.show-2,
+body.show-4,
+body.show-6 {
+  overflow-x: hidden !important;
+}
+
+
+
+/* ===== FIT FIX AFTER UP NEXT RESTYLE =====
+   Keep the gold halo, but reclaim vertical room so 2/4/6 all stay on-screen. */
+
+body.show-6 .need-more {
+  padding: 9px 14px !important;
+  margin-top: 2px !important;
+}
+
+
+body.show-4 .need-more {
+  padding: 10px 14px !important;
+  margin-top: 2px !important;
+}
+
+
+body.show-2 .need-more {
+  padding: 12px 16px !important;
+  margin-top: 3px !important;
+}
+
+
+/* Keep footer clear of the recruiting box without forcing a scrollbar. */
+body.show-6 .wrap,
+body.show-4 .wrap,
+body.show-2 .wrap {
+  padding-bottom: 82px !important;
+}
+
+/* Preserve the stronger row blur/darker panels. */
+.rotation-row {
+  background: rgba(15,23,42,.66) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Protect all TV modes from accidental horizontal scrollbars. */
 body.show-2,
 body.show-4,
 body.show-6 {
@@ -1542,9 +1586,7 @@ body.show-6 {
             We need more singers!
           </div>
 
-          <div class="need-more-sub">
-            Open the Rabbit Run Song Book and hop into the rotation.
-          </div>
+          
 
         </div>
 
