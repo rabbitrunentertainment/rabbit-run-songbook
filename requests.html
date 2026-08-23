@@ -3829,8 +3829,7 @@
 
        RESTORES ALL THEIR SONGS
        AND PUTS THEM IN THE SECOND
-       WAITING SPOT, AFTER THE PERSON
-       ALREADY FIRST IN LINE.
+       WAITING POSITION.
        ========================= */
 
     async function resumeSinger(key) {
@@ -3885,8 +3884,6 @@
 
         /*
           Restore the paused singer as normal waiting.
-          Do NOT use waiting_resumed_* here because
-          that status is treated as "send to back."
         */
         for (
           const request of singerRequests
@@ -3930,27 +3927,11 @@
 
 
         /*
-          Save an explicit manual order with the
-          resumed singer SECOND in the waiting list.
-
-          rotation.html reads this same manual order,
-          so the TV will show:
-
+          Put resumed singer in SECOND waiting spot:
           UP NEXT
           1st waiting singer
-          Resumed singer
-          Everyone else...
-        */
-        /*
-          Put the resumed singer in the SECOND waiting
-          position, not the first.
-
-          TV order becomes:
-          UP NEXT
-          1st waiting singer
-          1st waiting singer
-          Resumed singer
-          Everyone else...
+          resumed singer
+          everyone else
         */
         const resumedOrder = [
           ...currentWaitingKeys.slice(0, 1),
