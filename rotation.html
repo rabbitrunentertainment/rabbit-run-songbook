@@ -1086,6 +1086,56 @@ body.show-6 .need-more {
   box-sizing: border-box !important;
 }
 
+
+
+/* ===== CENTER EACH ROTATION ITEM INDEPENDENTLY =====
+   The wide one-line recruiting banner must not determine
+   the width/position of the singer rows. */
+body.show-2 #rotation,
+body.show-4 #rotation,
+body.show-6 #rotation {
+  width: 100% !important;
+  max-width: 100% !important;
+  justify-items: center !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+/* Singer rows keep their JS-calculated fitted width,
+   but are centered independently of the wide banner. */
+body.show-2 .rotation-row,
+body.show-4 .rotation-row,
+body.show-6 .rotation-row {
+  justify-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* The recruiting banner may stay wide and one-line,
+   but it no longer controls the singer-row placement. */
+body.show-2 .need-more,
+body.show-4 .need-more,
+body.show-6 .need-more {
+  justify-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Keep the title centered over the singer list. */
+body.show-2 .rotation-title,
+body.show-4 .rotation-title,
+body.show-6 .rotation-title {
+  justify-self: center !important;
+  width: auto !important;
+}
+
+/* No horizontal scrollbar in any TV mode. */
+body.show-2,
+body.show-4,
+body.show-6 {
+  overflow-x: hidden !important;
+}
+
 </style>
 </head>
 
