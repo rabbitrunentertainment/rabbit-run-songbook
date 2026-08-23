@@ -1065,6 +1065,27 @@ body.show-6 {
   overflow-x: hidden !important;
 }
 
+
+
+/* ===== KEEP "NEED MORE SINGERS" HEADLINE ON ONE LINE ===== */
+body.show-2 .need-more-main,
+body.show-4 .need-more-main,
+body.show-6 .need-more-main {
+  white-space: nowrap !important;
+  width: 100% !important;
+  max-width: none !important;
+  line-height: 1.08 !important;
+}
+
+/* Let the message box use enough horizontal room without causing a scrollbar. */
+body.show-2 .need-more,
+body.show-4 .need-more,
+body.show-6 .need-more {
+  width: min(88vw, 1180px) !important;
+  max-width: calc(100vw - 48px) !important;
+  box-sizing: border-box !important;
+}
+
 </style>
 </head>
 
