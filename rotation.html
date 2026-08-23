@@ -1546,29 +1546,94 @@ body.show-6 {
 
 
     /* =========================
+       KARAOKE NIGHT RESET
+
+       Each karaoke night runs from 3:00 AM
+       through 2:59:59 AM the next day.
+       Anything before the most recent 3:00 AM
+       does not count toward tonight's queue or
+       "has sung tonight" history.
+       ========================= */
+
+    function karaokeNightStart() {
+
+      const now =
+        new Date();
+
+      const start =
+        new Date(now);
+
+      start.setHours(
+        3,
+        0,
+        0,
+        0
+      );
+
+      if (now < start) {
+
+        start.setDate(
+          start.getDate() - 1
+        );
+
+      }
+
+      return start.getTime();
+
+    }
+
+
+    function isCurrentKaraokeNight(
+      request
+    ) {
+
+      if (
+        request.singer_name ===
+        SETTINGS_SINGER
+      ) {
+        return true;
+      }
+
+      const created =
+        new Date(
+          request.created_at
+        ).getTime();
+
+      return (
+        Number.isFinite(created) &&
+        created >= karaokeNightStart()
+      );
+
+    }
+
+
+    /* =========================
        STATUS HELPERS
        ========================= */
 
     function isCompleted(request) {
 
       return (
+        isCurrentKaraokeNight(request) &&
         request.status === "completed" &&
         request.singer_name !== SETTINGS_SINGER
       );
 
     }
 
-
     function isPaused(request) {
 
-      return request.status === "paused";
+      return (
+        isCurrentKaraokeNight(request) &&
+        request.status === "paused"
+      );
 
     }
-
 
     function isActive(request) {
 
       return (
+        isCurrentKaraokeNight(request) &&
         request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
         !isPaused(request) &&
@@ -1576,7 +1641,6 @@ body.show-6 {
       );
 
     }
-
 
     function resumedTime(request) {
 
@@ -1963,85 +2027,184 @@ body.show-6 {
         );
 
 
+      /*
+        TRUE QUEUE ORDER
+
+        New singers do NOT jump ahead of people
+        who are already waiting. They join at the
+        bottom of the current rotation.
+
+        A singer with another turn coming back
+        around is ordered by when they re-entered
+        the queue. Manual KJ moves and the special
+        paused/resume placement still override this
+        afterward.
+      */
+
       waiting.sort(
         (a, b) => {
 
-          const aResumed =
-            a.resumedAt !== null;
+          const aQueueTime =
+            a.resumedAt !== null
+              ? a.resumedAt
+              : (
+                  a.lastCompletedTime !== null
+                    ? a.lastCompletedTime
+                    : a.firstRequestTime
+                );
 
-          const bResumed =
-            b.resumedAt !== null;
+          const bQueueTime =
+            b.resumedAt !== null
+              ? b.resumedAt
+              : (
+                  b.lastCompletedTime !== null
+                    ? b.lastCompletedTime
+                    : b.firstRequestTime
+                );
 
-
-          if (
-            aResumed !== bResumed
-          ) {
-
-            return aResumed
-              ? 1
-              : -1;
-
+          if (aQueueTime !== bQueueTime) {
+            return aQueueTime - bQueueTime;
           }
-
-
-          if (
-            aResumed &&
-            bResumed
-          ) {
-
-            return (
-              a.resumedAt -
-              b.resumedAt
-            );
-
-          }
-
-
-          const aHasSung =
-            a.lastCompletedTime !== null;
-
-          const bHasSung =
-            b.lastCompletedTime !== null;
-
-
-          if (
-            aHasSung !== bHasSung
-          ) {
-
-            return aHasSung
-              ? 1
-              : -1;
-
-          }
-
-
-          if (
-            !aHasSung &&
-            !bHasSung
-          ) {
-
-            return (
-              a.firstRequestTime -
-              b.firstRequestTime
-            );
-
-          }
-
 
           return (
-            a.lastCompletedTime -
-            b.lastCompletedTime
+            a.firstRequestTime -
+            b.firstRequestTime
           );
 
         }
       );
 
 
+      /*
+        APPLY KJ MANUAL ORDER FIRST.
+
+        This preserves manual up/down moves and the
+        special pause/resume placement before any
+        invisible lower-queue balancing happens.
+      */
+
       waiting =
         applyManualOrder(
           waiting,
           data
         );
+
+
+      /*
+        SMART FIRST-TIME SINGER WEAVE
+
+        The TV can show at most:
+        Up Next + the next 5 singers.
+
+        Those 6 visible positions are protected.
+        A new singer can NEVER reshuffle someone
+        who is already in that visible group.
+
+        Smart balancing only happens BELOW the
+        protected group, and only when there are
+        more than 6 active singers total.
+
+        Below the protected group we alternate:
+        FIRST-TIME singer, REPEAT singer,
+        FIRST-TIME singer, REPEAT singer...
+
+        A first-time singer is someone who has not
+        completed a turn since tonight's 3:00 AM
+        reset. Relative order inside each group is
+        preserved.
+      */
+
+      const totalActiveSingers =
+        waiting.length +
+        (upNextSinger ? 1 : 0);
+
+
+      if (totalActiveSingers > 6) {
+
+        const protectedCount =
+          upNextSinger
+            ? 5
+            : 6;
+
+
+        const protectedWaiting =
+          waiting.slice(
+            0,
+            protectedCount
+          );
+
+
+        const flexibleWaiting =
+          waiting.slice(
+            protectedCount
+          );
+
+
+        const firstTimeSingers =
+          flexibleWaiting.filter(
+            singer =>
+              singer.lastCompletedTime === null
+          );
+
+
+        const repeatSingers =
+          flexibleWaiting.filter(
+            singer =>
+              singer.lastCompletedTime !== null
+          );
+
+
+        const wovenWaiting = [];
+
+        let firstIndex = 0;
+        let repeatIndex = 0;
+
+
+        while (
+          firstIndex < firstTimeSingers.length ||
+          repeatIndex < repeatSingers.length
+        ) {
+
+          if (
+            firstIndex <
+            firstTimeSingers.length
+          ) {
+
+            wovenWaiting.push(
+              firstTimeSingers[
+                firstIndex
+              ]
+            );
+
+            firstIndex += 1;
+
+          }
+
+
+          if (
+            repeatIndex <
+            repeatSingers.length
+          ) {
+
+            wovenWaiting.push(
+              repeatSingers[
+                repeatIndex
+              ]
+            );
+
+            repeatIndex += 1;
+
+          }
+
+        }
+
+
+        waiting = [
+          ...protectedWaiting,
+          ...wovenWaiting
+        ];
+
+      }
 
 
       /*
