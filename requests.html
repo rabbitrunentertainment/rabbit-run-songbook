@@ -580,6 +580,133 @@
       }
     }
 
+
+
+    /* =========================
+       COMPACT KJ SINGER CARDS
+       Narrow desktop / split-screen view
+       ========================= */
+
+    @media (min-width: 430px) and (max-width: 900px) {
+
+      #requests,
+      #pausedRequests,
+      .section-title,
+      .paused-note {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .request {
+        display: grid !important;
+        grid-template-columns:
+          minmax(105px, 1fr)
+          minmax(135px, 1.35fr)
+          74px
+          68px;
+
+        grid-template-areas:
+          "singer song status time"
+          "artist artist controls controls"
+          "warnings warnings warnings warnings"
+          "extra extra extra extra";
+
+        gap: 4px 7px !important;
+        align-items: center;
+
+        padding: 7px 9px !important;
+        margin-bottom: 5px !important;
+      }
+
+      .request .singer {
+        grid-area: singer;
+        font-size: 17px !important;
+        line-height: 1.05;
+        margin: 0 !important;
+      }
+
+      .request .song {
+        grid-area: song;
+        font-size: 14px !important;
+        line-height: 1.05;
+        margin: 0 !important;
+      }
+
+      .request .artist {
+        grid-area: artist;
+        font-size: 13px !important;
+        line-height: 1.05;
+        margin: 0 !important;
+      }
+
+      .request .status {
+        grid-area: status;
+        font-size: 11px !important;
+        line-height: 1;
+        margin: 0 !important;
+        text-align: right;
+      }
+
+      .request .time {
+        grid-area: time;
+        font-size: 11px !important;
+        line-height: 1;
+        margin: 0 !important;
+        text-align: right;
+      }
+
+      .request .controls {
+        grid-area: controls;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center;
+        gap: 4px !important;
+        margin: 0 !important;
+        flex-wrap: nowrap !important;
+      }
+
+      .request .controls button {
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+        min-height: 28px;
+      }
+
+      .request .move-button {
+        min-width: 30px !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+      }
+
+      .request .warnings {
+        grid-area: warnings;
+        margin: 1px 0 0 !important;
+        line-height: 1.05;
+      }
+
+      .request .warning {
+        display: inline-block;
+        margin: 0 10px 0 0 !important;
+        font-size: 10px !important;
+        line-height: 1.05;
+      }
+
+      .request .extra-songs {
+        grid-area: extra;
+        margin: 1px 0 0 !important;
+        font-size: 10px !important;
+        line-height: 1.05;
+      }
+
+      .request.up-next {
+        border-width: 2px !important;
+      }
+
+      .paused-note {
+        margin-bottom: 5px !important;
+      }
+
+    }
+
 </style>
 </head>
 
