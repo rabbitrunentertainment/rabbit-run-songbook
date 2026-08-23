@@ -3828,8 +3828,7 @@
        RESUME SINGER
 
        RESTORES ALL THEIR SONGS
-       AND PUTS THEM IN THE SECOND
-       WAITING POSITION.
+       AND PUTS THEM AT THE BACK.
        ========================= */
 
     async function resumeSinger(key) {
@@ -3856,9 +3855,8 @@
 
 
         /*
-          Capture the current active rotation BEFORE
-          restoring the paused singer. Up Next stays
-          exactly where it is.
+          Capture the current rotation before restoring
+          the singer. Up Next stays where it is.
         */
         const currentRotation =
           buildRotation(data);
@@ -3882,9 +3880,7 @@
             );
 
 
-        /*
-          Restore the paused singer as normal waiting.
-        */
+        /* Restore all paused songs as normal waiting songs. */
         for (
           const request of singerRequests
         ) {
@@ -3927,11 +3923,8 @@
 
 
         /*
-          Put resumed singer in SECOND waiting spot:
-          UP NEXT
-          1st waiting singer
-          resumed singer
-          everyone else
+          Put the resumed singer in the SECOND waiting spot:
+          Up Next -> first waiting singer -> resumed singer -> rest.
         */
         const resumedOrder = [
           ...currentWaitingKeys.slice(0, 1),
@@ -3942,71 +3935,6 @@
         await saveManualOrder(
           resumedOrder
         );
-
-
-        await loadRequests();
-
-      }
-
-
-      catch (error) {
-
-        console.error(error);
-
-        alert(
-          "Could not resume this singer."
-        );
-
-      }
-
-    }
-
-
-    
-        const resumeStatus =
-          `waiting_resumed_${Date.now()}`;
-
-
-        for (
-          const request of singerRequests
-        ) {
-
-          const response =
-            await fetch(
-
-              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
-
-              {
-                method: "PATCH",
-
-                headers: {
-                  "apikey":
-                    SUPABASE_KEY,
-
-                  "Authorization":
-                    `Bearer ${accessToken || SUPABASE_KEY}`,
-
-                  "Content-Type":
-                    "application/json"
-                },
-
-                body: JSON.stringify({
-                  status: resumeStatus
-                })
-              }
-
-            );
-
-
-          if (!response.ok) {
-
-            throw new Error(
-              "Could not resume singer."
-            );
-
-          }
-
-        }
 
 
         await loadRequests();
