@@ -707,6 +707,50 @@
 
     }
 
+
+
+    /* =========================
+       USEFUL KJ CONTROL ORDER
+       ========================= */
+
+    .bottom-kj-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 24px;
+    }
+
+    .bottom-kj-controls > * {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .bottom-kj-controls .final-three-control {
+      order: 2;
+    }
+
+    .bottom-kj-controls .wishlist-control {
+      order: 3;
+    }
+
+    .bottom-kj-controls .wishlist-panel {
+      order: 4;
+    }
+
+    @media (min-width: 430px) and (max-width: 900px) {
+
+      #kjApp > h1,
+      #kjApp > h2 {
+        margin-bottom: 2px !important;
+      }
+
+      .bottom-kj-controls {
+        margin-top: 12px;
+        gap: 7px;
+      }
+
+    }
+
 </style>
 </head>
 
@@ -938,171 +982,134 @@
     }
 
 
-    function positionFinalThreeForScreen() {
+    function moveKjControlsToUsefulPlaces() {
+
+      const bottomControls =
+        ensureBottomControlsContainer();
+
+      if (!bottomControls) {
+        return;
+      }
+
+
+      /*
+        TOP OF KJ PAGE:
+        Keep TV Shows above the singer rotation.
+
+        BOTTOM OF KJ PAGE:
+        Live Requests
+        Final 3
+        Song Wishlist
+        Venue
+        Sign Out
+      */
 
       const finalThree =
         document.querySelector(
           ".final-three-control"
         );
 
-      const bottomControls =
-        ensureBottomControlsContainer();
-
-
-      if (
-        !finalThree ||
-        !bottomControls
-      ) {
-        return;
-      }
-
-
-      /*
-        FINAL 3 ALWAYS LIVES AT THE BOTTOM
-        OF THE KJ PAGE.
-
-        It stays above Song Wishlist.
-      */
       const wishlistControl =
         document.querySelector(
           ".wishlist-control"
         );
 
-
-      if (
-        wishlistControl &&
-        wishlistControl.parentElement ===
-        bottomControls
-      ) {
-
-        bottomControls.insertBefore(
-          finalThree,
-          wishlistControl
+      const wishlistPanel =
+        document.getElementById(
+          "wishlistPanel"
         );
 
-      }
 
-      else {
+      /*
+        Locate the existing controls by the text
+        they already contain. This avoids changing
+        any of their IDs, buttons, or event logic.
+      */
 
-        bottomControls.appendChild(
-          finalThree
+      const allElements =
+        Array.from(
+          document.querySelectorAll(
+            "#kjApp *"
+          )
         );
 
-      }
+
+      const liveRequestsControl =
+        allElements.find(
+          el =>
+            el.children.length > 0 &&
+            /LIVE REQUESTS:/i.test(
+              el.textContent || ""
+            ) &&
+            el.querySelector("button")
+        );
+
+
+      const venueInput =
+        document.getElementById(
+          "venueInput"
+        );
+
+      const venueControl =
+        venueInput
+          ? venueInput.parentElement
+          : null;
+
+
+      const signOutButton =
+        Array.from(
+          document.querySelectorAll(
+            "#kjApp button"
+          )
+        ).find(
+          button =>
+            /sign out/i.test(
+              button.textContent || ""
+            )
+        );
+
+      const signOutControl =
+        signOutButton
+          ? signOutButton.parentElement
+          : null;
+
+
+      [
+        liveRequestsControl,
+        finalThree,
+        wishlistControl,
+        wishlistPanel,
+        venueControl,
+        signOutControl
+      ].forEach(
+        element => {
+
+          if (
+            element &&
+            element !== bottomControls &&
+            !bottomControls.contains(element)
+          ) {
+
+            bottomControls.appendChild(
+              element
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    function positionFinalThreeForScreen() {
+
+      moveKjControlsToUsefulPlaces();
 
     }
 
 
     positionFinalThreeForScreen();
-
-
-    window.addEventListener(
-      "resize",
-      positionFinalThreeForScreen
-    );
-
-
-
-    async function refreshAuthUI() {
-
-      const {
-        data: { session }
-      } =
-        await supabaseClient.auth.getSession();
-
-      accessToken =
-        session
-          ? session.access_token
-          : null;
-
-      document.getElementById(
-        "authPanel"
-      ).style.display =
-        session ? "none" : "block";
-
-      document.getElementById(
-        "kjApp"
-      ).style.display =
-        session ? "block" : "none";
-
-      if (session) {
-        await loadRequests();
-      }
-
-    }
-
-
-    async function kjSignIn() {
-
-      const email =
-        document.getElementById(
-          "loginEmail"
-        ).value.trim();
-
-      const password =
-        document.getElementById(
-          "loginPassword"
-        ).value;
-
-      const errorBox =
-        document.getElementById(
-          "authError"
-        );
-
-      errorBox.textContent = "";
-
-      const {
-        error
-      } =
-        await supabaseClient.auth
-          .signInWithPassword({
-            email,
-            password
-          });
-
-      if (error) {
-        errorBox.textContent =
-          "Login failed. Check the email and password.";
-        return;
-      }
-
-      document.getElementById(
-        "loginPassword"
-      ).value = "";
-
-      await refreshAuthUI();
-
-    }
-
-
-    async function kjSignOut() {
-
-      await supabaseClient.auth.signOut();
-      accessToken = null;
-      venueInputInitialized = false;
-      await refreshAuthUI();
-
-    }
-
-
-    function apiHeaders(
-      includeJson = false
-    ) {
-
-      const headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization":
-          `Bearer ${accessToken || SUPABASE_KEY}`
-      };
-
-      if (includeJson) {
-        headers["Content-Type"] =
-          "application/json";
-      }
-
-      return headers;
-
-    }
 
 
     /* =========================
@@ -1114,40 +1121,7 @@
 
     function positionWishlistForScreen() {
 
-      const control =
-        document.querySelector(
-          ".wishlist-control"
-        );
-
-      const panel =
-        document.getElementById(
-          "wishlistPanel"
-        );
-
-      const bottomControls =
-        ensureBottomControlsContainer();
-
-
-      if (
-        !control ||
-        !panel ||
-        !bottomControls
-      ) {
-        return;
-      }
-
-
-      /*
-        SONG WISHLIST ALWAYS LIVES UNDER
-        FINAL 3 AT THE BOTTOM OF THE KJ PAGE.
-      */
-      bottomControls.appendChild(
-        control
-      );
-
-      bottomControls.appendChild(
-        panel
-      );
+      moveKjControlsToUsefulPlaces();
 
     }
 
