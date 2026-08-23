@@ -3927,9 +3927,8 @@
           Up Next -> first waiting singer -> resumed singer -> rest.
         */
         const resumedOrder = [
-          ...currentWaitingKeys.slice(0, 1),
           key,
-          ...currentWaitingKeys.slice(1)
+          ...currentWaitingKeys
         ];
 
         await saveManualOrder(
