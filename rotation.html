@@ -1136,6 +1136,30 @@ body.show-6 {
   overflow-x: hidden !important;
 }
 
+
+    .waiting-for-song-note {
+      display:inline-block;
+      margin-left:10px;
+      color:#fbbf24;
+      font-size:.42em;
+      font-weight:800;
+      font-style:italic;
+      white-space:nowrap;
+      vertical-align:middle;
+    }
+
+    .up-next-song-note {
+      display:none;
+      margin-top:2px;
+      color:#fbbf24;
+      font-size:clamp(16px,1.7vw,22px);
+      font-weight:800;
+      font-style:italic;
+    }
+
+    .up-next-song-note.show {
+      display:block;
+    }
 </style>
 </head>
 
@@ -1181,6 +1205,13 @@ body.show-6 {
         id="upNextName"
         class="up-next-name"
       ></div>
+
+      <div
+        id="upNextSongNote"
+        class="up-next-song-note"
+      >
+        Waiting for next song
+      </div>
 
     </div>
 
@@ -1545,6 +1576,35 @@ body.show-6 {
     }
 
 
+
+    /* =========================
+       RESERVED SINGER SLOT
+       ========================= */
+
+    const WAITING_FOR_SONG_TITLE =
+      "__RABBIT_RUN_WAITING_FOR_NEXT_SONG__";
+
+    function isWaitingForSong(request) {
+      return request.song_title === WAITING_FOR_SONG_TITLE;
+    }
+
+    function skippedSlotTime(request) {
+      const status = String(request.status || "");
+      if (!status.startsWith("slot_skipped_")) {
+        return null;
+      }
+      const value = Number(status.replace("slot_skipped_", ""));
+      return Number.isFinite(value) ? value : null;
+    }
+
+    function isSkippedSlot(request) {
+      return (
+        isWaitingForSong(request) &&
+        skippedSlotTime(request) !== null
+      );
+    }
+
+
     /* =========================
        KARAOKE NIGHT RESET
 
@@ -1637,6 +1697,7 @@ body.show-6 {
         request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
         !isPaused(request) &&
+        !isSkippedSlot(request) &&
         request.status !== "final3_hold"
       );
 
@@ -1881,6 +1942,47 @@ body.show-6 {
       });
 
 
+      const lastSkippedSlotBySinger =
+        new Map();
+
+      data.forEach(request => {
+
+        if (
+          !isCurrentKaraokeNight(request) ||
+          !isWaitingForSong(request)
+        ) {
+          return;
+        }
+
+        const time =
+          skippedSlotTime(request);
+
+        if (time === null) {
+          return;
+        }
+
+        const key =
+          singerKey(request);
+
+        if (!key) {
+          return;
+        }
+
+        const existing =
+          lastSkippedSlotBySinger.get(key);
+
+        if (
+          existing === undefined ||
+          time > existing
+        ) {
+          lastSkippedSlotBySinger.set(
+            key,
+            time
+          );
+        }
+      });
+
+
       const singersByName =
         new Map();
 
@@ -1921,6 +2023,17 @@ body.show-6 {
                 lastCompletedBySinger.has(key)
                   ? lastCompletedBySinger.get(key)
                   : null,
+
+              lastSkippedTime:
+                lastSkippedSlotBySinger.has(key)
+                  ? lastSkippedSlotBySinger.get(key)
+                  : null,
+
+              slotRequest: null,
+              realRequests: [],
+              isWaitingForSong: false,
+              isPlacementNew: false,
+              isUpNext: false,
 
               resumedAt: null
             }
@@ -1970,52 +2083,65 @@ body.show-6 {
             new Date(b.created_at)
         );
 
+        singer.slotRequest =
+          singer.requests.find(
+            request =>
+              isWaitingForSong(request)
+          ) || null;
+
+        singer.realRequests =
+          singer.requests.filter(
+            request =>
+              !isWaitingForSong(request)
+          );
+
+        singer.isWaitingForSong =
+          (
+            singer.realRequests.length === 0 &&
+            singer.slotRequest !== null
+          );
+
+        singer.isPlacementNew =
+          (
+            singer.lastCompletedTime === null ||
+            (
+              singer.lastSkippedTime !== null &&
+              singer.lastSkippedTime >
+              singer.lastCompletedTime
+            )
+          );
+
+        singer.currentRequest =
+          singer.realRequests[0] ||
+          singer.slotRequest;
+
       });
 
 
       let upNextSinger = null;
-
 
       for (const singer of singers) {
 
         const upNextRequest =
           singer.requests.find(
             request =>
-              request.status ===
-              "up_next"
+              request.status === "up_next"
           );
-
 
         if (upNextRequest) {
 
-          upNextSinger =
-            singer;
+          upNextSinger = singer;
+          upNextSinger.isUpNext = true;
+          upNextSinger.upNextRequest =
+            upNextRequest;
 
           upNextSinger.currentRequest =
+            upNextSinger.realRequests[0] ||
             upNextRequest;
 
           break;
-
         }
-
       }
-
-
-      singers.forEach(singer => {
-
-        if (
-          upNextSinger &&
-          singer.key ===
-          upNextSinger.key
-        ) {
-          return;
-        }
-
-
-        singer.currentRequest =
-          singer.requests[0];
-
-      });
 
 
       let waiting =
@@ -2144,14 +2270,14 @@ body.show-6 {
         const firstTimeSingers =
           flexibleWaiting.filter(
             singer =>
-              singer.lastCompletedTime === null
+              singer.isPlacementNew
           );
 
 
         const repeatSingers =
           flexibleWaiting.filter(
             singer =>
-              singer.lastCompletedTime !== null
+              !singer.isPlacementNew
           );
 
 
@@ -2562,6 +2688,11 @@ body.show-6 {
           "upNextName"
         );
 
+      const upNextSongNote =
+        document.getElementById(
+          "upNextSongNote"
+        );
+
 
       try {
 
@@ -2712,6 +2843,13 @@ body.show-6 {
           upNextBox.style.display =
             "block";
 
+          if (upNextSongNote) {
+            upNextSongNote.classList.toggle(
+              "show",
+              upNextSinger.isWaitingForSong === true
+            );
+          }
+
           fitUpNextBox(
             upNextBox,
             upNextName,
@@ -2724,6 +2862,10 @@ body.show-6 {
 
           upNextBox.style.display =
             "none";
+
+          if (upNextSongNote) {
+            upNextSongNote.classList.remove("show");
+          }
 
         }
 
@@ -2814,6 +2956,15 @@ body.show-6 {
                   ${escapeHtml(
                     singer.name
                   )}
+                  ${
+                    singer.isWaitingForSong
+                      ? `
+                        <span class="waiting-for-song-note">
+                          Waiting for next song
+                        </span>
+                      `
+                      : ""
+                  }
                 </div>
 
               </div>
