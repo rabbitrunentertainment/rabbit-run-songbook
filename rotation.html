@@ -2104,9 +2104,10 @@ body.show-6 {
         protected group, and only when there are
         more than 6 active singers total.
 
-        Below the protected group we alternate:
-        FIRST-TIME singer, REPEAT singer,
-        FIRST-TIME singer, REPEAT singer...
+        Below the protected group we weave:
+        two REPEAT singers, then one
+        FIRST-TIME singer. Extra first-time
+        singers go to the bottom.
 
         A first-time singer is someone who has not
         completed a turn since tonight's 3:00 AM
@@ -2160,14 +2161,46 @@ body.show-6 {
         let repeatIndex = 0;
 
 
+        /*
+          FAIR WEAVE RULE
+
+          Below the protected visible group:
+          keep two repeat singers in their earned
+          order, then work in one first-time singer.
+
+          Pattern:
+          REPEAT, REPEAT, NEW,
+          REPEAT, REPEAT, NEW...
+
+          If we run out of repeat singers, any
+          remaining new singers are appended to
+          the bottom instead of flooding the round.
+        */
         while (
-          firstIndex < firstTimeSingers.length ||
           repeatIndex < repeatSingers.length
         ) {
 
+          let repeatsAdded = 0;
+
+          while (
+            repeatsAdded < 2 &&
+            repeatIndex < repeatSingers.length
+          ) {
+
+            wovenWaiting.push(
+              repeatSingers[
+                repeatIndex
+              ]
+            );
+
+            repeatIndex += 1;
+            repeatsAdded += 1;
+
+          }
+
+
           if (
-            firstIndex <
-            firstTimeSingers.length
+            firstIndex < firstTimeSingers.length
           ) {
 
             wovenWaiting.push(
@@ -2180,21 +2213,25 @@ body.show-6 {
 
           }
 
+        }
 
-          if (
-            repeatIndex <
-            repeatSingers.length
-          ) {
 
-            wovenWaiting.push(
-              repeatSingers[
-                repeatIndex
-              ]
-            );
+        /*
+          Any new singers that could not be woven
+          in without overloading the repeat round
+          simply join at the bottom.
+        */
+        while (
+          firstIndex < firstTimeSingers.length
+        ) {
 
-            repeatIndex += 1;
+          wovenWaiting.push(
+            firstTimeSingers[
+              firstIndex
+            ]
+          );
 
-          }
+          firstIndex += 1;
 
         }
 
