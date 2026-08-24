@@ -3299,17 +3299,146 @@
           );
 
 
+        /*
+          ARRIVAL-BASED FAIRNESS
+
+          "New" here means NEW TO THE EXISTING QUEUE,
+          not merely "has not sung yet."
+
+          That distinction matters on the first round:
+          Jane/Tom/Amy/etc. were already waiting before
+          Susy/Mike/etc. arrived, so the later arrivals
+          must not leapfrog the established queue just
+          because Jane has not performed yet.
+
+          We use the singer's oldest active request time
+          as their arrival time. The earliest waiting
+          cohort stays established. Later arrivals are
+          the newcomers eligible for weaving.
+        */
+
+        const arrivalTimes =
+          flexibleWaiting
+            .map(singer => {
+
+              const activeTimes =
+                singer.requests
+                  .map(request =>
+                    new Date(
+                      request.created_at
+                    ).getTime()
+                  )
+                  .filter(
+                    value =>
+                      Number.isFinite(value)
+                  );
+
+              return {
+                singer,
+                time:
+                  activeTimes.length
+                    ? Math.min(
+                        ...activeTimes
+                      )
+                    : Number.MAX_SAFE_INTEGER
+              };
+
+            })
+            .sort(
+              (a, b) =>
+                a.time - b.time
+            );
+
+
+        /*
+          Find natural arrival waves.
+
+          Requests entered together by the test seeder
+          (or a group scanning around the same time)
+          form a cohort. A later cohort is considered
+          newly arrived relative to the established one.
+
+          Five minutes is deliberately generous so a
+          normal first-round queue entered over a few
+          minutes remains one established group.
+        */
+        const ARRIVAL_WAVE_GAP_MS =
+          5 * 60 * 1000;
+
+        let newestWaveStart =
+          arrivalTimes.length;
+
+        for (
+          let index = 1;
+          index < arrivalTimes.length;
+          index += 1
+        ) {
+
+          const gap =
+            arrivalTimes[index].time -
+            arrivalTimes[index - 1].time;
+
+          if (
+            gap >
+            ARRIVAL_WAVE_GAP_MS
+          ) {
+
+            newestWaveStart =
+              index;
+
+          }
+
+        }
+
+
+        /*
+          If there is no later arrival wave, preserve
+          everybody's current order. Once a later wave
+          exists, only that newest wave is woven into
+          the established singers ahead of it.
+        */
+        const establishedKeys =
+          new Set(
+            arrivalTimes
+              .slice(
+                0,
+                newestWaveStart
+              )
+              .map(
+                item =>
+                  item.singer.key
+              )
+          );
+
+
+        const newcomerKeys =
+          new Set(
+            arrivalTimes
+              .slice(
+                newestWaveStart
+              )
+              .map(
+                item =>
+                  item.singer.key
+              )
+          );
+
+
         const firstTimeSingers =
           flexibleWaiting.filter(
             singer =>
-              singer.isPlacementNew
+              newcomerKeys.has(
+                singer.key
+              )
           );
 
 
         const repeatSingers =
           flexibleWaiting.filter(
             singer =>
-              !singer.isPlacementNew
+              establishedKeys.has(
+                singer.key
+              )
           );
 
 
