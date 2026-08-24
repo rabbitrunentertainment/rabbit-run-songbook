@@ -780,6 +780,22 @@
 
     }
 
+
+    .request.waiting-for-song { border-style: dashed; }
+    .request.waiting-for-song .song {
+      color: #fbbf24;
+      font-style: italic;
+    }
+    .request.waiting-for-song .artist { color: #94a3b8; }
+    .waiting-song-button {
+      background:#374151;
+      color:white;
+      border:1px solid #64748b;
+    }
+    .skip-slot-button {
+      background:#991b1b;
+      color:white;
+    }
 </style>
 </head>
 
@@ -2602,6 +2618,35 @@
     }
 
 
+
+    /* =========================
+       RESERVED SINGER SLOT
+       ========================= */
+
+    const WAITING_FOR_SONG_TITLE =
+      "__RABBIT_RUN_WAITING_FOR_NEXT_SONG__";
+
+    function isWaitingForSong(request) {
+      return request.song_title === WAITING_FOR_SONG_TITLE;
+    }
+
+    function skippedSlotTime(request) {
+      const status = String(request.status || "");
+      if (!status.startsWith("slot_skipped_")) {
+        return null;
+      }
+      const value = Number(status.replace("slot_skipped_", ""));
+      return Number.isFinite(value) ? value : null;
+    }
+
+    function isSkippedSlot(request) {
+      return (
+        isWaitingForSong(request) &&
+        skippedSlotTime(request) !== null
+      );
+    }
+
+
     /* =========================
        KARAOKE NIGHT RESET
 
@@ -2694,6 +2739,7 @@
         request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
         !isPaused(request) &&
+        !isSkippedSlot(request) &&
         request.status !== "final3_hold"
       );
 
@@ -2901,6 +2947,47 @@
         BY SINGER
       */
 
+      const lastSkippedSlotBySinger =
+        new Map();
+
+      data.forEach(request => {
+
+        if (
+          !isCurrentKaraokeNight(request) ||
+          !isWaitingForSong(request)
+        ) {
+          return;
+        }
+
+        const time =
+          skippedSlotTime(request);
+
+        if (time === null) {
+          return;
+        }
+
+        const key =
+          singerKey(request);
+
+        if (!key) {
+          return;
+        }
+
+        const existing =
+          lastSkippedSlotBySinger.get(key);
+
+        if (
+          existing === undefined ||
+          time > existing
+        ) {
+          lastSkippedSlotBySinger.set(
+            key,
+            time
+          );
+        }
+      });
+
+
       const singersByName =
         new Map();
 
@@ -2941,6 +3028,17 @@
                 lastCompletedBySinger.has(key)
                   ? lastCompletedBySinger.get(key)
                   : null,
+
+              lastSkippedTime:
+                lastSkippedSlotBySinger.has(key)
+                  ? lastSkippedSlotBySinger.get(key)
+                  : null,
+
+              slotRequest: null,
+              realRequests: [],
+              isWaitingForSong: false,
+              isPlacementNew: false,
+              isUpNext: false,
 
               resumedAt:
                 null
@@ -2996,61 +3094,65 @@
             new Date(b.created_at)
         );
 
+        singer.slotRequest =
+          singer.requests.find(
+            request =>
+              isWaitingForSong(request)
+          ) || null;
+
+        singer.realRequests =
+          singer.requests.filter(
+            request =>
+              !isWaitingForSong(request)
+          );
+
+        singer.isWaitingForSong =
+          (
+            singer.realRequests.length === 0 &&
+            singer.slotRequest !== null
+          );
+
+        singer.isPlacementNew =
+          (
+            singer.lastCompletedTime === null ||
+            (
+              singer.lastSkippedTime !== null &&
+              singer.lastSkippedTime >
+              singer.lastCompletedTime
+            )
+          );
+
+        singer.currentRequest =
+          singer.realRequests[0] ||
+          singer.slotRequest;
+
       });
 
 
-      /*
-        FIND CURRENT UP NEXT
-      */
-
       let upNextSinger = null;
-
 
       for (const singer of singers) {
 
         const upNextRequest =
           singer.requests.find(
             request =>
-              request.status ===
-              "up_next"
+              request.status === "up_next"
           );
-
 
         if (upNextRequest) {
 
           upNextSinger = singer;
+          upNextSinger.isUpNext = true;
+          upNextSinger.upNextRequest =
+            upNextRequest;
 
           upNextSinger.currentRequest =
+            upNextSinger.realRequests[0] ||
             upNextRequest;
 
           break;
-
         }
-
       }
-
-
-      /*
-        EVERY OTHER SINGER'S
-        NEXT SONG IS THEIR
-        OLDEST ACTIVE SONG
-      */
-
-      singers.forEach(singer => {
-
-        if (
-          upNextSinger &&
-          singer.key ===
-          upNextSinger.key
-        ) {
-          return;
-        }
-
-
-        singer.currentRequest =
-          singer.requests[0];
-
-      });
 
 
       let waiting =
@@ -3192,14 +3294,14 @@
         const firstTimeSingers =
           flexibleWaiting.filter(
             singer =>
-              singer.lastCompletedTime === null
+              singer.isPlacementNew
           );
 
 
         const repeatSingers =
           flexibleWaiting.filter(
             singer =>
-              singer.lastCompletedTime !== null
+              !singer.isPlacementNew
           );
 
 
@@ -3208,27 +3310,35 @@
         let firstIndex = 0;
         let repeatIndex = 0;
 
-
         /*
-          FAIR WEAVE RULE
+          FAIRNESS RULE
 
-          Below the protected visible group:
-          keep two repeat singers in their earned
-          order, then work in one first-time singer.
+          Normal mix-in:
+          two established singers, then one new singer.
 
-          Pattern:
-          REPEAT, REPEAT, NEW,
-          REPEAT, REPEAT, NEW...
+          Maximum stretch:
+          no established singer may have more than
+          TWO newly inserted singers added ahead of
+          the position they had already earned.
 
-          If we run out of repeat singers, any
-          remaining new singers are appended to
-          the bottom instead of flooding the round.
+          The protected visible six are handled above
+          and are never changed here.
+
+          "Waiting for next song" reserved slots count
+          as established singers because that singer
+          already earned the position.
         */
+
+        const MAX_NEW_AHEAD_OF_REPEAT = 2;
+        let newInsertedThisHiddenRound = 0;
+
+
         while (
           repeatIndex < repeatSingers.length
         ) {
 
           let repeatsAdded = 0;
+
 
           while (
             repeatsAdded < 2 &&
@@ -3247,8 +3357,15 @@
           }
 
 
+          /*
+            Work in one newcomer only while doing so
+            cannot stretch any still-waiting established
+            singer by more than the fairness cap.
+          */
           if (
-            firstIndex < firstTimeSingers.length
+            firstIndex < firstTimeSingers.length &&
+            newInsertedThisHiddenRound <
+              MAX_NEW_AHEAD_OF_REPEAT
           ) {
 
             wovenWaiting.push(
@@ -3258,6 +3375,7 @@
             );
 
             firstIndex += 1;
+            newInsertedThisHiddenRound += 1;
 
           }
 
@@ -3265,9 +3383,9 @@
 
 
         /*
-          Any new singers that could not be woven
-          in without overloading the repeat round
-          simply join at the bottom.
+          Once the fairness cap is reached, or there
+          are no established slots left to weave around,
+          all remaining newcomers join the bottom.
         */
         while (
           firstIndex < firstTimeSingers.length
@@ -3576,6 +3694,51 @@
     }
 
 
+    function singerControlsHtml(
+      singer,
+      request,
+      isUpNext,
+      waitingForSong
+    ) {
+
+      if (waitingForSong) {
+
+        if (isUpNext) {
+          return `
+            <button class="waiting-song-button" disabled>Hold</button>
+            <button
+              class="skip-slot-button"
+              onclick='skipWaitingSinger(${JSON.stringify(singer.key)})'
+            >Skip</button>
+          `;
+        }
+
+        return `
+          <button class="up-next-button" onclick="manualUpNext(${request.id})">Up Next</button>
+          <button class="move-button" title="Move up" onclick='moveSinger(${JSON.stringify(singer.key)}, -1)'>↑</button>
+          <button class="move-button" title="Move down" onclick='moveSinger(${JSON.stringify(singer.key)}, 1)'>↓</button>
+          <button class="pause-button" onclick='pauseSinger(${JSON.stringify(singer.key)})'>Pause</button>
+        `;
+      }
+
+      return `
+        ${isUpNext
+          ? `<button class="current-button" disabled>Up Next</button>`
+          : `<button class="up-next-button" onclick="manualUpNext(${request.id})">Up Next</button>`
+        }
+        ${!isUpNext
+          ? `
+            <button class="move-button" title="Move up" onclick='moveSinger(${JSON.stringify(singer.key)}, -1)'>↑</button>
+            <button class="move-button" title="Move down" onclick='moveSinger(${JSON.stringify(singer.key)}, 1)'>↓</button>
+          `
+          : ""
+        }
+        <button class="pause-button" onclick='pauseSinger(${JSON.stringify(singer.key)})'>Pause</button>
+        <button class="done-button" onclick="finishRequest(${request.id})">Done</button>
+      `;
+    }
+
+
     /* =========================
        LOAD KJ SCREEN
        ========================= */
@@ -3709,19 +3872,27 @@
 
 
               const isUpNext =
-                request.status ===
-                "up_next";
+                (
+                  singer.isUpNext === true ||
+                  request.status === "up_next"
+                );
 
+              const waitingForSong =
+                singer.isWaitingForSong === true;
 
               const extraSongCount =
-                singer.requests.length - 1;
+                Math.max(
+                  0,
+                  singer.realRequests.length - 1
+                );
 
 
               return `
 
                 <div
                   class="request
-                  ${isUpNext ? "up-next" : ""}"
+                  ${isUpNext ? "up-next" : ""}
+                  ${waitingForSong ? "waiting-for-song" : ""}"
                 >
 
                   <div class="singer">
@@ -3732,16 +3903,20 @@
 
 
                   <div class="song">
-                    ${escapeHtml(
-                      request.song_title
-                    )}
+                    ${
+                      waitingForSong
+                        ? "Waiting for next song"
+                        : escapeHtml(request.song_title)
+                    }
                   </div>
 
 
                   <div class="artist">
-                    ${escapeHtml(
-                      request.artist
-                    )}
+                    ${
+                      waitingForSong
+                        ? "Reserved rotation spot"
+                        : escapeHtml(request.artist)
+                    }
                   </div>
 
 
@@ -3750,7 +3925,11 @@
                     ${
                       isUpNext
                         ? "UP NEXT"
-                        : "WAITING"
+                        : (
+                            waitingForSong
+                              ? "WAITING FOR SONG"
+                              : "WAITING"
+                          )
                     }
 
                   </div>
@@ -3764,84 +3943,14 @@
 
 
                   <div class="controls">
-
                     ${
-                      isUpNext
-
-                        ? `
-                          <button
-                            class="current-button"
-                            disabled
-                          >
-                            Up Next
-                          </button>
-                        `
-
-                        : `
-                          <button
-                            class="up-next-button"
-                            onclick="manualUpNext(
-                              ${request.id}
-                            )"
-                          >
-                            Up Next
-                          </button>
-                        `
+                      singerControlsHtml(
+                        singer,
+                        request,
+                        isUpNext,
+                        waitingForSong
+                      )
                     }
-
-
-                    ${
-                      !isUpNext
-
-                        ? `
-                          <button
-                            class="move-button"
-                            title="Move up"
-                            onclick='moveSinger(
-                              ${JSON.stringify(singer.key)},
-                              -1
-                            )'
-                          >
-                            ↑
-                          </button>
-
-                          <button
-                            class="move-button"
-                            title="Move down"
-                            onclick='moveSinger(
-                              ${JSON.stringify(singer.key)},
-                              1
-                            )'
-                          >
-                            ↓
-                          </button>
-                        `
-
-                        : ""
-                    }
-
-
-                    <button
-                      class="pause-button"
-                      onclick='pauseSinger(
-                        ${JSON.stringify(
-                          singer.key
-                        )}
-                      )'
-                    >
-                      Pause
-                    </button>
-
-
-                    <button
-                      class="done-button"
-                      onclick="finishRequest(
-                        ${request.id}
-                      )"
-                    >
-                      Done
-                    </button>
-
                   </div>
 
 
@@ -4185,6 +4294,67 @@
     }
 
 
+    async function skipWaitingSinger(key) {
+
+      try {
+        const data = await fetchRequests();
+
+        const slots =
+          data.filter(
+            request =>
+              isCurrentKaraokeNight(request) &&
+              isWaitingForSong(request) &&
+              !isSkippedSlot(request) &&
+              singerKey(request) === key
+          );
+
+        if (slots.length === 0) {
+          return;
+        }
+
+        const skipStatus =
+          `slot_skipped_${Date.now()}`;
+
+        for (const slot of slots) {
+          const response =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${slot.id}`,
+              {
+                method:"PATCH",
+                headers:apiHeaders(true),
+                body:JSON.stringify({
+                  status:skipStatus
+                })
+              }
+            );
+
+          if (!response.ok) {
+            throw new Error(
+              "Could not skip reserved singer slot."
+            );
+          }
+        }
+
+        const savedOrder = getManualOrder(data);
+
+        if (savedOrder.includes(key)) {
+          await saveManualOrder(
+            savedOrder.filter(
+              savedKey => savedKey !== key
+            )
+          );
+        }
+
+        await loadRequests();
+      }
+
+      catch (error) {
+        console.error(error);
+        alert("Could not skip this singer.");
+      }
+    }
+
+
     /* =========================
        RESUME SINGER
 
@@ -4323,8 +4493,7 @@
 
       try {
 
-        const data =
-          await fetchRequests();
+        const data = await fetchRequests();
 
         const finishedRequest =
           data.find(
@@ -4332,41 +4501,29 @@
               String(request.id) === String(id)
           );
 
-        if (!finishedRequest) {
+        if (
+          !finishedRequest ||
+          isWaitingForSong(finishedRequest)
+        ) {
           throw new Error(
-            "Could not find the finished request."
+            "Could not find the finished song."
           );
         }
 
         const finishedSingerKey =
           singerKey(finishedRequest);
 
-
-        /* Mark only the song just sung as completed. */
-
         const response =
           await fetch(
-
             `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
-
             {
-              method: "PATCH",
-
-              headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization":
-                  `Bearer ${accessToken || SUPABASE_KEY}`,
-                "Content-Type":
-                  "application/json"
-              },
-
-              body: JSON.stringify({
-                status: "completed"
+              method:"PATCH",
+              headers:apiHeaders(true),
+              body:JSON.stringify({
+                status:"completed"
               })
             }
-
           );
-
 
         if (!response.ok) {
           throw new Error(
@@ -4374,176 +4531,153 @@
           );
         }
 
+        const oldSlots =
+          data.filter(
+            request =>
+              isCurrentKaraokeNight(request) &&
+              isWaitingForSong(request) &&
+              !isSkippedSlot(request) &&
+              singerKey(request) === finishedSingerKey
+          );
 
-        /*
-          NORMAL NIGHT:
-          If this singer has more songs,
-          put their remaining songs at the
-          back of the current rotation.
+        for (const slot of oldSlots) {
+          const deleteResponse =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${slot.id}`,
+              {
+                method:"DELETE",
+                headers:apiHeaders()
+              }
+            );
 
-          FINAL 3 MODE:
-          Each selected Final 3 singer gets
-          ONE final turn. After that song is
-          marked Done, all of that singer's
-          remaining queued songs are closed
-          out too so the singer falls off the
-          rotation instead of looping back.
-        */
+          if (!deleteResponse.ok) {
+            throw new Error(
+              "Could not clear old reserved singer slot."
+            );
+          }
+        }
 
         const remainingSingerRequests =
           data.filter(
             request =>
-              String(request.id) !== String(finishedRequest.id) &&
+              String(request.id) !==
+                String(finishedRequest.id) &&
               isActive(request) &&
+              !isWaitingForSong(request) &&
               singerKey(request) === finishedSingerKey
           );
 
-
-        const finalThree =
-          getFinalThree(data);
-
+        const finalThree = getFinalThree(data);
 
         const isFinalThreeSinger =
-          finalThree.length === 3 &&
-          finalThree.includes(
-            finishedSingerKey
+          (
+            finalThree.length === 3 &&
+            finalThree.includes(finishedSingerKey)
           );
 
+        if (isFinalThreeSinger) {
 
-        if (remainingSingerRequests.length > 0) {
+          for (const request of remainingSingerRequests) {
+            const closeResponse =
+              await fetch(
+                `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+                {
+                  method:"PATCH",
+                  headers:apiHeaders(true),
+                  body:JSON.stringify({
+                    status:"completed"
+                  })
+                }
+              );
 
-          if (isFinalThreeSinger) {
-
-            for (const request of remainingSingerRequests) {
-
-              const closeResponse =
-                await fetch(
-
-                  `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
-
-                  {
-                    method: "PATCH",
-
-                    headers: {
-                      "apikey": SUPABASE_KEY,
-                      "Authorization":
-                        `Bearer ${accessToken || SUPABASE_KEY}`,
-                      "Content-Type":
-                        "application/json"
-                    },
-
-                    body: JSON.stringify({
-                      status: "completed"
-                    })
-                  }
-
-                );
-
-
-              if (!closeResponse.ok) {
-
-                throw new Error(
-                  "Final singer finished, but their remaining queued songs could not be closed."
-                );
-
-              }
-
+            if (!closeResponse.ok) {
+              throw new Error(
+                "Final singer finished, but remaining songs could not be closed."
+              );
             }
-
           }
-
-
-          else {
-
-            const backOfRotationStatus =
-              `waiting_resumed_${Date.now()}`;
-
-
-            for (const request of remainingSingerRequests) {
-
-              const moveResponse =
-                await fetch(
-
-                  `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
-
-                  {
-                    method: "PATCH",
-
-                    headers: {
-                      "apikey": SUPABASE_KEY,
-                      "Authorization":
-                        `Bearer ${accessToken || SUPABASE_KEY}`,
-                      "Content-Type":
-                        "application/json"
-                    },
-
-                    body: JSON.stringify({
-                      status: backOfRotationStatus
-                    })
-                  }
-
-                );
-
-
-              if (!moveResponse.ok) {
-
-                throw new Error(
-                  "Song finished, but remaining songs could not be moved to the back."
-                );
-
-              }
-
-            }
-
-          }
-
         }
 
+        else if (remainingSingerRequests.length > 0) {
 
-        /*
-          If a saved manual order exists,
-          move this singer to its end too,
-          so an old manual order cannot
-          pull the singer forward again.
-        */
+          const nextRoundStatus =
+            `waiting_resumed_${Date.now()}`;
 
-        const savedOrder =
-          getManualOrder(data);
+          for (const request of remainingSingerRequests) {
+            const moveResponse =
+              await fetch(
+                `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+                {
+                  method:"PATCH",
+                  headers:apiHeaders(true),
+                  body:JSON.stringify({
+                    status:nextRoundStatus
+                  })
+                }
+              );
+
+            if (!moveResponse.ok) {
+              throw new Error(
+                "Song finished, but remaining songs could not be moved to the next round."
+              );
+            }
+          }
+        }
+
+        else {
+
+          const slotBody = {
+            singer_name:finishedRequest.singer_name,
+            song_title:WAITING_FOR_SONG_TITLE,
+            artist:"Waiting for next song",
+            status:`waiting_resumed_${Date.now()}`
+          };
+
+          if (finishedRequest.singer_id) {
+            slotBody.singer_id =
+              finishedRequest.singer_id;
+          }
+
+          if (finishedRequest.original_name) {
+            slotBody.original_name =
+              finishedRequest.original_name;
+          }
+
+          const slotResponse =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests`,
+              {
+                method:"POST",
+                headers:apiHeaders(true),
+                body:JSON.stringify(slotBody)
+              }
+            );
+
+          if (!slotResponse.ok) {
+            throw new Error(
+              "Song finished, but the singer's next-round slot could not be reserved."
+            );
+          }
+        }
+
+        const savedOrder = getManualOrder(data);
 
         if (savedOrder.includes(finishedSingerKey)) {
-
-          const updatedOrder = [
+          await saveManualOrder([
             ...savedOrder.filter(
               key => key !== finishedSingerKey
             ),
             finishedSingerKey
-          ];
-
-          await saveManualOrder(updatedOrder);
-
+          ]);
         }
 
-
-        /*
-          loadRequests() automatically
-          chooses the next available singer.
-        */
-
         await loadRequests();
-
       }
-
 
       catch (error) {
-
         console.error(error);
-
-        alert(
-          "Could not finish this request."
-        );
-
+        alert("Could not finish this request.");
       }
-
     }
 
 

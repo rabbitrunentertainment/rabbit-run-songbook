@@ -2286,27 +2286,35 @@ body.show-6 {
         let firstIndex = 0;
         let repeatIndex = 0;
 
-
         /*
-          FAIR WEAVE RULE
+          FAIRNESS RULE
 
-          Below the protected visible group:
-          keep two repeat singers in their earned
-          order, then work in one first-time singer.
+          Normal mix-in:
+          two established singers, then one new singer.
 
-          Pattern:
-          REPEAT, REPEAT, NEW,
-          REPEAT, REPEAT, NEW...
+          Maximum stretch:
+          no established singer may have more than
+          TWO newly inserted singers added ahead of
+          the position they had already earned.
 
-          If we run out of repeat singers, any
-          remaining new singers are appended to
-          the bottom instead of flooding the round.
+          The protected visible six are handled above
+          and are never changed here.
+
+          "Waiting for next song" reserved slots count
+          as established singers because that singer
+          already earned the position.
         */
+
+        const MAX_NEW_AHEAD_OF_REPEAT = 2;
+        let newInsertedThisHiddenRound = 0;
+
+
         while (
           repeatIndex < repeatSingers.length
         ) {
 
           let repeatsAdded = 0;
+
 
           while (
             repeatsAdded < 2 &&
@@ -2325,8 +2333,15 @@ body.show-6 {
           }
 
 
+          /*
+            Work in one newcomer only while doing so
+            cannot stretch any still-waiting established
+            singer by more than the fairness cap.
+          */
           if (
-            firstIndex < firstTimeSingers.length
+            firstIndex < firstTimeSingers.length &&
+            newInsertedThisHiddenRound <
+              MAX_NEW_AHEAD_OF_REPEAT
           ) {
 
             wovenWaiting.push(
@@ -2336,6 +2351,7 @@ body.show-6 {
             );
 
             firstIndex += 1;
+            newInsertedThisHiddenRound += 1;
 
           }
 
@@ -2343,9 +2359,9 @@ body.show-6 {
 
 
         /*
-          Any new singers that could not be woven
-          in without overloading the repeat round
-          simply join at the bottom.
+          Once the fairness cap is reached, or there
+          are no established slots left to weave around,
+          all remaining newcomers join the bottom.
         */
         while (
           firstIndex < firstTimeSingers.length
