@@ -2647,6 +2647,14 @@
     }
 
 
+    const KJ_READY_SONG_TITLE =
+      "__RABBIT_RUN_KJ_SONG_READY__";
+
+    function isKjReadySong(request) {
+      return request.song_title === KJ_READY_SONG_TITLE;
+    }
+
+
     /* =========================
        KARAOKE NIGHT RESET
 
@@ -3705,11 +3713,18 @@
 
         if (isUpNext) {
           return `
-            <button class="waiting-song-button" disabled>Hold</button>
+            <button
+              class="waiting-song-button"
+              onclick='markSingerSongReady(${JSON.stringify(singer.key)})'
+            >
+              Song Ready
+            </button>
             <button
               class="skip-slot-button"
               onclick='skipWaitingSinger(${JSON.stringify(singer.key)})'
-            >Skip</button>
+            >
+              Skip
+            </button>
           `;
         }
 
@@ -3906,7 +3921,11 @@
                     ${
                       waitingForSong
                         ? "Waiting for next song"
-                        : escapeHtml(request.song_title)
+                        : (
+                            isKjReadySong(request)
+                              ? "Song Ready"
+                              : escapeHtml(request.song_title)
+                          )
                     }
                   </div>
 
@@ -3915,7 +3934,11 @@
                     ${
                       waitingForSong
                         ? "Reserved rotation spot"
-                        : escapeHtml(request.artist)
+                        : (
+                            isKjReadySong(request)
+                              ? "Queued by KJ"
+                              : escapeHtml(request.artist)
+                          )
                     }
                   </div>
 
@@ -4287,6 +4310,62 @@
 
         alert(
           "Could not pause this singer."
+        );
+
+      }
+
+    }
+
+
+    async function markSingerSongReady(key) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+        const slot =
+          data.find(
+            request =>
+              isCurrentKaraokeNight(request) &&
+              isWaitingForSong(request) &&
+              !isSkippedSlot(request) &&
+              singerKey(request) === key
+          );
+
+        if (!slot) {
+          return;
+        }
+
+        const response =
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/requests?id=eq.${slot.id}`,
+            {
+              method: "PATCH",
+              headers: apiHeaders(true),
+              body: JSON.stringify({
+                song_title: KJ_READY_SONG_TITLE,
+                artist: "Queued by KJ"
+              })
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "Could not mark this singer's song ready."
+          );
+        }
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not mark this singer's song ready."
         );
 
       }
