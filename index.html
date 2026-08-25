@@ -474,6 +474,44 @@ input {
   margin-bottom: 12px;
 }
 
+
+/* FORCE SEARCH -> COUNT -> ROTATION BUTTON VISUAL ORDER */
+.searchbox {
+  display:block !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:10px 0 4px !important;
+}
+
+#status.status {
+  display:block !important;
+  position:static !important;
+  width:100% !important;
+  margin:8px 0 14px !important;
+  padding:0 !important;
+  text-align:center !important;
+  order:initial !important;
+}
+
+#rotationButton {
+  display:flex !important;
+  position:static !important;
+  width:min(460px,90%) !important;
+  margin:0 auto 22px !important;
+  order:initial !important;
+}
+
+@media (max-width:600px) {
+  #status.status {
+    margin:8px 0 14px !important;
+  }
+
+  #rotationButton {
+    width:90% !important;
+    margin:0 auto 20px !important;
+  }
+}
+
 </style>
 </head>
 
