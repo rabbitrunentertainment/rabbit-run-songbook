@@ -398,6 +398,15 @@
       margin: 0 auto 12px;
       display: flex;
       justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .wrap-button {
+      background: #5b2130;
+      color: #ffe4e6;
+      border: 2px solid #be123c;
+      font-weight: 900;
     }
 
     .wishlist-toggle-button {
@@ -1022,6 +1031,13 @@
           onclick="toggleWishlistPanel()"
         >
           🎵 Song Wishlist
+        </button>
+
+        <button
+          class="wrap-button"
+          onclick="thatsAWrap()"
+        >
+          That's a Wrap
         </button>
       </div>
 
@@ -4490,6 +4506,23 @@
                     ${escapeHtml(
                       currentName
                     )}
+                    <span
+                      class="singer-badge ${
+                        getNewcomerQueue(data).includes(
+                          singer.key
+                        )
+                          ? "new"
+                          : "repeat"
+                      }"
+                    >
+                      ${
+                        getNewcomerQueue(data).includes(
+                          singer.key
+                        )
+                          ? "NEW"
+                          : "REPEAT"
+                      }
+                    </span>
                   </div>
 
 
@@ -5083,6 +5116,96 @@
 
         alert(
           "Could not remove this singer from the rotation."
+        );
+
+      }
+
+    }
+
+
+    async function thatsAWrap() {
+
+      const confirmed =
+        confirm(
+          "End karaoke for tonight? This will close new song requests and end the active rotation. Completed song history will be kept."
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+
+        await setLiveRequestsOpen(
+          false
+        );
+
+
+        const data =
+          await fetchRequests();
+
+
+        const rowsToClose =
+          data.filter(
+            request =>
+              isCurrentKaraokeNight(
+                request
+              ) &&
+              request.singer_name !==
+                SETTINGS_SINGER &&
+              !isCompleted(request) &&
+              !isLeft(request)
+          );
+
+
+        const wrapStatus =
+          `left_wrap_${Date.now()}`;
+
+
+        for (
+          const request
+          of rowsToClose
+        ) {
+
+          const response =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+              {
+                method: "PATCH",
+                headers: apiHeaders(true),
+                body: JSON.stringify({
+                  status:
+                    wrapStatus
+                })
+              }
+            );
+
+          if (!response.ok) {
+            throw new Error(
+              "Could not end the active rotation."
+            );
+          }
+
+        }
+
+
+        await saveManualOrder([]);
+        await saveNewcomerQueue([]);
+
+        await loadRequests();
+
+        alert(
+          "That's a wrap! Requests are closed and tonight's active rotation has ended."
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not end tonight's karaoke rotation."
         );
 
       }
