@@ -8,1651 +8,206 @@
   <title>Rabbit Run Karaoke Rotation</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
+    html, body { margin: 0; max-width: 100%; }
     body {
-      margin: 0;
       min-height: 100vh;
       overflow-x: hidden;
       background: #050711;
-      color: white;
+      color: #fff;
       font-family: Arial, Helvetica, sans-serif;
     }
 
     #showBackground {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      object-position: center center;
-      z-index: 0;
-      pointer-events: none;
+      position: fixed; inset: 0; width: 100vw; height: 100vh;
+      object-fit: cover; object-position: center; z-index: 0; pointer-events: none;
     }
-
     #showBackgroundShade {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
       background: rgba(5,7,17,.18);
-      z-index: 1;
-      pointer-events: none;
     }
-
     .wrap {
-      position: relative;
-      z-index: 2;
-      width: min(1400px, 96vw);
-      margin: auto;
-      padding: 10px 20px 96px;
+      position: relative; z-index: 2; width: min(1400px,96vw);
+      margin: auto; padding: 10px 20px 82px;
     }
-
-    header {
-      position: relative;
-      text-align: center;
-      margin: 0 0 14px;
-      min-height: 0;
-      padding: 8px 0 0;
-    }
-
-    .venue-name {
-      min-height: 44px;
-      margin: 4px 0 0;
-      font-size: clamp(34px, 4.2vw, 56px);
-      font-weight: 800;
-      letter-spacing: .01em;
-      text-transform: none;
-      text-align: center;
-      background: linear-gradient(
-        90deg,
-        #00b7ff 0%,
-        #0066ff 24%,
-        #6236ff 50%,
-        #b000ff 74%,
-        #ff00b8 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      filter:
-        drop-shadow(0 0 2px rgba(0,183,255,.55));
-    }
-
+    header { text-align: center; margin: 0 0 6px; padding-top: 4px; }
     h1 {
-      width: 100%;
-      margin: 0;
-      font-size: clamp(68px, 8.5vw, 120px);
-      line-height: 1;
-      font-weight: 900;
-      letter-spacing: .02em;
-      text-align: center;
-      background: linear-gradient(
-        90deg,
-        #ff008c 0%,
-        #ff00d4 22%,
-        #b000ff 48%,
-        #5b2cff 70%,
-        #00b7ff 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      filter:
-        drop-shadow(0 0 2px rgba(255,0,212,.55));
+      margin: 0; font-size: clamp(62px,7.8vw,110px); line-height: 1;
+      font-weight: 900; letter-spacing: .02em; text-align: center;
+      background: linear-gradient(90deg,#ff008c 0%,#ff00d4 22%,#b000ff 48%,#5b2cff 70%,#00b7ff 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 2px rgba(255,0,212,.55));
     }
-
-    .closing-banner.wrap-complete .closing-banner-main {
-      font-size: clamp(50px, 6.4vw, 88px);
+    .venue-name {
+      min-height: 38px; margin: 0; font-size: clamp(32px,3.9vw,50px);
+      font-weight: 800; text-align: center;
+      background: linear-gradient(90deg,#FFE600 0%,#FFB000 45%,#FF6A00 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      color: #FFE600; filter: drop-shadow(0 0 2px rgba(255,230,0,.55)) drop-shadow(0 0 7px rgba(255,106,0,.22));
     }
-
-    .closing-banner.wrap-complete .closing-banner-sub {
-      font-size: clamp(25px, 3.1vw, 40px);
-      line-height: 1.28;
-      font-weight: 800;
+    .venue-emoji, .closing-emoji {
+      background: none; -webkit-background-clip: initial; background-clip: initial;
+      -webkit-text-fill-color: initial; color: initial; filter: none; text-shadow: none;
     }
-
 
     .up-next-box {
-      width: var(--up-next-width, min(60%, 900px));
-      max-width: calc(100vw - 48px);
-      border: 5px solid rgba(255,0,190,.96);
-      background: rgba(10,15,28,.68);
-      border-radius: 15px;
-      padding: 11px 20px;
-      text-align: center;
-      margin: 8px auto;
-      box-shadow:
-        0 0 8px rgba(255,196,0,.96),
-        0 0 18px rgba(255,174,0,.76),
-        0 0 32px rgba(255,148,0,.44);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      width: var(--up-next-width,min(60%,900px)); max-width: calc(100vw - 48px);
+      margin: 5px auto; padding: 7px 16px; text-align: center;
+      border: 5px solid rgba(255,0,190,.96); border-radius: 15px;
+      background: rgba(10,15,28,.68); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      box-shadow: 0 0 8px rgba(255,196,0,.96),0 0 18px rgba(255,174,0,.76),0 0 32px rgba(255,148,0,.44);
     }
-
     .up-next-label {
-      color: #ff63df;
-      font-size: 17px;
-      font-weight: 900;
-      letter-spacing: .16em;
-      text-shadow:
-        0 0 6px rgba(255,0,212,.95),
-        0 0 12px rgba(176,0,255,.48);
+      color: #ff63df; font-size: 17px; font-weight: 900; letter-spacing: .16em;
+      text-shadow: 0 0 6px rgba(255,0,212,.95),0 0 12px rgba(176,0,255,.48);
     }
-
-    .up-next-name {
-      font-size: clamp(34px, 5vw, 60px);
-      font-weight: bold;
-      line-height: 1.05;
-      margin-top: 2px;
+    .up-next-name { margin-top: 2px; font-size: clamp(34px,5vw,60px); font-weight: 700; line-height: 1.05; }
+    .up-next-song-note {
+      display: none; margin-top: 2px; color: #fbbf24;
+      font-size: clamp(16px,1.7vw,22px); font-weight: 800; font-style: italic;
     }
+    .up-next-song-note.show { display: block; }
 
-    body.show-4 .up-next-name {
-      font-size: clamp(40px, 5.4vw, 68px);
-    }
-
-    body.show-2 .up-next-name {
-      font-size: clamp(50px, 6.4vw, 80px);
-    }
-
-    body.show-6 .up-next-box {
-      padding: 8px 16px;
-      border-width: 4px;
-      margin-top: 5px !important;
-      margin-bottom: 4px !important;
-    }
-
-    body.show-4 .up-next-box {
-      padding: 11px 19px;
-      border-width: 5px;
-      margin-top: 6px !important;
-      margin-bottom: 4px !important;
-    }
-
-    body.show-2 .up-next-box {
-      padding: 16px 24px;
-      border-width: 6px;
-      margin-top: 7px !important;
-      margin-bottom: 5px !important;
-    }
-
-    body.show-4 .up-next-label {
-      font-size: 18px;
-    }
-
-    body.show-2 .up-next-label {
-      font-size: 19px;
-    }
-
-    .rotation-title {
-      text-align: center;
-      color: #d8b4fe;
-      font-size: 21px;
-      font-weight: bold;
-      margin: 8px 0 6px;
-    }
-
-    .content {
-      display: block;
-      width: 100%;
-    }
-
+    .rotation-title { margin: 3px 0 4px; text-align: center; color: #d8b4fe; font-size: 21px; font-weight: 700; }
+    .content { width: 100%; }
     #rotation {
-      display: grid;
-      gap: 8px;
-      align-self: start;
-      width: max-content;
-      max-width: 100%;
-      margin: 0 auto;
-      justify-items: center;
+      display: grid; gap: 3px; width: 100%; max-width: 100%; margin: 0 auto;
+      justify-items: center; align-items: center;
     }
-
-    #rotation .rotation-row {
-      width: var(--rotation-row-width, 560px);
-      max-width: 100%;
-      margin: 0 auto;
-    }
-
-    body.final-three-active #rotation {
-      width: 100%;
-      max-width: none;
-      justify-items: center;
-    }
-
-    body.final-three-active #rotation .rotation-row {
-      width: var(--rotation-row-width, 560px);
-      max-width: min(90vw, 100%);
-    }
-
-    body.final-three-active .wrap {
-      padding-bottom: 112px;
-    }
-
-    /*
-      Singer list sizing changes based on
-      the KJ's TV SHOWS 2 / 4 / 6 setting.
-
-      Up Next is NOT changed.
-    */
-
-    #rotation.display-6 {
-      max-width: 820px;
-    }
-
-    #rotation.display-6 .rotation-row {
-      min-height: 46px;
-      padding: 7px 12px;
-      grid-template-columns: 48px 1fr;
-    }
-
-    #rotation.display-6 .position {
-      font-size: 28px;
-    }
-
-    #rotation.display-6 .name {
-      font-size: clamp(36px, 3.6vw, 48px);
-    }
-
-
-    #rotation.display-4 {
-      max-width: 920px;
-    }
-
-    #rotation.display-4 .rotation-row {
-      min-height: 58px;
-      padding: 10px 14px;
-      grid-template-columns: 52px 1fr;
-    }
-
-    #rotation.display-4 .position {
-      font-size: 25px;
-    }
-
-    #rotation.display-4 .name {
-      font-size: clamp(44px, 4.5vw, 56px);
-    }
-
-
-    #rotation.display-2 {
-      max-width: 1040px;
-    }
-
-    #rotation.display-2 .rotation-row {
-      min-height: 72px;
-      padding: 14px 18px;
-      grid-template-columns: 58px 1fr;
-    }
-
-    #rotation.display-2 .position {
-      font-size: 22px;
-    }
-
-    #rotation.display-2 .name {
-      font-size: clamp(52px, 5.4vw, 66px);
-    }
-
     .rotation-row {
-      display: grid;
-      grid-template-columns: 48px 1fr;
-      align-items: center;
-      background: rgba(15,23,42,.66);
-      border: 2px solid rgba(124,58,237,.90);
-      border-radius: 10px;
-      padding: 8px 12px;
-      min-height: 46px;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      display: grid; grid-template-columns: 42px 1fr 42px; align-items: center;
+      width: var(--rotation-row-width,560px); max-width: 100%; min-height: 38px;
+      margin: 0 auto; padding: 0 8px;
+      border: 2px solid rgba(124,58,237,.90); border-radius: 10px;
+      background: rgba(15,23,42,.66); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     }
-
-    .position {
-      color: #d8b4fe;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
+    .position { grid-column: 1; justify-self: start; color: #d8b4fe; font-size: 20px; font-weight: 700; }
     .name {
-      font-size: clamp(21px, 2.5vw, 31px);
-      font-weight: bold;
-      text-align: center;
-      padding-right: 48px;
+      grid-column: 2; width: 100%; padding: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      font-size: clamp(28px,2.7vw,36px); font-weight: 700; line-height: 1;
     }
+    .waiting-for-song-note {
+      display: block; margin: 1px 0 0; color: #fbbf24; font-size: 10px;
+      font-weight: 800; font-style: italic; line-height: 1; white-space: nowrap; text-align: center;
+    }
+    .more-waiting { padding: 2px 0 0; text-align: center; color: #d8b4fe; font-size: 15px; font-weight: 700; }
 
-    .more-waiting {
-      text-align: center;
-      color: #d8b4fe;
-      font-size: 17px;
-      font-weight: bold;
-      padding: 6px 0 2px;
-    }
+    /* The KJ's 2/4/6 setting controls only how many rows JS shows and their scale. */
+    body.show-4 #rotation { gap: 6px; }
+    body.show-4 .rotation-row { min-height: 50px; padding: 2px 10px; }
+    body.show-4 .name { font-size: clamp(34px,3.4vw,46px); }
+    body.show-2 #rotation { gap: 8px; }
+    body.show-2 .rotation-row { min-height: 62px; padding: 3px 12px; }
+    body.show-2 .name { font-size: clamp(42px,4.4vw,56px); }
+    body.show-4 .up-next-name { font-size: clamp(40px,5.4vw,68px); }
+    body.show-2 .up-next-name { font-size: clamp(50px,6.4vw,80px); }
 
     .need-more {
-      text-align: center;
-      padding: 22px 16px;
-      margin-top: 4px;
-      border: 3px dashed transparent;
-      border-radius: 12px;
-      background:
-        linear-gradient(
-          rgba(10,15,28,.52),
-          rgba(10,15,28,.52)
-        ) padding-box,
-        linear-gradient(
-          90deg,
-          #ff008c,
-          #b000ff,
-          #00b7ff
-        ) border-box;
-      box-shadow:
-        0 0 10px rgba(255,0,140,.38),
-        0 0 20px rgba(0,183,255,.20);
-      backdrop-filter: blur(2px);
+      justify-self: center; width: min(88vw,1180px); max-width: calc(100vw - 48px);
+      margin: 2px auto 0; padding: 9px 14px; text-align: center; border: 3px dashed transparent; border-radius: 12px;
+      background: linear-gradient(rgba(10,15,28,.52),rgba(10,15,28,.52)) padding-box,
+                  linear-gradient(90deg,#ff008c,#b000ff,#00b7ff) border-box;
+      box-shadow: 0 0 10px rgba(255,0,140,.38),0 0 20px rgba(0,183,255,.20);
     }
-
     .need-more-main {
-      font-size: clamp(22px, 2.6vw, 34px);
-      font-weight: bold;
-      margin-bottom: 5px;
-      background: linear-gradient(
-        90deg,
-        #ff008c,
-        #b000ff 55%,
-        #00b7ff
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      filter: drop-shadow(0 0 2px rgba(255,0,212,.40));
+      font-size: clamp(22px,2.6vw,34px); font-weight: 700; line-height: 1.08; white-space: nowrap;
+      background: linear-gradient(90deg,#ff008c,#b000ff 55%,#00b7ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
-
-    .need-more-sub {
-      color: #d8b4fe;
-      font-size: clamp(15px, 1.7vw, 20px);
-    }
-
-    /* =========================
-       ZERO-SINGER WELCOME ONLY
-       ========================= */
+    .need-more-sub { color: #d8b4fe; font-size: clamp(15px,1.7vw,20px); }
 
     .empty-welcome {
-      text-align: center;
-      padding: 28px 20px;
-      margin-bottom: 12px;
-      background:
-        linear-gradient(
-          135deg,
-          rgba(255,0,140,.16) 0%,
-          rgba(176,0,255,.14) 48%,
-          rgba(0,183,255,.16) 100%
-        );
-      border: 3px solid transparent;
-      border-radius: 16px;
-      background:
-        linear-gradient(
-          rgba(10,15,28,.58),
-          rgba(10,15,28,.58)
-        ) padding-box,
-        linear-gradient(
-          90deg,
-          #ff008c,
-          #b000ff,
-          #00b7ff
-        ) border-box;
-      box-shadow:
-        0 0 10px rgba(255,0,140,.48),
-        0 0 24px rgba(176,0,255,.34),
-        0 0 34px rgba(0,183,255,.22);
-      backdrop-filter: blur(2px);
+      text-align: center; padding: 28px 20px; margin-bottom: 12px; border: 3px solid transparent; border-radius: 16px;
+      background: linear-gradient(rgba(10,15,28,.58),rgba(10,15,28,.58)) padding-box,
+                  linear-gradient(90deg,#ff008c,#b000ff,#00b7ff) border-box;
+      box-shadow: 0 0 10px rgba(255,0,140,.48),0 0 24px rgba(176,0,255,.34),0 0 34px rgba(0,183,255,.22);
     }
-
     .empty-welcome-main {
-      font-size: clamp(30px, 4vw, 52px);
-      font-weight: 900;
-      line-height: 1.05;
-      margin-bottom: 8px;
-      background: linear-gradient(
-        90deg,
-        #ff008c 0%,
-        #ff00d4 25%,
-        #b000ff 55%,
-        #00b7ff 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      filter:
-        drop-shadow(0 0 2px rgba(176,0,255,.45));
+      margin-bottom: 8px; font-size: clamp(30px,4vw,52px); font-weight: 900; line-height: 1.05;
+      background: linear-gradient(90deg,#ff008c,#ff00d4 25%,#b000ff 55%,#00b7ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
-
-    .empty-welcome-hook {
-      font-size: clamp(20px, 2.4vw, 30px);
-      font-weight: 800;
-      color: #f9a8d4;
-      margin-bottom: 12px;
-    }
-
-    .empty-welcome-steps {
-      font-size: clamp(16px, 1.8vw, 22px);
-      line-height: 1.5;
-      color: #e5e7eb;
-    }
-
-    .empty-welcome-tag {
-      margin-top: 12px;
-      color: #93c5fd;
-      font-size: clamp(18px, 2vw, 24px);
-      font-weight: 800;
-    }
+    .empty-welcome-hook { margin-bottom: 12px; color: #f9a8d4; font-size: clamp(20px,2.4vw,30px); font-weight: 800; }
+    .empty-welcome-steps { color: #e5e7eb; font-size: clamp(16px,1.8vw,22px); line-height: 1.5; }
+    .empty-welcome-tag { margin-top: 12px; color: #93c5fd; font-size: clamp(18px,2vw,24px); font-weight: 800; }
 
     .closing-banner {
-      width: min(92vw, 1320px);
-      max-width: calc(100vw - 48px);
-      box-sizing: border-box;
-      text-align: center;
-      padding: 30px 34px;
-      margin: 8px auto 0;
-      border: 4px solid transparent;
-      border-radius: 18px;
-      background:
-        linear-gradient(
-          rgba(10,15,28,.10),
-          rgba(10,15,28,.10)
-        ) padding-box,
-        linear-gradient(
-          90deg,
-          #ff008c 0%,
-          #ff00d4 22%,
-          #b000ff 50%,
-          #5b2cff 72%,
-          #00b7ff 100%
-        ) border-box;
-      box-shadow:
-        0 0 9px rgba(255,0,140,.42),
-        0 0 18px rgba(176,0,255,.24),
-        0 0 24px rgba(0,183,255,.16),
-        inset 0 0 8px rgba(255,255,255,.015);
-      backdrop-filter: blur(2px);
+      justify-self: center; width: min(92vw,1320px); max-width: calc(100vw - 48px); margin: 8px auto 0;
+      padding: 20px 30px; text-align: center; border: 4px solid rgba(255,0,140,.75); border-radius: 18px;
+      background: linear-gradient(90deg,rgba(0,183,255,.30),rgba(91,44,255,.30) 35%,rgba(176,0,255,.30) 65%,rgba(255,0,140,.30));
+      box-shadow: 0 0 9px rgba(0,183,255,.35),0 0 18px rgba(176,0,255,.24),0 0 24px rgba(255,0,140,.20);
+      overflow: visible;
     }
-
-    .closing-banner-main {
-      font-size: clamp(34px, 4.8vw, 62px);
-      line-height: 1.05;
-      font-weight: 900;
-      margin-bottom: 14px;
-      background: linear-gradient(
-        90deg,
-        #ff008c 0%,
-        #ff00d4 24%,
-        #b000ff 52%,
-        #00b7ff 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      filter:
-        drop-shadow(0 0 2px rgba(255,0,212,.55));
-    }
-
-    .closing-banner-sub {
-      color: #ffffff;
-      font-size: clamp(20px, 2.4vw, 30px);
-      line-height: 1.35;
-      font-weight: 700;
-      text-shadow:
-        0 0 8px rgba(255,0,212,.55),
-        0 0 14px rgba(0,183,255,.28);
-    }
-
-    @media (max-width: 700px) {
-      .closing-banner {
-        padding: 24px 14px;
-      }
-
-      .closing-banner-main {
-        font-size: clamp(30px, 9vw, 46px);
-      }
-
-      .closing-banner-sub {
-        font-size: clamp(18px, 5vw, 24px);
-      }
-    }
-
-    footer {
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      z-index: 100;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      width: min(92vw, 1240px);
-      max-width: calc(100vw - 40px);
-      pointer-events: none;
-    }
-
-    .footer-tagline {
-      flex: 0 0 auto;
-      font-size: clamp(22px, 2.8vw, 38px);
-      font-weight: 800;
-      font-style: italic;
-      letter-spacing: .02em;
-      background: linear-gradient(
-        90deg,
-        #ff008c 0%,
-        #ff00d4 45%,
-        #8a2cff 70%,
-        #00b7ff 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      filter:
-        drop-shadow(0 0 2px rgba(176,0,255,.45));
-      white-space: nowrap;
-    }
-
-    .sound-bars {
-      flex: 1 1 260px;
-      max-width: 420px;
-      height: 40px;
-      display: flex;
-      align-items: end;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .sound-bars span {
-      width: 8px;
-      min-width: 5px;
-      border-radius: 2px 2px 0 0;
-      background: linear-gradient(
-        to top,
-        #ff008c,
-        #b000ff 55%,
-        #00b7ff
-      );
-      box-shadow:
-        0 0 5px rgba(255,0,212,.75),
-        0 0 9px rgba(0,183,255,.35);
-      opacity: .95;
-    }
-
-    .sound-bars span:nth-child(1)  { height: 10px; }
-    .sound-bars span:nth-child(2)  { height: 16px; }
-    .sound-bars span:nth-child(3)  { height: 25px; }
-    .sound-bars span:nth-child(4)  { height: 34px; }
-    .sound-bars span:nth-child(5)  { height: 22px; }
-    .sound-bars span:nth-child(6)  { height: 30px; }
-    .sound-bars span:nth-child(7)  { height: 18px; }
-    .sound-bars span:nth-child(8)  { height: 27px; }
-    .sound-bars span:nth-child(9)  { height: 38px; }
-    .sound-bars span:nth-child(10) { height: 24px; }
-    .sound-bars span:nth-child(11) { height: 14px; }
-    .sound-bars span:nth-child(12) { height: 31px; }
-    .sound-bars span:nth-child(13) { height: 20px; }
-    .sound-bars span:nth-child(14) { height: 35px; }
-    .sound-bars span:nth-child(15) { height: 17px; }
-
-    @media (max-width: 700px) {
-      footer {
-        gap: 8px;
-      }
-
-      .footer-tagline {
-        font-size: clamp(18px, 5vw, 26px);
-      }
-
-      .sound-bars {
-        height: 28px;
-        gap: 2px;
-      }
-
-      .sound-bars span {
-        width: 4px;
-      }
-    }
-
-
-    /* =========================
-       MOBILE
-       ========================= */
-
-   @media (max-width: 700px) {
-
-  header {
-    min-height: 0;
-    padding: 0;
-    margin: 0 0 10px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  footer {
-    margin: 10px 0 0;
-  }
-
-  .up-next-box {
-    width: 100%;
-    margin: 12px auto;
-  }
-
-  #rotation.display-2,
-  #rotation.display-4,
-  #rotation.display-6 {
-    max-width: 100%;
-  }
-
-  .content {
-    display: block;
-  }
-
-  .rotation-row {
-    grid-template-columns: 42px 1fr;
-  }
-}
-
-  
-
-/* ===== TV SHOW SCREEN FINAL OVERRIDES ===== */
-
-    /* VENUE: electric aqua -> electric blue */
-    .venue,
-    #venue,
-    .venue-name,
-    #venueName {
-      background: linear-gradient(90deg, #00F5FF 0%, #00A8FF 100%) !important;
-      -webkit-background-clip: text !important;
-      background-clip: text !important;
-      -webkit-text-fill-color: transparent !important;
-      color: #00F5FF;
-      filter: drop-shadow(0 0 5px rgba(0,245,255,.24));
-    }
-
-    /* Closing headline readability + descender fix */
-    .closing-banner-main {
-      line-height: 1.18 !important;
-      padding: 0.08em 0.08em 0.16em !important;
-      overflow: visible !important;
-
-      /* Keep existing gradient text but add a thin mint outline */
-      -webkit-text-stroke: 1.5px #5CFFB0;
-      paint-order: stroke fill;
-      text-shadow:
-        0 0 2px rgba(92,255,176,.85),
-        0 0 8px rgba(92,255,176,.30);
-    }
-
-    .closing-banner {
-      overflow: visible !important;
-    }
-
-    /* 6 singer view: fit on one TV screen */
-    body.show-6 .rotation-row {
-      min-height: 62px !important;
-      padding-top: 5px !important;
-      padding-bottom: 5px !important;
-    }
-
-    body.show-6 #rotation {
-      row-gap: 7px !important;
-      gap: 7px !important;
-    }
-
-    body.show-6 .rotation-name {
-      font-size: clamp(31px, 3.4vw, 48px) !important;
-      line-height: 1.05 !important;
-    }
-
-    body.show-6 .wrap {
-      padding-bottom: 92px !important;
-    }
-
-    /* 4 singer view: keep large, remove page overflow */
-    body.show-4 .rotation-row {
-      min-height: 76px !important;
-      padding-top: 7px !important;
-      padding-bottom: 7px !important;
-    }
-
-    body.show-4 #rotation {
-      row-gap: 9px !important;
-      gap: 9px !important;
-    }
-
-    body.show-4 .wrap {
-      padding-bottom: 92px !important;
-    }
-
-    /* Final 3: fit banner without shrinking its text */
-    body.final-three-active .closing-banner {
-      width: min(94vw, 1380px) !important;
-      max-width: calc(100vw - 42px) !important;
-      padding-top: 20px !important;
-      padding-bottom: 20px !important;
-      margin-top: 2px !important;
-    }
-
-    body.final-three-active #rotation {
-      row-gap: 8px !important;
-      gap: 8px !important;
-    }
-
-    body.final-three-active .wrap {
-      padding-bottom: 96px !important;
-    }
-
-    /* Footer: fixed to TV viewport bottom */
-    footer {
-      position: fixed !important;
-      left: 50% !important;
-      bottom: 14px !important;
-      transform: translateX(-50%) !important;
-      z-index: 200 !important;
-      width: min(92vw, 1240px) !important;
-      max-width: calc(100vw - 40px) !important;
-    }
-
-    body {
-      overflow-x: hidden !important;
-    }
-
-
-/* ===== REFINED TV OVERRIDES ===== */
-
-    /* VENUE: electric gold -> orange so it does NOT blend into the title */
-    .venue-name,
-    #venueName {
-      background: linear-gradient(
-        90deg,
-        #FFE600 0%,
-        #FFB000 45%,
-        #FF6A00 100%
-      ) !important;
-      -webkit-background-clip: text !important;
-      background-clip: text !important;
-      -webkit-text-fill-color: transparent !important;
-      color: #FFE600 !important;
-      filter:
-        drop-shadow(0 0 2px rgba(255,230,0,.55))
-        drop-shadow(0 0 7px rgba(255,106,0,.22)) !important;
-    }
-
-    .venue-emoji {
-      background: none !important;
-      -webkit-background-clip: initial !important;
-      background-clip: initial !important;
-      -webkit-text-fill-color: initial !important;
-      color: initial !important;
-      filter: none !important;
-      text-shadow: none !important;
-    }
-
-    /* Closing headline: gradient fill + thin GOLD outline, not mint fill */
-    .closing-banner-main {
-      line-height: 1.20 !important;
-      padding: .06em .06em .18em !important;
-      overflow: visible !important;
-      -webkit-text-stroke: 0 !important;
-      text-shadow: none !important;
-    }
-
+    .closing-banner-main { margin-bottom: 14px; padding: .06em .06em .18em; font-size: clamp(34px,4.8vw,62px); line-height: 1.2; font-weight: 900; }
     .closing-headline-text {
-      display: inline-block;
-      background: linear-gradient(
-        90deg,
-        #ff008c 0%,
-        #ff00d4 24%,
-        #b000ff 52%,
-        #5b2cff 74%,
-        #00b7ff 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-      -webkit-text-stroke: 1.25px #FFD400;
-      paint-order: stroke fill;
-      filter: drop-shadow(0 0 2px rgba(255,212,0,.32));
+      display: inline-block; background: linear-gradient(90deg,#ff008c,#ff00d4 24%,#b000ff 52%,#5b2cff 74%,#00b7ff);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+      -webkit-text-stroke: 1.25px #FFD400; paint-order: stroke fill; filter: drop-shadow(0 0 2px rgba(255,212,0,.32));
     }
-
-    .closing-emoji {
-      display: inline-block;
-      margin: 0 .12em;
-      background: none !important;
-      -webkit-background-clip: initial !important;
-      background-clip: initial !important;
-      -webkit-text-fill-color: initial !important;
-      color: initial !important;
-      -webkit-text-stroke: 0 !important;
-      filter: none !important;
-      text-shadow: none !important;
-    }
-
-    /* 6-SINGER VIEW: fit all 6 + footer on one screen */
-    body.show-6 .wrap {
-      padding-top: 2px !important;
-      padding-bottom: 70px !important;
-    }
-
-    body.show-6 header {
-      margin-bottom: 4px !important;
-    }
-
-    body.show-6 h1 {
-      font-size: clamp(62px, 7.8vw, 110px) !important;
-    }
-
-    body.show-6 .venue-name {
-      font-size: clamp(32px, 3.9vw, 50px) !important;
-      min-height: 38px !important;
-      margin-top: 0 !important;
-    }
-
-    body.show-6 .up-next-box {
-      margin-top: 5px !important;
-      margin-bottom: 5px !important;
-      padding-top: 7px !important;
-      padding-bottom: 7px !important;
-    }
-
-    body.show-6 .rotation-title {
-      margin: 3px 0 4px !important;
-    }
-
-    body.show-6 #rotation {
-      gap: 3px !important;
-      row-gap: 3px !important;
-    }
-
-    body.show-6 .rotation-row {
-      min-height: 48px !important;
-      padding: 2px 10px !important;
-    }
-
-    body.show-6 .name {
-      font-size: clamp(34px, 3.4vw, 44px) !important;
-      line-height: 1.02 !important;
-    }
-
-    body.show-6 .position {
-      font-size: 20px !important;
-    }
-
-    body.show-6 .more-waiting {
-      padding: 2px 0 0 !important;
-      font-size: 15px !important;
-    }
-
-    body.show-6 {
-      overflow-y: hidden !important;
-    }
-
-    /* 4-SINGER VIEW: remove scrollbar without making names small */
-    body.show-4 .wrap {
-      padding-top: 4px !important;
-      padding-bottom: 74px !important;
-    }
-
-    body.show-4 header {
-      margin-bottom: 6px !important;
-    }
-
-    body.show-4 .up-next-box {
-      margin-top: 6px !important;
-      margin-bottom: 6px !important;
-    }
-
-    body.show-4 .rotation-title {
-      margin: 4px 0 5px !important;
-    }
-
-    body.show-4 #rotation {
-      gap: 6px !important;
-      row-gap: 6px !important;
-    }
-
-    body.show-4 .rotation-row {
-      min-height: 66px !important;
-      padding: 6px 12px !important;
-    }
-
-    body.show-4 .name {
-      font-size: clamp(40px, 4.1vw, 54px) !important;
-      line-height: 1.04 !important;
-    }
-
-    body.show-4 {
-      overflow-y: hidden !important;
-    }
-
-    /* FINAL 3 START ONLY: fit the banner without shrinking its text */
-    body.final-three-start .wrap {
-      padding-top: 3px !important;
-      padding-bottom: 84px !important;
-    }
-
-    body.final-three-start header {
-      margin-bottom: 3px !important;
-    }
-
-    body.final-three-start .up-next-box {
-      margin-top: 4px !important;
-      margin-bottom: 4px !important;
-      padding-top: 6px !important;
-      padding-bottom: 6px !important;
-    }
-
-    body.final-three-start .rotation-title {
-      margin: 2px 0 4px !important;
-    }
-
-    body.final-three-start #rotation {
-      gap: 5px !important;
-      row-gap: 5px !important;
-    }
-
-    body.final-three-start .rotation-row {
-      min-height: 52px !important;
-      padding-top: 4px !important;
-      padding-bottom: 4px !important;
-    }
-
-    body.final-three-start .closing-banner {
-      width: min(94vw, 1380px) !important;
-      max-width: calc(100vw - 34px) !important;
-      padding: 16px 30px !important;
-      margin-top: 1px !important;
-    }
-
-    body.final-three-start {
-      overflow-y: hidden !important;
-    }
+    .closing-banner-sub { color: #fff; font-size: clamp(20px,2.4vw,30px); line-height: 1.35; font-weight: 700; }
 
     footer {
-      position: fixed !important;
-      left: 50% !important;
-      bottom: 10px !important;
-      transform: translateX(-50%) !important;
-      z-index: 300 !important;
-      width: min(92vw, 1240px) !important;
-      max-width: calc(100vw - 40px) !important;
-      margin: 0 !important;
-      pointer-events: none !important;
+      position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 300;
+      display: flex; align-items: center; justify-content: center; gap: 18px;
+      width: min(92vw,1240px); max-width: calc(100vw - 40px); margin: 0; pointer-events: none;
     }
-
-    body {
-      overflow-x: hidden !important;
+    .footer-tagline {
+      flex: 0 0 auto; white-space: nowrap; text-align: center; font-size: clamp(22px,2.8vw,38px);
+      font-weight: 800; font-style: italic; letter-spacing: .02em;
+      background: linear-gradient(90deg,#ff008c,#ff00d4 45%,#8a2cff 70%,#00b7ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
+    .sound-bars { flex: 1 1 260px; max-width: 420px; height: 40px; display: flex; align-items: end; justify-content: center; gap: 4px; }
+    .sound-bars span { width: 8px; min-width: 5px; border-radius: 2px 2px 0 0; background: linear-gradient(to top,#ff008c,#b000ff 55%,#00b7ff); box-shadow: 0 0 5px rgba(255,0,212,.75),0 0 9px rgba(0,183,255,.35); }
+    .sound-bars span:nth-child(1){height:10px}.sound-bars span:nth-child(2){height:16px}.sound-bars span:nth-child(3){height:25px}.sound-bars span:nth-child(4){height:34px}.sound-bars span:nth-child(5){height:22px}.sound-bars span:nth-child(6){height:30px}.sound-bars span:nth-child(7){height:18px}.sound-bars span:nth-child(8){height:27px}.sound-bars span:nth-child(9){height:38px}.sound-bars span:nth-child(10){height:24px}.sound-bars span:nth-child(11){height:14px}.sound-bars span:nth-child(12){height:31px}.sound-bars span:nth-child(13){height:20px}.sound-bars span:nth-child(14){height:35px}.sound-bars span:nth-child(15){height:17px}
 
-
-
-/* ===== FINAL BOX TRANSPARENCY OVERRIDE =====
-   Applies to Last 3, Last 2, Final Singer, and That's a Wrap.
-   Text styling/gradients are intentionally unchanged. */
-.closing-banner {
-  background: linear-gradient(
-    90deg,
-    rgba(0, 183, 255, 0.30) 0%,
-    rgba(91, 44, 255, 0.30) 35%,
-    rgba(176, 0, 255, 0.30) 65%,
-    rgba(255, 0, 140, 0.30) 100%
-  ) !important;
-
-  border: 4px solid rgba(255, 0, 140, 0.75) !important;
-
-  box-shadow:
-    0 0 9px rgba(0,183,255,.35),
-    0 0 18px rgba(176,0,255,.24),
-    0 0 24px rgba(255,0,140,.20) !important;
-}
-
-/* ===== SAFE VIEWPORT GUARD ===== */
-html,
-body {
-  max-width: 100%;
-}
-
-body.show-2,
-body.show-4,
-body.show-6 {
-  overflow-x: hidden !important;
-}
-
-
-
-/* ===== FIT FIX AFTER UP NEXT RESTYLE =====
-   Keep the gold halo, but reclaim vertical room so 2/4/6 all stay on-screen. */
-
-body.show-6 .need-more {
-  padding: 9px 14px !important;
-  margin-top: 2px !important;
-}
-
-
-body.show-4 .need-more {
-  padding: 10px 14px !important;
-  margin-top: 2px !important;
-}
-
-
-body.show-2 .need-more {
-  padding: 12px 16px !important;
-  margin-top: 3px !important;
-}
-
-
-/* Keep footer clear of the recruiting box without forcing a scrollbar. */
-body.show-6 .wrap,
-body.show-4 .wrap,
-body.show-2 .wrap {
-  padding-bottom: 82px !important;
-}
-
-/* Preserve the stronger row blur/darker panels. */
-.rotation-row {
-  background: rgba(15,23,42,.66) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-}
-
-/* Protect all TV modes from accidental horizontal scrollbars. */
-body.show-2,
-body.show-4,
-body.show-6 {
-  overflow-x: hidden !important;
-}
-
-
-
-/* ===== KEEP "NEED MORE SINGERS" HEADLINE ON ONE LINE ===== */
-body.show-2 .need-more-main,
-body.show-4 .need-more-main,
-body.show-6 .need-more-main {
-  white-space: nowrap !important;
-  width: 100% !important;
-  max-width: none !important;
-  line-height: 1.08 !important;
-}
-
-/* Let the message box use enough horizontal room without causing a scrollbar. */
-body.show-2 .need-more,
-body.show-4 .need-more,
-body.show-6 .need-more {
-  width: min(88vw, 1180px) !important;
-  max-width: calc(100vw - 48px) !important;
-  box-sizing: border-box !important;
-}
-
-
-
-/* ===== CENTER EACH ROTATION ITEM INDEPENDENTLY =====
-   The wide one-line recruiting banner must not determine
-   the width/position of the singer rows. */
-body.show-2 #rotation,
-body.show-4 #rotation,
-body.show-6 #rotation {
-  width: 100% !important;
-  max-width: 100% !important;
-  justify-items: center !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
-}
-
-/* Singer rows keep their JS-calculated fitted width,
-   but are centered independently of the wide banner. */
-body.show-2 .rotation-row,
-body.show-4 .rotation-row,
-body.show-6 .rotation-row {
-  justify-self: center !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* The recruiting banner may stay wide and one-line,
-   but it no longer controls the singer-row placement. */
-body.show-2 .need-more,
-body.show-4 .need-more,
-body.show-6 .need-more {
-  justify-self: center !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* Keep the title centered over the singer list. */
-body.show-2 .rotation-title,
-body.show-4 .rotation-title,
-body.show-6 .rotation-title {
-  justify-self: center !important;
-  width: auto !important;
-}
-
-/* No horizontal scrollbar in any TV mode. */
-body.show-2,
-body.show-4,
-body.show-6 {
-  overflow-x: hidden !important;
-}
-
-
-    .waiting-for-song-note {
-      display:inline-block;
-      margin-left:10px;
-      color:#fbbf24;
-      font-size:.42em;
-      font-weight:800;
-      font-style:italic;
-      white-space:nowrap;
-      vertical-align:middle;
-    }
-
-    .up-next-song-note {
-      display:none;
-      margin-top:2px;
-      color:#fbbf24;
-      font-size:clamp(16px,1.7vw,22px);
-      font-weight:800;
-      font-style:italic;
-    }
-
-    .up-next-song-note.show {
-      display:block;
-    }
-
-
-    /* =========================
-       MOBILE: NORMAL PAGE SCROLL
-       ========================= */
-
+    /* MOBILE: one clean rule set. Page scrolls, footer follows content, visible singer count still comes from JS. */
     @media (max-width: 700px) {
-
-      html,
-      body {
-        height: auto;
-        min-height: 100%;
-        overflow-y: auto;
+      html, body, body.show-2, body.show-4, body.show-6, body.final-three-start, body.final-three-active {
+        height: auto; min-height: 100%; overflow-x: hidden; overflow-y: auto;
       }
-
-      .wrap {
-        width: 100%;
-        box-sizing: border-box;
-        margin: 0 auto;
-        padding-bottom: 24px;
+      .wrap, body.show-2 .wrap, body.show-4 .wrap, body.show-6 .wrap,
+      body.final-three-start .wrap, body.final-three-active .wrap {
+        width: 100%; max-width: 100%; margin: 0 auto; padding: 0 10px 18px; overflow: visible;
       }
-
-      body.final-three-active .wrap {
-        padding-bottom: 24px;
+      header { margin-bottom: 10px; padding: 0; }
+      h1 { font-size: clamp(58px,17vw,92px); }
+      .venue-name { min-height: 0; font-size: clamp(30px,9vw,48px); }
+      .up-next-box { width: 92%; max-width: 92%; margin: 12px auto; padding: 10px 12px; }
+      .up-next-name, body.show-2 .up-next-name, body.show-4 .up-next-name { font-size: clamp(36px,10vw,54px); }
+      .rotation-title { margin: 8px 0 7px; font-size: clamp(24px,7vw,36px); }
+      #rotation, #rotation.display-2, #rotation.display-4, #rotation.display-6,
+      body.show-2 #rotation, body.show-4 #rotation, body.show-6 #rotation {
+        width: 100%; max-width: 100%; min-width: 0; gap: 8px; justify-items: stretch; overflow: visible;
       }
-
-      /*
-        On phones the footer belongs AFTER the singer list,
-        not fixed over the bottom of the screen.
-      */
-      footer {
-        position: relative;
-        left: auto;
-        bottom: auto;
-        transform: none;
-        z-index: 2;
-        width: min(94vw, 640px);
-        max-width: 100%;
-        margin: 28px auto 18px;
-        padding: 0 8px 10px;
-        box-sizing: border-box;
+      #rotation .rotation-row, #rotation.display-2 .rotation-row, #rotation.display-4 .rotation-row,
+      #rotation.display-6 .rotation-row, body.show-2 .rotation-row, body.show-4 .rotation-row, body.show-6 .rotation-row {
+        width: 100%; max-width: 100%; min-width: 0; min-height: 72px; margin: 0;
+        padding: 4px 8px; grid-template-columns: 42px 1fr 42px;
       }
-
-      .footer-tagline {
-        font-size: clamp(20px, 6vw, 30px);
-        white-space: normal;
-        text-align: center;
+      .position, body.show-2 .position, body.show-4 .position, body.show-6 .position { font-size: 20px; }
+      #rotation .name, #rotation.display-2 .name, #rotation.display-4 .name, #rotation.display-6 .name,
+      body.show-2 .name, body.show-4 .name, body.show-6 .name {
+        grid-column: 2; width: 100%; min-width: 0; padding: 0;
+        font-size: clamp(30px,8.3vw,42px); line-height: 1; overflow-wrap: anywhere;
       }
-
-      .sound-bars {
-        min-width: 48px;
-        height: 30px;
-        gap: 2px;
+      .waiting-for-song-note { margin-top: 4px; font-size: 13px; line-height: 1.05; white-space: normal; }
+      .more-waiting, .need-more { width: 100%; max-width: 100%; white-space: normal; }
+      .need-more-main { white-space: normal; }
+      .closing-banner { width: 100%; max-width: 100%; padding: 24px 14px; }
+      .closing-banner-main { font-size: clamp(30px,9vw,46px); }
+      .closing-banner-sub { font-size: clamp(18px,5vw,24px); }
+      footer, body.show-2 footer, body.show-4 footer, body.show-6 footer,
+      body.final-three-start footer, body.final-three-active footer {
+        position: relative; left: auto; right: auto; bottom: auto; transform: none;
+        width: 100%; max-width: 100%; margin: 28px auto 18px; padding: 0 8px 10px; gap: 8px;
       }
-
-      .sound-bars span {
-        width: 5px;
-        min-width: 3px;
-      }
+      .footer-tagline { white-space: normal; font-size: clamp(20px,6vw,30px); }
+      .sound-bars { min-width: 48px; height: 30px; gap: 2px; }
+      .sound-bars span { width: 5px; min-width: 3px; }
     }
-
-
-
-/* ===== FINAL MOBILE SCROLL + FOOTER FLOW FIX ===== */
-@media (max-width: 700px) {
-  html,
-  body,
-  body.show-2,
-  body.show-4,
-  body.show-6,
-  body.final-three-start,
-  body.final-three-active {
-    height: auto !important;
-    min-height: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-  }
-
-  .wrap,
-  body.show-2 .wrap,
-  body.show-4 .wrap,
-  body.show-6 .wrap,
-  body.final-three-start .wrap,
-  body.final-three-active .wrap {
-    width: 100% !important;
-    margin: 0 auto !important;
-    padding-bottom: 18px !important;
-    box-sizing: border-box !important;
-  }
-
-  footer,
-  body.show-2 footer,
-  body.show-4 footer,
-  body.show-6 footer,
-  body.final-three-start footer,
-  body.final-three-active footer {
-    position: relative !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-    width: min(94vw, 640px) !important;
-    max-width: 100% !important;
-    margin: 28px auto 18px !important;
-    padding: 0 8px 10px !important;
-    box-sizing: border-box !important;
-    z-index: 2 !important;
-  }
-
-  .footer-tagline {
-    font-size: clamp(20px, 6vw, 30px) !important;
-    white-space: normal !important;
-    text-align: center !important;
-  }
-
-  .sound-bars {
-    min-width: 48px !important;
-    height: 30px !important;
-    gap: 2px !important;
-  }
-
-  .sound-bars span {
-    width: 5px !important;
-    min-width: 3px !important;
-  }
-}
-
-
-
-/* ===== MOBILE WIDTH + SCROLL FINAL FIX ===== */
-@media (max-width: 700px) {
-
-  html,
-  body {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-  }
-
-  .wrap,
-  body.show-2 .wrap,
-  body.show-4 .wrap,
-  body.show-6 .wrap,
-  body.final-three-start .wrap,
-  body.final-three-active .wrap {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-    padding-bottom: 18px !important;
-    overflow: visible !important;
-  }
-
-  .content,
-  #rotation,
-  #rotation.display-2,
-  #rotation.display-4,
-  #rotation.display-6,
-  body.show-2 #rotation,
-  body.show-4 #rotation,
-  body.show-6 #rotation {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    overflow: visible !important;
-    justify-items: stretch !important;
-  }
-
-  #rotation .rotation-row,
-  #rotation.display-2 .rotation-row,
-  #rotation.display-4 .rotation-row,
-  #rotation.display-6 .rotation-row,
-  body.show-2 .rotation-row,
-  body.show-4 .rotation-row,
-  body.show-6 .rotation-row,
-  body.final-three-active #rotation .rotation-row {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    justify-self: stretch !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    grid-template-columns: 42px minmax(0, 1fr) !important;
-  }
-
-  .rotation-row .name,
-  #rotation.display-2 .name,
-  #rotation.display-4 .name,
-  #rotation.display-6 .name,
-  body.show-2 .name,
-  body.show-4 .name,
-  body.show-6 .name {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    padding-right: 0 !important;
-    text-align: center !important;
-    overflow-wrap: anywhere !important;
-    word-break: normal !important;
-  }
-
-  .more-waiting,
-  .need-more {
-    width: 100% !important;
-    max-width: 100% !important;
-    white-space: normal !important;
-  }
-
-  footer,
-  body.show-2 footer,
-  body.show-4 footer,
-  body.show-6 footer,
-  body.final-three-start footer,
-  body.final-three-active footer {
-    position: relative !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 28px auto 18px !important;
-  }
-}
-
-
-
-/* ===== MOBILE: WAITING NOTE UNDER SINGER NAME ===== */
-@media (max-width: 700px) {
-
-  #rotation .rotation-row,
-  #rotation.display-2 .rotation-row,
-  #rotation.display-4 .rotation-row,
-  #rotation.display-6 .rotation-row,
-  body.show-2 .rotation-row,
-  body.show-4 .rotation-row,
-  body.show-6 .rotation-row {
-    align-items: center !important;
-  }
-
-  .name {
-    display: block !important;
-    text-align: center !important;
-    padding-right: 0 !important;
-    min-width: 0 !important;
-  }
-
-  .waiting-for-song-note {
-    display: block !important;
-    margin: 5px 0 0 !important;
-    font-size: 14px !important;
-    line-height: 1.15 !important;
-    white-space: normal !important;
-    text-align: center !important;
-  }
-}
-
-
-
-/* ===== ALL SCREENS: WAITING NOTE UNDER SINGER NAME ===== */
-.waiting-for-song-note {
-  display: block !important;
-  margin: 5px 0 0 !important;
-  line-height: 1.15 !important;
-  white-space: normal !important;
-  text-align: center !important;
-}
-
-
-
-/* ===== BALANCE MOBILE + KEEP DESKTOP COMPACT ===== */
-
-/* Desktop / TV: keep waiting note underneath, but do NOT let it make the rows tall. */
-@media (min-width: 701px) {
-
-  .name {
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:center !important;
-    justify-content:center !important;
-    padding-right:0 !important;
-    line-height:1 !important;
-  }
-
-  .waiting-for-song-note {
-    display:block !important;
-    margin:2px 0 0 !important;
-    font-size:11px !important;
-    line-height:1 !important;
-    white-space:nowrap !important;
-    text-align:center !important;
-  }
-
-  body.show-6 .rotation-row {
-    min-height:44px !important;
-    padding:1px 10px !important;
-  }
-
-  body.show-6 .name {
-    font-size:clamp(30px,3vw,40px) !important;
-  }
-
-  body.show-4 .rotation-row {
-    min-height:58px !important;
-    padding:3px 12px !important;
-  }
-
-  body.show-4 .name {
-    font-size:clamp(37px,3.8vw,50px) !important;
-  }
-
-  body.show-2 .rotation-row {
-    min-height:68px !important;
-    padding:4px 14px !important;
-  }
-
-  body.show-2 .name {
-    font-size:clamp(46px,4.8vw,60px) !important;
-  }
-}
-
-/* Mobile: same-size singer cards, centered name block, note tucked directly underneath. */
-@media (max-width: 700px) {
-
-  #rotation .rotation-row,
-  #rotation.display-2 .rotation-row,
-  #rotation.display-4 .rotation-row,
-  #rotation.display-6 .rotation-row,
-  body.show-2 .rotation-row,
-  body.show-4 .rotation-row,
-  body.show-6 .rotation-row {
-    min-height:86px !important;
-    padding:6px 10px !important;
-    grid-template-columns:42px minmax(0,1fr) !important;
-    align-items:center !important;
-  }
-
-  #rotation .name,
-  #rotation.display-2 .name,
-  #rotation.display-4 .name,
-  #rotation.display-6 .name,
-  body.show-2 .name,
-  body.show-4 .name,
-  body.show-6 .name {
-    display:flex !important;
-    min-height:72px !important;
-    flex-direction:column !important;
-    align-items:center !important;
-    justify-content:center !important;
-    padding:0 !important;
-    font-size:clamp(34px,9.5vw,48px) !important;
-    line-height:.98 !important;
-    text-align:center !important;
-  }
-
-  .waiting-for-song-note {
-    display:block !important;
-    margin:5px 0 0 !important;
-    font-size:13px !important;
-    line-height:1.05 !important;
-    white-space:normal !important;
-    text-align:center !important;
-  }
-
-  .rotation-title {
-    margin:9px 0 8px !important;
-  }
-}
-
-
-
-/* ===== FINAL ALIGNMENT / SIZE CORRECTION ===== */
-
-/* DESKTOP / TV: restore the compact row feel and true centering */
-@media (min-width: 701px) {
-
-  #rotation .rotation-row,
-  #rotation.display-2 .rotation-row,
-  #rotation.display-4 .rotation-row,
-  #rotation.display-6 .rotation-row,
-  body.show-2 .rotation-row,
-  body.show-4 .rotation-row,
-  body.show-6 .rotation-row {
-    grid-template-columns: 42px 1fr 42px !important;
-  }
-
-  .position {
-    grid-column: 1 !important;
-    justify-self: start !important;
-  }
-
-  .name {
-    grid-column: 2 !important;
-    justify-self: stretch !important;
-    width: 100% !important;
-    padding: 0 !important;
-    text-align: center !important;
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:center !important;
-    justify-content:center !important;
-  }
-
-  body.show-6 .rotation-row {
-    min-height: 38px !important;
-    padding: 0 8px !important;
-  }
-
-  body.show-6 .name {
-    font-size: clamp(28px,2.7vw,36px) !important;
-  }
-
-  body.show-4 .rotation-row {
-    min-height: 50px !important;
-    padding: 2px 10px !important;
-  }
-
-  body.show-4 .name {
-    font-size: clamp(34px,3.4vw,46px) !important;
-  }
-
-  body.show-2 .rotation-row {
-    min-height: 62px !important;
-    padding: 3px 12px !important;
-  }
-
-  body.show-2 .name {
-    font-size: clamp(42px,4.4vw,56px) !important;
-  }
-
-  .waiting-for-song-note {
-    margin-top: 1px !important;
-    font-size: 10px !important;
-    line-height: 1 !important;
-  }
-}
-
-/* MOBILE: keep the original visual scale, just center correctly */
-@media (max-width: 700px) {
-
-  #rotation .rotation-row,
-  #rotation.display-2 .rotation-row,
-  #rotation.display-4 .rotation-row,
-  #rotation.display-6 .rotation-row,
-  body.show-2 .rotation-row,
-  body.show-4 .rotation-row,
-  body.show-6 .rotation-row {
-    min-height: 72px !important;
-    padding: 4px 8px !important;
-    grid-template-columns: 42px 1fr 42px !important;
-  }
-
-  .position {
-    grid-column: 1 !important;
-    justify-self: start !important;
-  }
-
-  #rotation .name,
-  #rotation.display-2 .name,
-  #rotation.display-4 .name,
-  #rotation.display-6 .name,
-  body.show-2 .name,
-  body.show-4 .name,
-  body.show-6 .name {
-    grid-column: 2 !important;
-    justify-self: stretch !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:center !important;
-    justify-content:center !important;
-    text-align:center !important;
-    font-size: clamp(30px,8.3vw,42px) !important;
-    line-height: 1 !important;
-  }
-
-  .waiting-for-song-note {
-    margin-top: 4px !important;
-    font-size: 13px !important;
-    line-height: 1.05 !important;
-    text-align: center !important;
-  }
-
-  .rotation-title {
-    margin: 8px 0 7px !important;
-  }
-}
-
-</style>
+  </style>
 </head>
 
 
