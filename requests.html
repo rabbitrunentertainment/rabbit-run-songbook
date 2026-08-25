@@ -862,15 +862,17 @@
     }
 
     .singer-badge.new {
-      background: #0f766e;
-      color: #ccfbf1;
-      border: 1px solid #2dd4bf;
+      background: #14b8a6;
+      color: #042f2e;
+      border: 2px solid #5eead4;
+      font-size: 10px;
     }
 
     .singer-badge.repeat {
-      background: #4c1d95;
-      color: #ede9fe;
-      border: 1px solid #a78bfa;
+      background: #a78bfa;
+      color: #2e1065;
+      border: 2px solid #ddd6fe;
+      font-size: 10px;
     }
 
     @media (min-width: 430px) and (max-width: 900px) {
@@ -2406,6 +2408,254 @@
       "MANUAL_ROTATION_ORDER";
 
 
+    const NEWCOMER_QUEUE_SETTING =
+      "NEWCOMER_QUEUE";
+
+
+    function getNewcomerQueue(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name ===
+                SETTINGS_SINGER &&
+              request.song_title ===
+                NEWCOMER_QUEUE_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return [];
+      }
+
+      try {
+
+        const value =
+          JSON.parse(
+            settings[0].artist || "[]"
+          );
+
+        return Array.isArray(value)
+          ? value.map(String)
+          : [];
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Could not read newcomer queue.",
+          error
+        );
+
+        return [];
+
+      }
+
+    }
+
+
+    async function saveNewcomerQueue(
+      queue
+    ) {
+
+      const deleteResponse =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(NEWCOMER_QUEUE_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+        );
+
+      if (!deleteResponse.ok) {
+
+        throw new Error(
+          "Could not clear old newcomer queue."
+        );
+
+      }
+
+
+      if (queue.length === 0) {
+        return;
+      }
+
+
+      const response =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests`,
+          {
+            method: "POST",
+
+            headers:
+              apiHeaders(true),
+
+            body:
+              JSON.stringify({
+                singer_name:
+                  SETTINGS_SINGER,
+
+                song_title:
+                  NEWCOMER_QUEUE_SETTING,
+
+                artist:
+                  JSON.stringify(
+                    queue
+                  ),
+
+                status:
+                  "completed"
+              })
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `Could not save newcomer queue: ${await response.text()}`
+        );
+
+      }
+
+    }
+
+
+    async function syncNewcomerQueue(
+      data
+    ) {
+
+      const savedOrder =
+        new Set(
+          getManualOrder(data)
+        );
+
+
+      const currentQueue =
+        getNewcomerQueue(data);
+
+
+      const activeRequests =
+        data.filter(
+          isActive
+        );
+
+
+      const activeSingerKeys =
+        new Set(
+          activeRequests
+            .map(
+              request =>
+                singerKey(request)
+            )
+            .filter(Boolean)
+        );
+
+
+      const completedSingerKeys =
+        new Set(
+          data
+            .filter(
+              isCompleted
+            )
+            .map(
+              request =>
+                singerKey(request)
+            )
+            .filter(Boolean)
+        );
+
+
+      /*
+        Keep a newcomer in this queue UNTIL they
+        complete their first song.
+
+        This is the key fix:
+        assigning a newcomer to #7 does NOT make
+        them an established repeat on the next refresh.
+      */
+      const nextQueue =
+        currentQueue.filter(
+          key =>
+            activeSingerKeys.has(key) &&
+            !completedSingerKeys.has(key)
+        );
+
+
+      const queueSet =
+        new Set(
+          nextQueue
+        );
+
+
+      const repeatRotationExists =
+        completedSingerKeys.size > 0;
+
+
+      if (repeatRotationExists) {
+
+        for (
+          const key
+          of activeSingerKeys
+        ) {
+
+          if (
+            completedSingerKeys.has(key) ||
+            savedOrder.has(key) ||
+            queueSet.has(key)
+          ) {
+            continue;
+          }
+
+          /*
+            This singer arrived AFTER an established
+            rotation already existed. Keep them marked
+            as a newcomer until their first song is Done.
+          */
+          nextQueue.push(key);
+          queueSet.add(key);
+
+        }
+
+      }
+
+
+      const oldQueue =
+        currentQueue;
+
+
+      const changed =
+        (
+          oldQueue.length !==
+            nextQueue.length ||
+          oldQueue.some(
+            (key, index) =>
+              key !==
+              nextQueue[index]
+          )
+        );
+
+
+      if (changed) {
+
+        await saveNewcomerQueue(
+          nextQueue
+        );
+
+      }
+
+
+      return changed;
+
+    }
+
+
     function getManualOrder(data) {
 
       const settings =
@@ -2711,6 +2961,30 @@
         await saveManualOrder(
           fullOrder
         );
+
+
+        /*
+          A manual KJ move overrides automatic weaving.
+          Keep the visual NEW badge until first song,
+          but stop auto-moving this singer afterward.
+        */
+        const newcomerQueue =
+          getNewcomerQueue(data);
+
+
+        if (
+          newcomerQueue.includes(key)
+        ) {
+
+          await saveNewcomerQueue(
+            newcomerQueue.filter(
+              newcomerKey =>
+                newcomerKey !== key
+            )
+          );
+
+        }
+
 
         await loadRequests();
 
@@ -3455,6 +3729,19 @@
           savedRotationOrder
         );
 
+      /*
+        Persistent newcomer membership.
+
+        A singer remains NEW for placement until
+        they actually complete their first song.
+        Merely assigning them a fair position does
+        not erase their newcomer status.
+      */
+      const newcomerKeys =
+        new Set(
+          getNewcomerQueue(data)
+        );
+
 
       if (
         savedRotationOrder.length > 0 &&
@@ -3483,7 +3770,7 @@
         const newcomers =
           hiddenWaiting.filter(
             singer =>
-              !savedRotationKeys.has(
+              newcomerKeys.has(
                 singer.key
               )
           );
@@ -3508,7 +3795,7 @@
           const existingHidden =
             hiddenWaiting.filter(
               singer =>
-                savedRotationKeys.has(
+                !newcomerKeys.has(
                   singer.key
                 )
             );
@@ -4072,6 +4359,27 @@
 
         const mismatchedDevices =
           findMismatchedDevices(data);
+
+
+        /*
+          Update persistent NEW-singer membership
+          BEFORE calculating placement.
+
+          If the queue changes, refetch so both
+          buildRotation and the TV see the same data.
+        */
+        const newcomerQueueChanged =
+          await syncNewcomerQueue(
+            data
+          );
+
+
+        if (newcomerQueueChanged) {
+
+          data =
+            await fetchRequests();
+
+        }
 
 
         const rotation =
@@ -4738,6 +5046,26 @@
             savedOrder.filter(
               savedKey =>
                 savedKey !== key
+            )
+          );
+
+        }
+
+
+        const newcomerQueue =
+          getNewcomerQueue(data);
+
+
+        if (
+          newcomerQueue.includes(
+            key
+          )
+        ) {
+
+          await saveNewcomerQueue(
+            newcomerQueue.filter(
+              newcomerKey =>
+                newcomerKey !== key
             )
           );
 

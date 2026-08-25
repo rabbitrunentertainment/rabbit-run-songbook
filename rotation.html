@@ -1422,6 +1422,58 @@ body.show-6 {
       "MANUAL_ROTATION_ORDER";
 
 
+    const NEWCOMER_QUEUE_SETTING =
+      "NEWCOMER_QUEUE";
+
+
+    function getNewcomerQueue(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name ===
+                SETTINGS_SINGER &&
+              request.song_title ===
+                NEWCOMER_QUEUE_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return [];
+      }
+
+      try {
+
+        const value =
+          JSON.parse(
+            settings[0].artist || "[]"
+          );
+
+        return Array.isArray(value)
+          ? value.map(String)
+          : [];
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Could not read newcomer queue.",
+          error
+        );
+
+        return [];
+
+      }
+
+    }
+
+
     function getManualOrder(data) {
 
       const settings =
@@ -2265,6 +2317,19 @@ body.show-6 {
           savedRotationOrder
         );
 
+      /*
+        Persistent newcomer membership.
+
+        A singer remains NEW for placement until
+        they actually complete their first song.
+        Merely assigning them a fair position does
+        not erase their newcomer status.
+      */
+      const newcomerKeys =
+        new Set(
+          getNewcomerQueue(data)
+        );
+
 
       if (
         savedRotationOrder.length > 0 &&
@@ -2293,7 +2358,7 @@ body.show-6 {
         const newcomers =
           hiddenWaiting.filter(
             singer =>
-              !savedRotationKeys.has(
+              newcomerKeys.has(
                 singer.key
               )
           );
@@ -2318,7 +2383,7 @@ body.show-6 {
           const existingHidden =
             hiddenWaiting.filter(
               singer =>
-                savedRotationKeys.has(
+                !newcomerKeys.has(
                   singer.key
                 )
             );
