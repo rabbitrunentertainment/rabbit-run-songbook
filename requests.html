@@ -796,6 +796,53 @@
       background:#991b1b;
       color:white;
     }
+
+
+    /* =========================
+       SINGER LEFT FOR THE NIGHT
+       ========================= */
+
+    .departure-control {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 2px;
+    }
+
+    .left-button {
+      background: #4b1f2a;
+      color: #fecdd3;
+      border: 1px solid #9f1239;
+      padding: 5px 9px;
+      font-size: 10px;
+      opacity: .88;
+    }
+
+    .left-button:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: 750px) {
+      .departure-control {
+        justify-content: flex-start;
+        margin-top: 6px;
+      }
+    }
+
+    @media (min-width: 430px) and (max-width: 900px) {
+      .departure-control {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+        margin-top: 1px;
+      }
+
+      .departure-control .left-button {
+        padding: 4px 7px !important;
+        font-size: 9px !important;
+        min-height: 24px;
+      }
+    }
+
 </style>
 </head>
 
@@ -2820,6 +2867,20 @@
 
     }
 
+    function isLeft(request) {
+
+      return (
+        isCurrentKaraokeNight(request) &&
+        String(
+          request.status || ""
+        ).startsWith(
+          "left_"
+        )
+      );
+
+    }
+
+
     function isActive(request) {
 
       return (
@@ -2827,6 +2888,7 @@
         request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
         !isPaused(request) &&
+        !isLeft(request) &&
         !isSkippedSlot(request) &&
         request.status !== "final3_hold"
       );
@@ -3335,10 +3397,11 @@
         1. Up Next + next 5 are protected.
         2. Existing first-turn singers keep their order.
         3. Waiting-for-song reserved slots stay in the
-           established order and do NOT count toward the
-           2-repeat / 1-new calculation.
-        4. Only established repeat singers WITH a real
-           song count toward newcomer weaving.
+           established order AND count as established
+           repeat positions for the 2-repeat / 1-new rule.
+        4. Choosing or entering the singer's next song
+           changes only the slot contents, never fairness
+           classification or queue position.
         5. Newcomers are inserted at 1 per 2 eligible
            repeats, with a maximum of 2 inserted in the
            hidden balancing pass.
@@ -3467,8 +3530,9 @@
 
             Waiting-for-song placeholders are simply
             carried along in their earned position.
-            They neither count as a repeat nor trigger
-            a newcomer insertion.
+            Because that singer already sang and earned
+            the next-round chair, the placeholder DOES
+            count as an established repeat position.
           */
           for (
             const singer
@@ -3480,15 +3544,16 @@
             );
 
 
-            if (
-              singer.isWaitingForSong
-            ) {
+            /*
+              A reserved "Waiting for next song" slot
+              IS still an established repeat position.
 
-              continue;
-
-            }
-
-
+              The singer already completed a turn and
+              earned this chair in the next round.
+              Whether they have chosen the actual song
+              yet must make NO difference to newcomer
+              fairness or to their position.
+            */
             if (
               singer.lastCompletedTime !== null
             ) {
@@ -4125,6 +4190,20 @@
                   </div>
 
 
+                  <div class="departure-control">
+                    <button
+                      class="left-button"
+                      onclick='markSingerLeft(
+                        ${JSON.stringify(
+                          singer.key
+                        )}
+                      )'
+                    >
+                      Left
+                    </button>
+                  </div>
+
+
                   ${
                     extraSongCount > 0
 
@@ -4298,6 +4377,20 @@
                   </div>
 
 
+                  <div class="departure-control">
+                    <button
+                      class="left-button"
+                      onclick='markSingerLeft(
+                        ${JSON.stringify(
+                          singer.key
+                        )}
+                      )'
+                    >
+                      Left
+                    </button>
+                  </div>
+
+
                   ${
                     songCount > 1
 
@@ -4458,6 +4551,142 @@
 
         alert(
           "Could not pause this singer."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       SINGER LEFT FOR THE NIGHT
+       ========================= */
+
+    async function markSingerLeft(
+      key
+    ) {
+
+      const confirmed =
+        confirm(
+          "Remove this singer from tonight's rotation? Their completed-song history will stay, but their current songs and reserved spot will be removed."
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+
+        /*
+          Mark ONLY currently active/paused/reserved
+          rows as LEFT.
+
+          Do NOT change completed songs. That keeps
+          accurate history of what they actually sang.
+        */
+        const singerRows =
+          data.filter(
+            request =>
+              isCurrentKaraokeNight(
+                request
+              ) &&
+              request.singer_name !==
+                SETTINGS_SINGER &&
+              singerKey(request) ===
+                key &&
+              !isCompleted(
+                request
+              ) &&
+              !isLeft(
+                request
+              )
+          );
+
+
+        const leftStatus =
+          `left_${Date.now()}`;
+
+
+        for (
+          const request
+          of singerRows
+        ) {
+
+          const response =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+              {
+                method:
+                  "PATCH",
+
+                headers:
+                  apiHeaders(true),
+
+                body:
+                  JSON.stringify({
+                    status:
+                      leftStatus
+                  })
+              }
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Could not remove this singer from the rotation."
+            );
+
+          }
+
+        }
+
+
+        /*
+          Remove their earned queue position too.
+
+          If they come back later and submit another
+          song, their key is no longer in the saved
+          rotation order, so they re-enter as a NEW
+          singer for placement.
+        */
+        const savedOrder =
+          getManualOrder(data);
+
+
+        if (
+          savedOrder.includes(
+            key
+          )
+        ) {
+
+          await saveManualOrder(
+            savedOrder.filter(
+              savedKey =>
+                savedKey !== key
+            )
+          );
+
+        }
+
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not remove this singer from the rotation."
         );
 
       }

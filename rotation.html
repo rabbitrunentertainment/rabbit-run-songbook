@@ -1681,6 +1681,20 @@ body.show-6 {
 
     }
 
+    function isLeft(request) {
+
+      return (
+        isCurrentKaraokeNight(request) &&
+        String(
+          request.status || ""
+        ).startsWith(
+          "left_"
+        )
+      );
+
+    }
+
+
     function isPaused(request) {
 
       return (
@@ -1697,6 +1711,7 @@ body.show-6 {
         request.singer_name !== SETTINGS_SINGER &&
         !isCompleted(request) &&
         !isPaused(request) &&
+        !isLeft(request) &&
         !isSkippedSlot(request) &&
         request.status !== "final3_hold"
       );
@@ -2230,10 +2245,11 @@ body.show-6 {
         1. Up Next + next 5 are protected.
         2. Existing first-turn singers keep their order.
         3. Waiting-for-song reserved slots stay in the
-           established order and do NOT count toward the
-           2-repeat / 1-new calculation.
-        4. Only established repeat singers WITH a real
-           song count toward newcomer weaving.
+           established order AND count as established
+           repeat positions for the 2-repeat / 1-new rule.
+        4. Choosing or entering the singer's next song
+           changes only the slot contents, never fairness
+           classification or queue position.
         5. Newcomers are inserted at 1 per 2 eligible
            repeats, with a maximum of 2 inserted in the
            hidden balancing pass.
@@ -2362,8 +2378,9 @@ body.show-6 {
 
             Waiting-for-song placeholders are simply
             carried along in their earned position.
-            They neither count as a repeat nor trigger
-            a newcomer insertion.
+            Because that singer already sang and earned
+            the next-round chair, the placeholder DOES
+            count as an established repeat position.
           */
           for (
             const singer
@@ -2375,15 +2392,16 @@ body.show-6 {
             );
 
 
-            if (
-              singer.isWaitingForSong
-            ) {
+            /*
+              A reserved "Waiting for next song" slot
+              IS still an established repeat position.
 
-              continue;
-
-            }
-
-
+              The singer already completed a turn and
+              earned this chair in the next round.
+              Whether they have chosen the actual song
+              yet must make NO difference to newcomer
+              fairness or to their position.
+            */
             if (
               singer.lastCompletedTime !== null
             ) {
