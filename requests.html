@@ -3309,31 +3309,27 @@
         SMART ROTATION FAIRNESS
 
         IMPORTANT:
-        We no longer guess "newcomers" from a time gap.
+        A singer's saved queue position is the truth.
 
-        MANUAL_ROTATION_ORDER is also our memory of
-        who already had a place in the active queue,
-        INCLUDING the current Up Next singer.
+        Filling a "Waiting for next song" slot with a
+        real song NEVER causes a re-sort. The singer
+        keeps the exact same saved rotation position.
 
-        A singer becomes established the moment their
-        position is assigned. Pressing Done on anyone
-        ahead of them must never make them "new" again.
-
-        A singer whose key is NOT in that saved order
-        is genuinely new to the current queue.
+        Automatic weaving runs ONLY when a genuinely
+        NEW singer key enters the queue.
 
         RULES:
         1. Up Next + next 5 are protected.
-        2. Existing first-turn singers keep their
-           earned order. New arrivals never cut in
-           ahead of them.
-        3. After the established first-turn section,
-           new arrivals may be worked into established
-           repeat singers at 1 new per 2 repeats.
-        4. At most 2 newcomers are inserted in that
-           hidden balancing pass. Extras go to bottom.
-        5. Reserved "Waiting for next song" slots are
-           established repeat slots.
+        2. Existing first-turn singers keep their order.
+        3. Waiting-for-song reserved slots stay in the
+           established order and do NOT count toward the
+           2-repeat / 1-new calculation.
+        4. Only established repeat singers WITH a real
+           song count toward newcomer weaving.
+        5. Newcomers are inserted at 1 per 2 eligible
+           repeats, with a maximum of 2 inserted in the
+           hidden balancing pass.
+        6. Extra newcomers go to the bottom.
       */
 
       const savedRotationOrder =
@@ -3345,11 +3341,6 @@
         );
 
 
-      /*
-        If there is no saved queue yet, this is the
-        initial queue for the night. Preserve it as-is.
-        The KJ page will save this order after rendering.
-      */
       if (
         savedRotationOrder.length > 0 &&
         totalActiveSingers > 6
@@ -3374,20 +3365,6 @@
           );
 
 
-        /*
-          Split the hidden queue into singers who
-          already had an earned position and singers
-          who have just arrived.
-        */
-        const existingHidden =
-          hiddenWaiting.filter(
-            singer =>
-              savedRotationKeys.has(
-                singer.key
-              )
-          );
-
-
         const newcomers =
           hiddenWaiting.filter(
             singer =>
@@ -3398,122 +3375,154 @@
 
 
         /*
-          Existing singers who have not completed a
-          turn tonight are still on their FIRST turn.
-          Nobody arriving later may be inserted before
-          them.
+          CRITICAL POSITION-LOCK RULE:
 
-          Keep everything through the LAST such singer
-          exactly where it was.
+          If there are no genuinely new singers,
+          do absolutely nothing to the established
+          queue. This is what guarantees that changing
+
+          "Waiting for next song"
+          into
+          "Song Ready" / a real submitted song
+
+          changes ONLY the contents of that singer's
+          slot, never its position.
         */
-        let lastExistingFirstTurnIndex =
-          -1;
+        if (newcomers.length > 0) {
+
+          const existingHidden =
+            hiddenWaiting.filter(
+              singer =>
+                savedRotationKeys.has(
+                  singer.key
+                )
+            );
 
 
-        existingHidden.forEach(
-          (singer, index) => {
+          /*
+            Nobody arriving later may cut ahead of
+            existing singers still waiting for their
+            FIRST turn.
+          */
+          let lastExistingFirstTurnIndex =
+            -1;
+
+
+          existingHidden.forEach(
+            (singer, index) => {
+
+              if (
+                singer.lastCompletedTime === null &&
+                !singer.isWaitingForSong
+              ) {
+
+                lastExistingFirstTurnIndex =
+                  index;
+
+              }
+
+            }
+          );
+
+
+          const fixedExistingPrefix =
+            existingHidden.slice(
+              0,
+              lastExistingFirstTurnIndex + 1
+            );
+
+
+          const establishedTail =
+            existingHidden.slice(
+              lastExistingFirstTurnIndex + 1
+            );
+
+
+          const balancedTail = [];
+
+          let newcomerIndex = 0;
+          let eligibleRepeatCount = 0;
+          let newcomersInserted = 0;
+
+          const REPEATS_PER_NEWCOMER = 2;
+          const MAX_INSERTED_NEWCOMERS = 2;
+
+
+          /*
+            Walk the established tail IN ITS EXISTING
+            ORDER. We never sort it into new groups.
+
+            Waiting-for-song placeholders are simply
+            carried along in their earned position.
+            They neither count as a repeat nor trigger
+            a newcomer insertion.
+          */
+          for (
+            const singer
+            of establishedTail
+          ) {
+
+            balancedTail.push(
+              singer
+            );
+
 
             if (
-              singer.lastCompletedTime === null &&
-              !singer.isWaitingForSong
+              singer.isWaitingForSong
             ) {
 
-              lastExistingFirstTurnIndex =
-                index;
+              continue;
+
+            }
+
+
+            if (
+              singer.lastCompletedTime !== null
+            ) {
+
+              eligibleRepeatCount += 1;
+
+            }
+
+
+            if (
+              eligibleRepeatCount >=
+                REPEATS_PER_NEWCOMER &&
+              newcomerIndex <
+                newcomers.length &&
+              newcomersInserted <
+                MAX_INSERTED_NEWCOMERS
+            ) {
+
+              balancedTail.push(
+                newcomers[
+                  newcomerIndex
+                ]
+              );
+
+              newcomerIndex += 1;
+              newcomersInserted += 1;
+              eligibleRepeatCount = 0;
 
             }
 
           }
-        );
 
 
-        const fixedExistingPrefix =
-          existingHidden.slice(
-            0,
-            lastExistingFirstTurnIndex + 1
-          );
-
-
-        const repeatTail =
-          existingHidden.slice(
-            lastExistingFirstTurnIndex + 1
-          );
-
-
-        const balancedTail = [];
-
-        let repeatIndex = 0;
-        let newcomerIndex = 0;
-        let newcomersInserted = 0;
-
-        const REPEATS_PER_NEWCOMER = 2;
-        const MAX_INSERTED_NEWCOMERS = 2;
-
-
-        while (
-          repeatIndex <
-          repeatTail.length
-        ) {
-
-          let repeatsAdded = 0;
-
-
-          while (
-            repeatsAdded <
-              REPEATS_PER_NEWCOMER &&
-            repeatIndex <
-              repeatTail.length
-          ) {
-
-            balancedTail.push(
-              repeatTail[
-                repeatIndex
-              ]
+          const remainingNewcomers =
+            newcomers.slice(
+              newcomerIndex
             );
 
-            repeatIndex += 1;
-            repeatsAdded += 1;
 
-          }
-
-
-          if (
-            newcomerIndex <
-              newcomers.length &&
-            newcomersInserted <
-              MAX_INSERTED_NEWCOMERS
-          ) {
-
-            balancedTail.push(
-              newcomers[
-                newcomerIndex
-              ]
-            );
-
-            newcomerIndex += 1;
-            newcomersInserted += 1;
-
-          }
+          waiting = [
+            ...protectedWaiting,
+            ...fixedExistingPrefix,
+            ...balancedTail,
+            ...remainingNewcomers
+          ];
 
         }
-
-
-        /*
-          Any newcomers we could not fairly work in
-          are appended to the bottom in arrival order.
-        */
-        const remainingNewcomers =
-          newcomers.slice(
-            newcomerIndex
-          );
-
-
-        waiting = [
-          ...protectedWaiting,
-          ...fixedExistingPrefix,
-          ...balancedTail,
-          ...remainingNewcomers
-        ];
 
       }
 
