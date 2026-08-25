@@ -1287,6 +1287,106 @@ body.show-6 {
   }
 }
 
+
+
+/* ===== MOBILE WIDTH + SCROLL FINAL FIX ===== */
+@media (max-width: 700px) {
+
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .wrap,
+  body.show-2 .wrap,
+  body.show-4 .wrap,
+  body.show-6 .wrap,
+  body.final-three-start .wrap,
+  body.final-three-active .wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    padding-bottom: 18px !important;
+    overflow: visible !important;
+  }
+
+  .content,
+  #rotation,
+  #rotation.display-2,
+  #rotation.display-4,
+  #rotation.display-6,
+  body.show-2 #rotation,
+  body.show-4 #rotation,
+  body.show-6 #rotation {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    overflow: visible !important;
+    justify-items: stretch !important;
+  }
+
+  #rotation .rotation-row,
+  #rotation.display-2 .rotation-row,
+  #rotation.display-4 .rotation-row,
+  #rotation.display-6 .rotation-row,
+  body.show-2 .rotation-row,
+  body.show-4 .rotation-row,
+  body.show-6 .rotation-row,
+  body.final-three-active #rotation .rotation-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .rotation-row .name,
+  #rotation.display-2 .name,
+  #rotation.display-4 .name,
+  #rotation.display-6 .name,
+  body.show-2 .name,
+  body.show-4 .name,
+  body.show-6 .name {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding-right: 0 !important;
+    text-align: center !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .more-waiting,
+  .need-more {
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+
+  footer,
+  body.show-2 footer,
+  body.show-4 footer,
+  body.show-6 footer,
+  body.final-three-start footer,
+  body.final-three-active footer {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 28px auto 18px !important;
+  }
+}
+
 </style>
 </head>
 
