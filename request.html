@@ -1,0 +1,5315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Rabbit Run Song Requests</title>
+
+  <style>
+    body {
+      background: #111827;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 30px;
+      margin: 0 0 2px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #d8b4fe;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    #requests {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .section-title {
+      max-width: 1100px;
+      margin: 22px auto 8px;
+      color: #d8b4fe;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .request {
+      background: #1f2937;
+      border: 2px solid #7c3aed;
+      border-radius: 9px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+
+      display: grid;
+      grid-template-columns:
+        minmax(110px, 0.8fr)
+        minmax(180px, 1.6fr)
+        minmax(140px, 1.3fr)
+        85px
+        75px
+        auto;
+
+      gap: 10px;
+      align-items: center;
+    }
+
+    .request.up-next {
+      border: 4px solid #ff2fcf;
+      background: #342443;
+      box-shadow:
+        0 0 8px rgba(255,47,207,.80),
+        0 0 18px rgba(255,196,0,.42);
+    }
+
+    .request.paused {
+      border-color: #64748b;
+      background: #18202d;
+      opacity: .9;
+    }
+
+    .singer {
+      font-size: 16px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .song {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .artist {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .status {
+      color: #f9a8d4;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .paused .status {
+      color: #fbbf24;
+    }
+
+    .time {
+      color: #cbd5e1;
+      font-size: 12px;
+    }
+
+    .warnings {
+      grid-column: 1 / -1;
+    }
+
+    .warning {
+      color: #fbbf24;
+      font-weight: bold;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .up-next-button,
+    .done-button {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .pause-button {
+      background: #fbbf24;
+      color: #111827;
+    }
+
+    .resume-button {
+      background: #d8b4fe;
+      color: #111827;
+    }
+
+    .move-button {
+      background: #374151;
+      color: white;
+      border: 1px solid #64748b;
+      min-width: 34px;
+    }
+
+    .move-button:disabled {
+      opacity: .3;
+      cursor: default;
+    }
+
+    .current-button {
+      background: #d42fc5;
+      color: white;
+    }
+
+    .extra-songs {
+      grid-column: 1 / -1;
+      color: #d8b4fe;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .paused-note {
+      max-width: 1100px;
+      margin: 0 auto 8px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    #pausedRequests {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .requests-toggle-control {
+      max-width: 1100px;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .requests-toggle-button {
+      min-width: 130px;
+      border: 2px solid #64748b;
+    }
+
+    .requests-toggle-button.open {
+      background: #15803d;
+      color: white;
+      border-color: #4ade80;
+    }
+
+    .requests-toggle-button.closed {
+      background: #b91c1c;
+      color: white;
+      border-color: #f87171;
+    }
+
+    .tv-display-control {
+      max-width: 1100px;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .venue-control {
+      max-width: 1100px;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .venue-control input {
+      width: min(320px, 70vw);
+      padding: 8px 10px;
+      border-radius: 7px;
+      border: 1px solid #64748b;
+      background: #111827;
+      color: white;
+      font-size: 14px;
+    }
+
+    .venue-save-button {
+      background: #d42fc5;
+      color: white;
+    }
+
+    .tv-display-label {
+      color: #d8b4fe;
+      font-size: 13px;
+      font-weight: bold;
+      margin-right: 2px;
+    }
+
+    .tv-count-button {
+      min-width: 42px;
+      background: #374151;
+      color: white;
+      border: 2px solid #64748b;
+    }
+
+    .tv-count-button.selected {
+      background: #d42fc5;
+      border-color: #f9a8d4;
+      color: white;
+      box-shadow: 0 0 12px rgba(212,47,197,.35);
+    }
+
+    .auth-panel {
+      max-width: 460px;
+      margin: 18px auto;
+      padding: 18px;
+      background: #1f2937;
+      border: 2px solid #7c3aed;
+      border-radius: 16px;
+    }
+
+    .auth-panel h2 {
+      margin: 0 0 8px;
+      color: #e9d5ff;
+    }
+
+    .auth-panel p {
+      color: #cbd5e1;
+      margin: 0 0 12px;
+    }
+
+    .auth-panel input {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 6px 0;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #64748b;
+      background: #111827;
+      color: white;
+      font-size: 16px;
+    }
+
+    .auth-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .auth-error {
+      color: #fca5a5;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    .kj-app {
+      display: none;
+    }
+
+    .signed-in-bar {
+      max-width: 1100px;
+      margin: 0 auto 12px;
+      text-align: center;
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .signout-button {
+      background: #374151;
+      color: white;
+      margin-left: 8px;
+    }
+
+
+    .final-three-control {
+      max-width: 1100px;
+      margin: 0 auto 12px;
+      padding: 8px 10px;
+      border: 2px solid #7c3aed;
+      border-radius: 10px;
+      background: #1f2937;
+    }
+
+    .final-three-title {
+      text-align: center;
+      color: #f9a8d4;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .final-three-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .final-three-grid select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 7px;
+      border: 1px solid #64748b;
+      background: #111827;
+      color: white;
+      font-size: 14px;
+    }
+
+    .final-three-actions {
+      display: flex;
+      gap: 7px;
+      justify-content: center;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .final-three-button {
+      background: #d42fc5;
+      color: white;
+    }
+
+    .clear-final-three-button {
+      background: #374151;
+      color: white;
+    }
+
+    .final-three-status {
+      text-align: center;
+      margin-top: 6px;
+      color: #d8b4fe;
+      font-size: 11px;
+      min-height: 14px;
+    }
+
+
+    .wishlist-control {
+      max-width: 1100px;
+      margin: 0 auto 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wishlist-toggle-button {
+      background: #7c3aed;
+      color: white;
+      border: 2px solid #a78bfa;
+    }
+
+    .wishlist-panel {
+      max-width: 1100px;
+      margin: 12px auto 20px;
+      padding: 12px;
+      background: #1f2937;
+      border: 2px solid #7c3aed;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .wishlist-panel.open {
+      display: block;
+    }
+
+    .wishlist-panel h2 {
+      margin: 0 0 10px;
+      text-align: center;
+      color: #f9a8d4;
+      font-size: 20px;
+    }
+
+    .wishlist-empty {
+      text-align: center;
+      color: #94a3b8;
+      padding: 14px 0;
+    }
+
+    .wishlist-item {
+      display: grid;
+      grid-template-columns:
+        minmax(180px, 1.4fr)
+        minmax(160px, 1.2fr)
+        120px
+        auto;
+      gap: 10px;
+      align-items: center;
+      background: #111827;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 9px 10px;
+      margin-bottom: 7px;
+    }
+
+    .wishlist-song {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .wishlist-artist {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .wishlist-date {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    .wishlist-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .wishlist-added-button {
+      background: #22c55e;
+      color: #052e16;
+    }
+
+    .wishlist-delete-button {
+      background: #991b1b;
+      color: white;
+    }
+
+    @media (max-width: 750px) {
+
+      .wishlist-control {
+        width: 100%;
+        margin: 18px auto 28px;
+        justify-content: center;
+      }
+
+      .wishlist-panel {
+        width: calc(100% - 20px);
+        margin: 12px auto 8px;
+      }
+
+      .wishlist-item {
+        display: block;
+      }
+
+      .wishlist-artist,
+      .wishlist-date {
+        margin-top: 4px;
+      }
+
+      .wishlist-actions {
+        justify-content: flex-start;
+        margin-top: 8px;
+      }
+
+      .final-three-control {
+        width: calc(100% - 12px);
+        padding: 7px 8px;
+        margin-top: 10px;
+      }
+
+      .final-three-grid {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      .final-three-grid select {
+        padding: 6px 8px;
+      }
+
+      .request {
+        display: block;
+        padding: 10px;
+      }
+
+      .singer {
+        font-size: 18px;
+      }
+
+      .song {
+        margin-top: 4px;
+      }
+
+      .artist,
+      .status,
+      .time {
+        margin-top: 3px;
+      }
+
+      .controls {
+        justify-content: flex-start;
+        margin-top: 7px;
+      }
+
+      .warnings,
+      .extra-songs {
+        margin-top: 4px;
+      }
+    }
+  
+
+    /* =========================
+       BOTTOM KJ CONTROLS
+       ========================= */
+
+    .bottom-kj-controls {
+      max-width: 1100px;
+      margin: 28px auto 0;
+      width: 100%;
+    }
+
+    .bottom-kj-controls .final-three-control {
+      margin: 0 auto 12px;
+    }
+
+    .bottom-kj-controls .wishlist-control {
+      margin: 0 auto 10px;
+    }
+
+    .bottom-kj-controls .wishlist-panel {
+      margin: 10px auto 20px;
+    }
+
+    @media (max-width: 750px) {
+      .bottom-kj-controls {
+        width: 100%;
+        margin-top: 20px;
+      }
+    }
+
+
+
+    /* =========================
+       COMPACT KJ SINGER CARDS
+       Narrow desktop / split-screen view
+       ========================= */
+
+    @media (min-width: 430px) and (max-width: 900px) {
+
+      #requests,
+      #pausedRequests,
+      .section-title,
+      .paused-note {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .request {
+        display: grid !important;
+        grid-template-columns:
+          minmax(105px, 1fr)
+          minmax(135px, 1.35fr)
+          74px
+          68px;
+
+        grid-template-areas:
+          "singer song status time"
+          "artist artist controls controls"
+          "warnings warnings warnings warnings"
+          "extra extra extra extra";
+
+        gap: 4px 7px !important;
+        align-items: center;
+
+        padding: 7px 9px !important;
+        margin-bottom: 5px !important;
+      }
+
+      .request .singer {
+        grid-area: singer;
+        font-size: 17px !important;
+        line-height: 1.05;
+        margin: 0 !important;
+      }
+
+      .request .song {
+        grid-area: song;
+        font-size: 14px !important;
+        line-height: 1.05;
+        margin: 0 !important;
+      }
+
+      .request .artist {
+        grid-area: artist;
+        font-size: 13px !important;
+        line-height: 1.05;
+        margin: 0 !important;
+      }
+
+      .request .status {
+        grid-area: status;
+        font-size: 11px !important;
+        line-height: 1;
+        margin: 0 !important;
+        text-align: right;
+      }
+
+      .request .time {
+        grid-area: time;
+        font-size: 11px !important;
+        line-height: 1;
+        margin: 0 !important;
+        text-align: right;
+      }
+
+      .request .controls {
+        grid-area: controls;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center;
+        gap: 4px !important;
+        margin: 0 !important;
+        flex-wrap: nowrap !important;
+      }
+
+      .request .controls button {
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+        min-height: 28px;
+      }
+
+      .request .move-button {
+        min-width: 30px !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+      }
+
+      .request .warnings {
+        grid-area: warnings;
+        margin: 1px 0 0 !important;
+        line-height: 1.05;
+      }
+
+      .request .warning {
+        display: inline-block;
+        margin: 0 10px 0 0 !important;
+        font-size: 10px !important;
+        line-height: 1.05;
+      }
+
+      .request .extra-songs {
+        grid-area: extra;
+        margin: 1px 0 0 !important;
+        font-size: 10px !important;
+        line-height: 1.05;
+      }
+
+      .request.up-next {
+        border-width: 4px !important;
+        background: #342443 !important;
+        box-shadow:
+          0 0 7px rgba(255,47,207,.85),
+          0 0 15px rgba(255,196,0,.38) !important;
+      }
+
+      .request.up-next .singer {
+        color: #ffffff;
+        text-shadow:
+          0 0 5px rgba(255,255,255,.18),
+          0 0 9px rgba(255,47,207,.22);
+      }
+
+      .request.up-next .status {
+        color: #ff6fdf !important;
+        font-size: 12px !important;
+        letter-spacing: .04em;
+        text-shadow:
+          0 0 5px rgba(255,47,207,.55);
+      }
+
+      .paused-note {
+        margin-bottom: 5px !important;
+      }
+
+    }
+
+
+
+    /* =========================
+       KJ WORKFLOW LAYOUT
+       ========================= */
+
+    .bottom-kj-controls {
+      max-width: 1100px;
+      width: 100%;
+      margin: 22px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 22px;
+      box-sizing: border-box;
+    }
+
+    .bottom-kj-controls > * {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .bottom-kj-controls .requests-toggle-control,
+    .bottom-kj-controls .venue-control,
+    .bottom-kj-controls .wishlist-control,
+    .bottom-kj-controls .signed-in-bar {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .bottom-signout {
+      margin-top: 0;
+      margin-bottom: 0;
+      text-align: center;
+    }
+
+    @media (min-width: 430px) and (max-width: 900px) {
+
+      .bottom-kj-controls {
+        margin-top: 12px;
+        gap: 7px;
+      }
+
+      .bottom-kj-controls .requests-toggle-control,
+      .bottom-kj-controls .venue-control {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+
+    }
+
+
+    .request.waiting-for-song { border-style: dashed; }
+    .request.waiting-for-song .song {
+      color: #fbbf24;
+      font-style: italic;
+    }
+    .request.waiting-for-song .artist { color: #94a3b8; }
+    .waiting-song-button {
+      background:#374151;
+      color:white;
+      border:1px solid #64748b;
+    }
+    .skip-slot-button {
+      background:#991b1b;
+      color:white;
+    }
+
+
+    /* =========================
+       SINGER LEFT FOR THE NIGHT
+       ========================= */
+
+    .departure-control {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 2px;
+    }
+
+    .left-button {
+      background: #4b1f2a;
+      color: #fecdd3;
+      border: 1px solid #9f1239;
+      padding: 5px 9px;
+      font-size: 10px;
+      opacity: .88;
+    }
+
+    .left-button:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: 750px) {
+      .departure-control {
+        justify-content: flex-start;
+        margin-top: 6px;
+      }
+    }
+
+    @media (min-width: 430px) and (max-width: 900px) {
+      .departure-control {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+        margin-top: 1px;
+      }
+
+      .departure-control .left-button {
+        padding: 4px 7px !important;
+        font-size: 9px !important;
+        min-height: 24px;
+      }
+    }
+
+
+
+    /* =========================
+       NEW / REPEAT SINGER BADGES
+       ========================= */
+
+    .singer-badge {
+      display: inline-block;
+      margin-left: 7px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .05em;
+      vertical-align: middle;
+      line-height: 1.2;
+    }
+
+    .singer-badge.new {
+      background: #0f766e;
+      color: #ccfbf1;
+      border: 1px solid #2dd4bf;
+    }
+
+    .singer-badge.repeat {
+      background: #4c1d95;
+      color: #ede9fe;
+      border: 1px solid #a78bfa;
+    }
+
+    @media (min-width: 430px) and (max-width: 900px) {
+      .singer-badge {
+        margin-left: 5px;
+        padding: 2px 5px;
+        font-size: 8px;
+      }
+    }
+
+</style>
+</head>
+
+<body>
+
+  <h1>🎤 Song Requests</h1>
+  <div class="subtitle">Rabbit Run Entertainment</div>
+
+  <div id="authPanel" class="auth-panel">
+    <h2>🔐 KJ Login</h2>
+    <p>Sign in to manage the Rabbit Run rotation.</p>
+
+    <input
+      id="loginEmail"
+      type="email"
+      autocomplete="username"
+      placeholder="Rabbit Run email"
+    >
+
+    <input
+      id="loginPassword"
+      type="password"
+      autocomplete="current-password"
+      placeholder="Password"
+    >
+
+    <div class="auth-actions">
+      <button onclick="kjSignIn()">Sign In</button>
+    </div>
+
+    <div id="authError" class="auth-error"></div>
+  </div>
+
+  <div id="kjApp" class="kj-app">
+
+    <div class="signed-in-bar">
+      🔓 KJ controls unlocked
+    </div>
+
+    <div class="tv-display-control">
+      <span class="tv-display-label">TV SHOWS:</span>
+      <button id="tvShow2" class="tv-count-button" onclick="setTvDisplayCount(2)">2</button>
+      <button id="tvShow4" class="tv-count-button" onclick="setTvDisplayCount(4)">4</button>
+      <button id="tvShow6" class="tv-count-button" onclick="setTvDisplayCount(6)">6</button>
+    </div>
+
+    <div id="requests">
+      Loading requests...
+    </div>
+
+    <div
+      id="pausedSection"
+      style="display:none;"
+    >
+
+      <div class="section-title">
+        ⏸ Paused Singers
+      </div>
+
+      <div class="paused-note">
+        Saved for later and hidden from the active rotation.
+      </div>
+
+      <div id="pausedRequests"></div>
+
+    </div>
+
+
+    <div id="bottomKjControls" class="bottom-kj-controls">
+
+      <div class="requests-toggle-control">
+        <span class="tv-display-label">LIVE REQUESTS:</span>
+        <button
+          id="requestsToggleButton"
+          class="requests-toggle-button open"
+          onclick="toggleLiveRequests()"
+        >
+          OPEN
+        </button>
+      </div>
+
+
+      <div class="final-three-control">
+
+        <div class="final-three-title">
+          🎤 FINAL 3 SINGERS
+        </div>
+
+        <div class="final-three-grid">
+
+          <select id="finalSinger1" onchange="finalThreeEditing = true;">
+            <option value="">Final Singer 1</option>
+          </select>
+
+          <select id="finalSinger2" onchange="finalThreeEditing = true;">
+            <option value="">Final Singer 2</option>
+          </select>
+
+          <select id="finalSinger3" onchange="finalThreeEditing = true;">
+            <option value="">Final Singer 3</option>
+          </select>
+
+        </div>
+
+        <div class="final-three-actions">
+
+          <button
+            class="final-three-button"
+            onclick="saveFinalThree()"
+          >
+            Set Final 3
+          </button>
+
+          <button
+            class="clear-final-three-button"
+            onclick="clearFinalThree()"
+          >
+            Clear Final 3
+          </button>
+
+        </div>
+
+        <div
+          id="finalThreeStatus"
+          class="final-three-status"
+        >
+          Choose the final three singers in order.
+        </div>
+
+      </div>
+
+
+      <div class="wishlist-control">
+        <button
+          id="wishlistToggleButton"
+          class="wishlist-toggle-button"
+          onclick="toggleWishlistPanel()"
+        >
+          🎵 Song Wishlist
+        </button>
+      </div>
+
+      <div
+        id="wishlistPanel"
+        class="wishlist-panel"
+      >
+        <h2>🎵 Song Wishlist</h2>
+
+        <div id="wishlistList">
+          Loading wishlist...
+        </div>
+      </div>
+
+
+      <div class="venue-control">
+        <span class="tv-display-label">VENUE:</span>
+        <input
+          id="venueNameInput"
+          type="text"
+          placeholder="Enter venue/location name"
+          autocomplete="off"
+          onkeydown="event.stopPropagation()"
+          onkeyup="event.stopPropagation()"
+        >
+        <button
+          class="venue-save-button"
+          onclick="saveVenueName()"
+        >
+          Save Venue
+        </button>
+      </div>
+
+
+      <div class="signed-in-bar bottom-signout">
+        <button
+          class="signout-button"
+          onclick="kjSignOut()"
+        >
+          Sign Out
+        </button>
+      </div>
+
+    </div>
+
+  </div><!-- /kjApp -->
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+
+    const SUPABASE_URL =
+      "https://cpprxqlevftbgpjjfgnz.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_HeuQI_aKycIu8i8TUBNP-A_7bHnRwp3";
+
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+
+    let accessToken = null;
+    let venueInputInitialized = false;
+    let finalThreeEditing = false;
+
+
+    /* =========================
+       FINAL 3 MOBILE POSITION
+       ========================= */
+
+    function ensureBottomControlsContainer() {
+
+      const kjApp =
+        document.getElementById(
+          "kjApp"
+        );
+
+      if (!kjApp) {
+        return null;
+      }
+
+      let bottomControls =
+        document.getElementById(
+          "bottomKjControls"
+        );
+
+      if (!bottomControls) {
+
+        bottomControls =
+          document.createElement(
+            "div"
+          );
+
+        bottomControls.id =
+          "bottomKjControls";
+
+        bottomControls.className =
+          "bottom-kj-controls";
+
+        kjApp.appendChild(
+          bottomControls
+        );
+
+      }
+
+      return bottomControls;
+
+    }
+
+
+    function positionFinalThreeForScreen() {
+
+      /* Static layout: no repositioning needed. */
+      return;
+
+    }
+
+
+    positionFinalThreeForScreen();
+
+
+    window.addEventListener(
+      "resize",
+      positionFinalThreeForScreen
+    );
+
+
+
+    async function refreshAuthUI() {
+
+      const {
+        data: { session }
+      } =
+        await supabaseClient.auth.getSession();
+
+      accessToken =
+        session
+          ? session.access_token
+          : null;
+
+      document.getElementById(
+        "authPanel"
+      ).style.display =
+        session ? "none" : "block";
+
+      document.getElementById(
+        "kjApp"
+      ).style.display =
+        session ? "block" : "none";
+
+      if (session) {
+        await loadRequests();
+      }
+
+    }
+
+
+    async function kjSignIn() {
+
+      const email =
+        document.getElementById(
+          "loginEmail"
+        ).value.trim();
+
+      const password =
+        document.getElementById(
+          "loginPassword"
+        ).value;
+
+      const errorBox =
+        document.getElementById(
+          "authError"
+        );
+
+      errorBox.textContent = "";
+
+      const {
+        error
+      } =
+        await supabaseClient.auth
+          .signInWithPassword({
+            email,
+            password
+          });
+
+      if (error) {
+        errorBox.textContent =
+          "Login failed. Check the email and password.";
+        return;
+      }
+
+      document.getElementById(
+        "loginPassword"
+      ).value = "";
+
+      await refreshAuthUI();
+
+    }
+
+
+    async function kjSignOut() {
+
+      await supabaseClient.auth.signOut();
+      accessToken = null;
+      venueInputInitialized = false;
+      await refreshAuthUI();
+
+    }
+
+
+    function apiHeaders(
+      includeJson = false
+    ) {
+
+      const headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization":
+          `Bearer ${accessToken || SUPABASE_KEY}`
+      };
+
+      if (includeJson) {
+        headers["Content-Type"] =
+          "application/json";
+      }
+
+      return headers;
+
+    }
+
+
+    /* =========================
+       SONG WISHLIST
+       ========================= */
+
+    let wishlistOpen = false;
+
+
+    function positionWishlistForScreen() {
+
+      /* Static layout: no repositioning needed. */
+      return;
+
+    }
+
+
+    positionWishlistForScreen();
+
+
+    window.addEventListener(
+      "resize",
+      positionWishlistForScreen
+    );
+
+
+
+    function toggleWishlistPanel() {
+
+      wishlistOpen =
+        !wishlistOpen;
+
+
+      const panel =
+        document.getElementById(
+          "wishlistPanel"
+        );
+
+
+      if (!panel) {
+        return;
+      }
+
+
+      panel.classList.toggle(
+        "open",
+        wishlistOpen
+      );
+
+
+      if (wishlistOpen) {
+        loadWishlist();
+      }
+
+    }
+
+
+    async function loadWishlist() {
+
+      const list =
+        document.getElementById(
+          "wishlistList"
+        );
+
+
+      if (!list) {
+        return;
+      }
+
+
+      list.innerHTML =
+        "Loading wishlist...";
+
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/song_wishlist?select=*&status=eq.requested&order=created_at.desc`,
+
+            {
+              headers:
+                apiHeaders()
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Could not load wishlist: ${await response.text()}`
+          );
+
+        }
+
+
+        const items =
+          await response.json();
+
+
+        if (items.length === 0) {
+
+          list.innerHTML = `
+
+            <div class="wishlist-empty">
+              No open song requests right now.
+            </div>
+
+          `;
+
+          return;
+
+        }
+
+
+        list.innerHTML =
+          items.map(item => {
+
+            const created =
+              item.created_at
+                ? new Date(
+                    item.created_at
+                  ).toLocaleDateString()
+                : "";
+
+
+            return `
+
+              <div class="wishlist-item">
+
+                <div class="wishlist-song">
+                  ${escapeHtml(
+                    item.song_title || ""
+                  )}
+                </div>
+
+                <div class="wishlist-artist">
+                  ${escapeHtml(
+                    item.artist || ""
+                  )}
+                </div>
+
+                <div class="wishlist-date">
+                  ${escapeHtml(created)}
+                </div>
+
+                <div class="wishlist-actions">
+
+                  <button
+                    class="wishlist-added-button"
+                    onclick="markWishlistAdded(${item.id})"
+                  >
+                    ✓ Added
+                  </button>
+
+                  <button
+                    class="wishlist-delete-button"
+                    onclick="deleteWishlistItem(${item.id})"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+
+              </div>
+
+            `;
+
+          }).join("");
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        list.innerHTML = `
+
+          <div class="wishlist-empty">
+            Could not load the song wishlist.
+          </div>
+
+        `;
+
+      }
+
+    }
+
+
+    async function markWishlistAdded(id) {
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/song_wishlist?id=eq.${id}`,
+
+            {
+              method: "PATCH",
+
+              headers:
+                apiHeaders(true),
+
+              body: JSON.stringify({
+                status: "added"
+              })
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Could not mark wishlist song added: ${await response.text()}`
+          );
+
+        }
+
+
+        await loadWishlist();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not mark this song as added."
+        );
+
+      }
+
+    }
+
+
+    async function deleteWishlistItem(id) {
+
+      if (
+        !confirm(
+          "Delete this song request?"
+        )
+      ) {
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/song_wishlist?id=eq.${id}`,
+
+            {
+              method: "DELETE",
+
+              headers:
+                apiHeaders()
+            }
+
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Could not delete wishlist song: ${await response.text()}`
+          );
+
+        }
+
+
+        await loadWishlist();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not delete this song request."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       SHARED TV DISPLAY SETTING
+       ========================= */
+
+    const SETTINGS_SINGER =
+      "__RABBIT_RUN_SETTINGS__";
+
+    const TV_DISPLAY_SETTING =
+      "TV_DISPLAY_COUNT";
+
+    const DEFAULT_TV_DISPLAY_COUNT = 6;
+
+
+    const VENUE_NAME_SETTING =
+      "VENUE_NAME";
+
+    const FINAL_THREE_SETTING =
+      "FINAL_THREE";
+
+
+    function getFinalThree(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === FINAL_THREE_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return [];
+      }
+
+      try {
+
+        const value =
+          JSON.parse(
+            settings[0].artist || "[]"
+          );
+
+        return Array.isArray(value)
+          ? value
+              .map(String)
+              .filter(Boolean)
+              .slice(0, 3)
+          : [];
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Could not read Final 3 setting.",
+          error
+        );
+
+        return [];
+
+      }
+
+    }
+
+
+    async function saveFinalThreeSetting(
+      finalThree
+    ) {
+
+      const deleteResponse =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(FINAL_THREE_SETTING)}`,
+
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+
+        );
+
+
+      if (!deleteResponse.ok) {
+
+        throw new Error(
+          "Could not clear old Final 3 setting."
+        );
+
+      }
+
+
+      if (finalThree.length === 0) {
+        return;
+      }
+
+
+      const response =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests`,
+
+          {
+            method: "POST",
+
+            headers:
+              apiHeaders(true),
+
+            body: JSON.stringify({
+
+              singer_name:
+                SETTINGS_SINGER,
+
+              song_title:
+                FINAL_THREE_SETTING,
+
+              artist:
+                JSON.stringify(finalThree),
+
+              status:
+                "completed"
+
+            })
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `Could not save Final 3: ${await response.text()}`
+        );
+
+      }
+
+    }
+
+
+    function updateFinalThreeControls(data) {
+
+      /*
+        DON'T RESET THE DROPDOWNS
+        WHILE THE KJ IS CHOOSING
+        THE FINAL 3.
+      */
+      if (finalThreeEditing) {
+        return;
+      }
+
+      const activeKeys =
+        new Set(
+          data
+            .filter(isActive)
+            .map(singerKey)
+            .filter(Boolean)
+        );
+
+      const singerNames =
+        new Map();
+
+      data
+        .filter(isActive)
+        .forEach(request => {
+
+          const key =
+            singerKey(request);
+
+          if (
+            key &&
+            !singerNames.has(key)
+          ) {
+
+            singerNames.set(
+              key,
+              String(
+                request.singer_name || ""
+              ).trim()
+            );
+
+          }
+
+        });
+
+
+      const activeSingers =
+        Array.from(activeKeys)
+          .map(key => ({
+            key,
+            name:
+              singerNames.get(key) || key
+          }))
+          .sort(
+            (a, b) =>
+              a.name.localeCompare(b.name)
+          );
+
+
+      const savedFinalThree =
+        getFinalThree(data);
+
+
+      const selects = [
+
+        document.getElementById(
+          "finalSinger1"
+        ),
+
+        document.getElementById(
+          "finalSinger2"
+        ),
+
+        document.getElementById(
+          "finalSinger3"
+        )
+
+      ];
+
+
+      selects.forEach(
+        (select, index) => {
+
+          if (!select) {
+            return;
+          }
+
+          const selectedValue =
+            savedFinalThree[index] || "";
+
+
+          select.innerHTML =
+            `<option value="">Final Singer ${index + 1}</option>` +
+
+            activeSingers
+              .map(
+                singer => `
+
+                  <option
+                    value="${escapeHtml(singer.key)}"
+                  >
+                    ${escapeHtml(singer.name)}
+                  </option>
+
+                `
+              )
+              .join("");
+
+
+          select.value =
+            selectedValue;
+
+        }
+      );
+
+
+      const status =
+        document.getElementById(
+          "finalThreeStatus"
+        );
+
+
+      if (!status) {
+        return;
+      }
+
+
+      if (savedFinalThree.length === 3) {
+
+        const names =
+          savedFinalThree.map(
+            key =>
+              singerNames.get(key) || key
+          );
+
+
+        status.textContent =
+          `Final 3 set: ${names.join(" → ")}`;
+
+      }
+
+      else {
+
+        status.textContent =
+          "Choose the final three singers in order.";
+
+      }
+
+    }
+
+
+    async function saveFinalThree() {
+
+      try {
+
+        const values = [
+
+          document.getElementById(
+            "finalSinger1"
+          ).value,
+
+          document.getElementById(
+            "finalSinger2"
+          ).value,
+
+          document.getElementById(
+            "finalSinger3"
+          ).value
+
+        ];
+
+
+        if (
+          values.some(
+            value => !value
+          )
+        ) {
+
+          alert(
+            "Choose all three final singers."
+          );
+
+          return;
+
+        }
+
+
+        if (
+          new Set(values).size !== 3
+        ) {
+
+          alert(
+            "Choose three different singers."
+          );
+
+          return;
+
+        }
+
+
+        /*
+          SAVE THE CHOSEN FINAL 3.
+        */
+
+        await saveFinalThreeSetting(
+          values
+        );
+
+
+        /*
+          FINAL 3 MEANS THE NIGHT IS CLOSED
+          TO NEW LIVE REQUESTS.
+        */
+
+        await setLiveRequestsOpen(
+          false
+        );
+
+
+        /*
+          IGNORE EVERYBODY EXCEPT THE
+          THREE CHOSEN FINAL SINGERS.
+
+          We use final3_hold instead of
+          completed so Clear Final 3 can
+          bring them back if needed.
+        */
+
+        const data =
+          await fetchRequests();
+
+
+        const nonFinalRequests =
+          data.filter(
+            request =>
+              isActive(request) &&
+              !values.includes(
+                singerKey(request)
+              )
+          );
+
+
+        for (
+          const request
+          of nonFinalRequests
+        ) {
+
+          const holdResponse =
+            await fetch(
+
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+
+              {
+                method: "PATCH",
+
+                headers:
+                  apiHeaders(true),
+
+                body: JSON.stringify({
+                  status: "final3_hold"
+                })
+              }
+
+            );
+
+
+          if (!holdResponse.ok) {
+
+            throw new Error(
+              "Could not close out the non-final singers."
+            );
+
+          }
+
+        }
+
+
+        /*
+          RESET UP NEXT.
+
+          loadRequests() will immediately
+          choose Final Singer 1 first.
+        */
+
+        const resetResponse =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/requests?status=eq.up_next`,
+
+            {
+              method: "PATCH",
+
+              headers:
+                apiHeaders(true),
+
+              body: JSON.stringify({
+                status: "waiting"
+              })
+            }
+
+          );
+
+
+        if (!resetResponse.ok) {
+
+          throw new Error(
+            "Final 3 saved, but Up Next could not be reset."
+          );
+
+        }
+
+
+        finalThreeEditing = false;
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not save the Final 3."
+        );
+
+      }
+
+    }
+
+    async function clearFinalThree() {
+
+      try {
+
+        await saveFinalThreeSetting(
+          []
+        );
+
+
+        /*
+          RESTORE ANY SINGERS THAT WERE
+          HIDDEN ONLY BECAUSE FINAL 3
+          MODE WAS ACTIVE.
+        */
+
+        const restoreResponse =
+          await fetch(
+
+            `${SUPABASE_URL}/rest/v1/requests?status=eq.final3_hold`,
+
+            {
+              method: "PATCH",
+
+              headers:
+                apiHeaders(true),
+
+              body: JSON.stringify({
+                status: "waiting"
+              })
+            }
+
+          );
+
+
+        if (!restoreResponse.ok) {
+
+          throw new Error(
+            "Could not restore singers after clearing Final 3."
+          );
+
+        }
+
+
+        finalThreeEditing = false;
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not clear the Final 3."
+        );
+
+      }
+
+    }
+
+
+    const LIVE_REQUESTS_SETTING =
+      "LIVE_REQUESTS_OPEN";
+
+    function getLiveRequestsOpen(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === LIVE_REQUESTS_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return true;
+      }
+
+      return String(
+        settings[0].artist || "true"
+      ).toLowerCase() !== "false";
+
+    }
+
+
+    function updateLiveRequestsButton(isOpen) {
+
+      const button =
+        document.getElementById(
+          "requestsToggleButton"
+        );
+
+      if (!button) {
+        return;
+      }
+
+      button.textContent =
+        isOpen ? "OPEN" : "CLOSED";
+
+      button.classList.toggle(
+        "open",
+        isOpen
+      );
+
+      button.classList.toggle(
+        "closed",
+        !isOpen
+      );
+
+    }
+
+
+    async function setLiveRequestsOpen(isOpen) {
+
+      const deleteResponse =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(LIVE_REQUESTS_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+        );
+
+      if (!deleteResponse.ok) {
+        throw new Error(
+          "Could not clear old live request setting."
+        );
+      }
+
+      const response =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests`,
+          {
+            method: "POST",
+            headers: apiHeaders(true),
+            body: JSON.stringify({
+              singer_name: SETTINGS_SINGER,
+              song_title: LIVE_REQUESTS_SETTING,
+              artist: isOpen ? "true" : "false",
+              status: "completed"
+            })
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          `Could not save live request setting: ${await response.text()}`
+        );
+      }
+
+      updateLiveRequestsButton(isOpen);
+
+    }
+
+
+    async function toggleLiveRequests() {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+        const currentlyOpen =
+          getLiveRequestsOpen(data);
+
+        await setLiveRequestsOpen(
+          !currentlyOpen
+        );
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not change the live request setting."
+        );
+
+      }
+
+    }
+
+    function getVenueName(data) {
+      const settings = data
+        .filter(request =>
+          request.singer_name === SETTINGS_SINGER &&
+          request.song_title === VENUE_NAME_SETTING
+        )
+        .sort((a, b) =>
+          new Date(b.created_at) - new Date(a.created_at)
+        );
+
+      return settings.length > 0
+        ? String(settings[0].artist || "").trim()
+        : "";
+    }
+
+    async function saveVenueName() {
+      const input = document.getElementById("venueNameInput");
+      const venueName = input.value.replace(/\s+/g, " ").trim();
+
+      try {
+        const deleteResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(VENUE_NAME_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+        );
+
+        if (!deleteResponse.ok) {
+          throw new Error("Could not clear old venue setting.");
+        }
+
+        if (venueName) {
+          const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/requests`,
+            {
+              method: "POST",
+              headers: apiHeaders(true),
+              body: JSON.stringify({
+                singer_name: SETTINGS_SINGER,
+                song_title: VENUE_NAME_SETTING,
+                artist: venueName,
+                status: "completed"
+              })
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Could not save venue: ${await response.text()}`);
+          }
+        }
+
+        input.value = venueName;
+        venueInputInitialized = true;
+      } catch (error) {
+        console.error(error);
+        alert("Could not save the venue name.");
+      }
+    }
+
+    function getTvDisplayCount(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === TV_DISPLAY_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return DEFAULT_TV_DISPLAY_COUNT;
+      }
+
+      const value = Number(settings[0].artist);
+
+      return [2, 4, 6].includes(value)
+        ? value
+        : DEFAULT_TV_DISPLAY_COUNT;
+    }
+
+
+    function updateTvDisplayButtons(count) {
+
+      [2, 4, 6].forEach(value => {
+
+        const button =
+          document.getElementById(
+            `tvShow${value}`
+          );
+
+        if (!button) {
+          return;
+        }
+
+        button.classList.toggle(
+          "selected",
+          value === count
+        );
+
+      });
+
+    }
+
+
+    async function setTvDisplayCount(count) {
+
+      if (![2, 4, 6].includes(count)) {
+        return;
+      }
+
+      try {
+
+        const deleteResponse =
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(TV_DISPLAY_SETTING)}`,
+            {
+              method: "DELETE",
+              headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization":
+                  `Bearer ${accessToken || SUPABASE_KEY}`
+              }
+            }
+          );
+
+        if (!deleteResponse.ok) {
+          throw new Error(
+            "Could not clear old TV display setting."
+          );
+        }
+
+        const response =
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/requests`,
+            {
+              method: "POST",
+              headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization":
+                  `Bearer ${accessToken || SUPABASE_KEY}`,
+                "Content-Type":
+                  "application/json"
+              },
+              body: JSON.stringify({
+                singer_name: SETTINGS_SINGER,
+                song_title: TV_DISPLAY_SETTING,
+                artist: String(count),
+                status: "completed"
+              })
+            }
+          );
+
+        if (!response.ok) {
+          const errorText =
+            await response.text();
+
+          throw new Error(
+            `Could not save TV display setting: ${errorText}`
+          );
+        }
+
+        updateTvDisplayButtons(count);
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not change the TV display."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       MANUAL ROTATION ORDER
+       ========================= */
+
+    const MANUAL_ORDER_SETTING =
+      "MANUAL_ROTATION_ORDER";
+
+
+    function getManualOrder(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === MANUAL_ORDER_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return [];
+      }
+
+      try {
+
+        const value =
+          JSON.parse(settings[0].artist || "[]");
+
+        return Array.isArray(value)
+          ? value.map(String)
+          : [];
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Could not read manual rotation order.",
+          error
+        );
+
+        return [];
+
+      }
+
+    }
+
+
+    async function saveManualOrder(order) {
+
+      const deleteResponse =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(MANUAL_ORDER_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization":
+                `Bearer ${accessToken || SUPABASE_KEY}`
+            }
+          }
+        );
+
+      if (!deleteResponse.ok) {
+        throw new Error(
+          "Could not clear old rotation order."
+        );
+      }
+
+      const response =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests`,
+          {
+            method: "POST",
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization":
+                `Bearer ${accessToken || SUPABASE_KEY}`,
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+              singer_name: SETTINGS_SINGER,
+              song_title: MANUAL_ORDER_SETTING,
+              artist: JSON.stringify(order),
+              status: "completed"
+            })
+          }
+        );
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          `Could not save rotation order: ${errorText}`
+        );
+
+      }
+
+    }
+
+
+    function applyManualOrder(
+      waiting,
+      data
+    ) {
+
+      const savedOrder =
+        getManualOrder(data);
+
+      if (savedOrder.length === 0) {
+        return waiting;
+      }
+
+      const positions =
+        new Map(
+          savedOrder.map(
+            (key, index) => [
+              key,
+              index
+            ]
+          )
+        );
+
+      const originalPositions =
+        new Map(
+          waiting.map(
+            (singer, index) => [
+              singer.key,
+              index
+            ]
+          )
+        );
+
+      return [...waiting].sort(
+        (a, b) => {
+
+          const aSaved =
+            positions.has(a.key);
+
+          const bSaved =
+            positions.has(b.key);
+
+          if (aSaved && bSaved) {
+            return (
+              positions.get(a.key) -
+              positions.get(b.key)
+            );
+          }
+
+          if (aSaved !== bSaved) {
+            return aSaved ? -1 : 1;
+          }
+
+          return (
+            originalPositions.get(a.key) -
+            originalPositions.get(b.key)
+          );
+
+        }
+      );
+
+    }
+
+
+    async function syncActiveRotationOrder(
+      data,
+      rotation
+    ) {
+
+      const upNextKey =
+        rotation.length > 0 &&
+        (
+          rotation[0].isUpNext === true ||
+          (
+            rotation[0].currentRequest &&
+            rotation[0].currentRequest.status ===
+              "up_next"
+          )
+        )
+          ? rotation[0].key
+          : null;
+
+
+      /*
+        Save the FULL singer rotation, INCLUDING Up Next.
+
+        Up Next is ignored by applyManualOrder while they
+        are currently Up Next, but keeping their key here
+        preserves their earned membership in the rotation.
+
+        This is critical when Done is pressed: the singer
+        who was Up Next becomes a waiting/repeat singer and
+        must NOT suddenly be mistaken for a brand-new arrival.
+      */
+      const desiredOrder =
+        rotation.map(
+          singer =>
+            singer.key
+        );
+
+
+      const savedOrder =
+        getManualOrder(data);
+
+
+      const same =
+        (
+          desiredOrder.length ===
+            savedOrder.length &&
+          desiredOrder.every(
+            (key, index) =>
+              key ===
+              savedOrder[index]
+          )
+        );
+
+
+      if (same) {
+        return false;
+      }
+
+
+      await saveManualOrder(
+        desiredOrder
+      );
+
+      return true;
+
+    }
+
+
+    async function moveSinger(
+      key,
+      direction
+    ) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+        const rotation =
+          buildRotation(data);
+
+        const upNextSinger =
+          rotation.find(
+            singer =>
+              singer.isUpNext === true ||
+              (
+                singer.currentRequest &&
+                singer.currentRequest.status ===
+                  "up_next"
+              )
+          ) || null;
+
+        const waiting =
+          rotation.filter(
+            singer =>
+              !upNextSinger ||
+              singer.key !==
+                upNextSinger.key
+          );
+
+        const index =
+          waiting.findIndex(
+            singer =>
+              singer.key === key
+          );
+
+        if (index === -1) {
+          return;
+        }
+
+        const targetIndex =
+          index + direction;
+
+        if (
+          targetIndex < 0 ||
+          targetIndex >= waiting.length
+        ) {
+          return;
+        }
+
+        const reordered =
+          [...waiting];
+
+        [
+          reordered[index],
+          reordered[targetIndex]
+        ] = [
+          reordered[targetIndex],
+          reordered[index]
+        ];
+
+        const fullOrder = [
+          ...(upNextSinger
+            ? [upNextSinger.key]
+            : []),
+          ...reordered.map(
+            singer => singer.key
+          )
+        ];
+
+        await saveManualOrder(
+          fullOrder
+        );
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not move this singer."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       SAFE DISPLAY TEXT
+       ========================= */
+
+    const escapeHtml = value =>
+      String(value ?? "").replace(
+        /[&<>"']/g,
+        character => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        }[character])
+      );
+
+
+    /* =========================
+       FORMAT TIME
+       ========================= */
+
+    function formatTime(timestamp) {
+
+      return new Date(timestamp)
+        .toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit"
+        });
+
+    }
+
+
+    /* =========================
+       SINGER IDENTITY
+       ========================= */
+
+    function singerKey(request) {
+
+      if (
+        request.singer_name ===
+        SETTINGS_SINGER
+      ) {
+        return "";
+      }
+
+      return String(
+        request.singer_name || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    }
+
+
+
+    /* =========================
+       RESERVED SINGER SLOT
+       ========================= */
+
+    const WAITING_FOR_SONG_TITLE =
+      "__RABBIT_RUN_WAITING_FOR_NEXT_SONG__";
+
+    function isWaitingForSong(request) {
+      return request.song_title === WAITING_FOR_SONG_TITLE;
+    }
+
+    function skippedSlotTime(request) {
+      const status = String(request.status || "");
+      if (!status.startsWith("slot_skipped_")) {
+        return null;
+      }
+      const value = Number(status.replace("slot_skipped_", ""));
+      return Number.isFinite(value) ? value : null;
+    }
+
+    function isSkippedSlot(request) {
+      return (
+        isWaitingForSong(request) &&
+        skippedSlotTime(request) !== null
+      );
+    }
+
+
+    const KJ_READY_SONG_TITLE =
+      "__RABBIT_RUN_KJ_SONG_READY__";
+
+    function isKjReadySong(request) {
+      return request.song_title === KJ_READY_SONG_TITLE;
+    }
+
+
+    /* =========================
+       KARAOKE NIGHT RESET
+
+       Each karaoke night runs from 3:00 AM
+       through 2:59:59 AM the next day.
+       Anything before the most recent 3:00 AM
+       does not count toward tonight's queue or
+       "has sung tonight" history.
+       ========================= */
+
+    function karaokeNightStart() {
+
+      const now =
+        new Date();
+
+      const start =
+        new Date(now);
+
+      start.setHours(
+        3,
+        0,
+        0,
+        0
+      );
+
+      if (now < start) {
+
+        start.setDate(
+          start.getDate() - 1
+        );
+
+      }
+
+      return start.getTime();
+
+    }
+
+
+    function isCurrentKaraokeNight(
+      request
+    ) {
+
+      if (
+        request.singer_name ===
+        SETTINGS_SINGER
+      ) {
+        return true;
+      }
+
+      const created =
+        new Date(
+          request.created_at
+        ).getTime();
+
+      return (
+        Number.isFinite(created) &&
+        created >= karaokeNightStart()
+      );
+
+    }
+
+
+    /* =========================
+       STATUS HELPERS
+       ========================= */
+
+    function isPaused(request) {
+
+      return (
+        isCurrentKaraokeNight(request) &&
+        request.status === "paused"
+      );
+
+    }
+
+    function isCompleted(request) {
+
+      return (
+        isCurrentKaraokeNight(request) &&
+        request.status === "completed" &&
+        request.singer_name !== SETTINGS_SINGER
+      );
+
+    }
+
+    function isLeft(request) {
+
+      return (
+        isCurrentKaraokeNight(request) &&
+        String(
+          request.status || ""
+        ).startsWith(
+          "left_"
+        )
+      );
+
+    }
+
+
+    function isActive(request) {
+
+      return (
+        isCurrentKaraokeNight(request) &&
+        request.singer_name !== SETTINGS_SINGER &&
+        !isCompleted(request) &&
+        !isPaused(request) &&
+        !isLeft(request) &&
+        !isSkippedSlot(request) &&
+        request.status !== "final3_hold"
+      );
+
+    }
+
+    /*
+      WHEN A PAUSED SINGER IS RESUMED,
+      WE STORE THE RESUME TIME INSIDE
+      THE STATUS.
+
+      THIS LETS THEM GO TO THE BACK
+      WITHOUT NEEDING A NEW DATABASE
+      COLUMN.
+    */
+
+    function resumedTime(request) {
+
+      const status =
+        String(request.status || "");
+
+      if (
+        !status.startsWith(
+          "waiting_resumed_"
+        )
+      ) {
+        return null;
+      }
+
+      const value =
+        Number(
+          status.replace(
+            "waiting_resumed_",
+            ""
+          )
+        );
+
+      return Number.isFinite(value)
+        ? value
+        : null;
+
+    }
+
+
+    /* =========================
+       FETCH ALL REQUESTS
+       ========================= */
+
+    async function fetchRequests() {
+
+      const response = await fetch(
+
+        `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
+
+        {
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization":
+              `Bearer ${accessToken || SUPABASE_KEY}`
+          }
+        }
+
+      );
+
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          `Could not load requests: ${errorText}`
+        );
+
+      }
+
+
+      return await response.json();
+
+    }
+
+
+    /* =========================
+       DEVICE NAME MISMATCHES
+       ========================= */
+
+    function findMismatchedDevices(data) {
+
+      const namesByDevice = {};
+
+
+      data.forEach(request => {
+
+        if (!request.singer_id) {
+          return;
+        }
+
+
+        if (
+          !namesByDevice[
+            request.singer_id
+          ]
+        ) {
+
+          namesByDevice[
+            request.singer_id
+          ] = new Set();
+
+        }
+
+
+        namesByDevice[
+          request.singer_id
+        ].add(
+          String(
+            request.singer_name || ""
+          )
+            .trim()
+            .toLowerCase()
+        );
+
+      });
+
+
+      return new Set(
+
+        Object.entries(
+          namesByDevice
+        )
+
+          .filter(
+            ([id, names]) =>
+              names.size > 1
+          )
+
+          .map(
+            ([id]) => id
+          )
+
+      );
+
+    }
+
+
+    /* =========================
+       BUILD ACTIVE ROTATION
+       ========================= */
+
+    function buildRotation(data) {
+
+      const active =
+        data.filter(isActive);
+
+
+      const completed =
+        data.filter(isCompleted);
+
+
+      /*
+        LAST COMPLETED TURN
+        FOR EACH SINGER
+      */
+
+      const lastCompletedBySinger =
+        new Map();
+
+
+      completed.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        const completedTime =
+          new Date(
+            request.created_at
+          ).getTime();
+
+
+        const existing =
+          lastCompletedBySinger.get(key);
+
+
+        if (
+          existing === undefined ||
+          completedTime > existing
+        ) {
+
+          lastCompletedBySinger.set(
+            key,
+            completedTime
+          );
+
+        }
+
+      });
+
+
+      /*
+        GROUP ACTIVE SONGS
+        BY SINGER
+      */
+
+      const lastSkippedSlotBySinger =
+        new Map();
+
+      data.forEach(request => {
+
+        if (
+          !isCurrentKaraokeNight(request) ||
+          !isWaitingForSong(request)
+        ) {
+          return;
+        }
+
+        const time =
+          skippedSlotTime(request);
+
+        if (time === null) {
+          return;
+        }
+
+        const key =
+          singerKey(request);
+
+        if (!key) {
+          return;
+        }
+
+        const existing =
+          lastSkippedSlotBySinger.get(key);
+
+        if (
+          existing === undefined ||
+          time > existing
+        ) {
+          lastSkippedSlotBySinger.set(
+            key,
+            time
+          );
+        }
+      });
+
+
+      const singersByName =
+        new Map();
+
+
+      active.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        if (
+          !singersByName.has(key)
+        ) {
+
+          singersByName.set(
+            key,
+            {
+              key: key,
+
+              name:
+                String(
+                  request.singer_name || ""
+                ).trim(),
+
+              requests: [],
+
+              firstRequestTime:
+                new Date(
+                  request.created_at
+                ).getTime(),
+
+              lastCompletedTime:
+                lastCompletedBySinger.has(key)
+                  ? lastCompletedBySinger.get(key)
+                  : null,
+
+              lastSkippedTime:
+                lastSkippedSlotBySinger.has(key)
+                  ? lastSkippedSlotBySinger.get(key)
+                  : null,
+
+              slotRequest: null,
+              realRequests: [],
+              isWaitingForSong: false,
+              isPlacementNew: false,
+              isUpNext: false,
+
+              resumedAt:
+                null
+            }
+          );
+
+        }
+
+
+        const singer =
+          singersByName.get(key);
+
+
+        singer.requests.push(request);
+
+
+        const resume =
+          resumedTime(request);
+
+
+        if (
+          resume !== null &&
+          (
+            singer.resumedAt === null ||
+            resume > singer.resumedAt
+          )
+        ) {
+
+          singer.resumedAt =
+            resume;
+
+        }
+
+      });
+
+
+      const singers =
+        Array.from(
+          singersByName.values()
+        );
+
+
+      /*
+        SORT EACH SINGER'S SONGS
+        OLDEST FIRST
+      */
+
+      singers.forEach(singer => {
+
+        singer.requests.sort(
+          (a, b) =>
+            new Date(a.created_at) -
+            new Date(b.created_at)
+        );
+
+        singer.slotRequest =
+          singer.requests.find(
+            request =>
+              isWaitingForSong(request)
+          ) || null;
+
+        singer.realRequests =
+          singer.requests.filter(
+            request =>
+              !isWaitingForSong(request)
+          );
+
+        singer.isWaitingForSong =
+          (
+            singer.realRequests.length === 0 &&
+            singer.slotRequest !== null
+          );
+
+        singer.isPlacementNew =
+          (
+            singer.lastCompletedTime === null ||
+            (
+              singer.lastSkippedTime !== null &&
+              singer.lastSkippedTime >
+              singer.lastCompletedTime
+            )
+          );
+
+        singer.currentRequest =
+          singer.realRequests[0] ||
+          singer.slotRequest;
+
+      });
+
+
+      let upNextSinger = null;
+
+      for (const singer of singers) {
+
+        const upNextRequest =
+          singer.requests.find(
+            request =>
+              request.status === "up_next"
+          );
+
+        if (upNextRequest) {
+
+          upNextSinger = singer;
+          upNextSinger.isUpNext = true;
+          upNextSinger.upNextRequest =
+            upNextRequest;
+
+          upNextSinger.currentRequest =
+            upNextSinger.realRequests[0] ||
+            upNextRequest;
+
+          break;
+        }
+      }
+
+
+      let waiting =
+        singers.filter(
+          singer =>
+            !upNextSinger ||
+            singer.key !==
+            upNextSinger.key
+        );
+
+
+      /*
+        TRUE QUEUE ORDER
+
+        New singers do NOT jump ahead of people
+        who are already waiting. They join at the
+        bottom of the current rotation.
+
+        A singer with another turn coming back
+        around is ordered by when they re-entered
+        the queue. Manual KJ moves and the special
+        paused/resume placement still override this
+        afterward.
+      */
+
+      waiting.sort(
+        (a, b) => {
+
+          const aQueueTime =
+            a.resumedAt !== null
+              ? a.resumedAt
+              : (
+                  a.lastCompletedTime !== null
+                    ? a.lastCompletedTime
+                    : a.firstRequestTime
+                );
+
+          const bQueueTime =
+            b.resumedAt !== null
+              ? b.resumedAt
+              : (
+                  b.lastCompletedTime !== null
+                    ? b.lastCompletedTime
+                    : b.firstRequestTime
+                );
+
+          if (aQueueTime !== bQueueTime) {
+            return aQueueTime - bQueueTime;
+          }
+
+          return (
+            a.firstRequestTime -
+            b.firstRequestTime
+          );
+
+        }
+      );
+
+
+      /*
+        APPLY ANY KJ MANUAL
+        UP / DOWN CHANGES AFTER
+        THE NORMAL AUTO SORT.
+      */
+
+      waiting =
+        applyManualOrder(
+          waiting,
+          data
+        );
+
+
+      const totalActiveSingers =
+        waiting.length +
+        (upNextSinger ? 1 : 0);
+
+
+      /*
+        SMART ROTATION FAIRNESS
+
+        IMPORTANT:
+        A singer's saved queue position is the truth.
+
+        Filling a "Waiting for next song" slot with a
+        real song NEVER causes a re-sort. The singer
+        keeps the exact same saved rotation position.
+
+        Automatic weaving runs ONLY when a genuinely
+        NEW singer key enters the queue.
+
+        RULES:
+        1. Up Next + next 5 are protected.
+        2. Existing first-turn singers keep their order.
+        3. Waiting-for-song reserved slots stay in the
+           established order AND count as established
+           repeat positions for the 2-repeat / 1-new rule.
+        4. Choosing or entering the singer's next song
+           changes only the slot contents, never fairness
+           classification or queue position.
+        5. Newcomers are inserted at 1 per 2 eligible
+           repeats, with a maximum of 2 inserted in the
+           hidden balancing pass.
+        6. Extra newcomers go to the bottom.
+      */
+
+      const savedRotationOrder =
+        getManualOrder(data);
+
+      const savedRotationKeys =
+        new Set(
+          savedRotationOrder
+        );
+
+
+      if (
+        savedRotationOrder.length > 0 &&
+        totalActiveSingers > 6
+      ) {
+
+        const protectedCount =
+          upNextSinger
+            ? 5
+            : 6;
+
+
+        const protectedWaiting =
+          waiting.slice(
+            0,
+            protectedCount
+          );
+
+
+        const hiddenWaiting =
+          waiting.slice(
+            protectedCount
+          );
+
+
+        const newcomers =
+          hiddenWaiting.filter(
+            singer =>
+              !savedRotationKeys.has(
+                singer.key
+              )
+          );
+
+
+        /*
+          CRITICAL POSITION-LOCK RULE:
+
+          If there are no genuinely new singers,
+          do absolutely nothing to the established
+          queue. This is what guarantees that changing
+
+          "Waiting for next song"
+          into
+          "Song Ready" / a real submitted song
+
+          changes ONLY the contents of that singer's
+          slot, never its position.
+        */
+        if (newcomers.length > 0) {
+
+          const existingHidden =
+            hiddenWaiting.filter(
+              singer =>
+                savedRotationKeys.has(
+                  singer.key
+                )
+            );
+
+
+          /*
+            Nobody arriving later may cut ahead of
+            existing singers still waiting for their
+            FIRST turn.
+          */
+          let lastExistingFirstTurnIndex =
+            -1;
+
+
+          existingHidden.forEach(
+            (singer, index) => {
+
+              if (
+                singer.lastCompletedTime === null &&
+                !singer.isWaitingForSong
+              ) {
+
+                lastExistingFirstTurnIndex =
+                  index;
+
+              }
+
+            }
+          );
+
+
+          const fixedExistingPrefix =
+            existingHidden.slice(
+              0,
+              lastExistingFirstTurnIndex + 1
+            );
+
+
+          const establishedTail =
+            existingHidden.slice(
+              lastExistingFirstTurnIndex + 1
+            );
+
+
+          const balancedTail = [];
+
+          let newcomerIndex = 0;
+          let eligibleRepeatCount = 0;
+          let newcomersInserted = 0;
+
+          const REPEATS_PER_NEWCOMER = 2;
+          const MAX_INSERTED_NEWCOMERS = 2;
+
+
+          /*
+            Walk the established tail IN ITS EXISTING
+            ORDER. We never sort it into new groups.
+
+            Waiting-for-song placeholders are simply
+            carried along in their earned position.
+            Because that singer already sang and earned
+            the next-round chair, the placeholder DOES
+            count as an established repeat position.
+          */
+          for (
+            const singer
+            of establishedTail
+          ) {
+
+            balancedTail.push(
+              singer
+            );
+
+
+            /*
+              A reserved "Waiting for next song" slot
+              IS still an established repeat position.
+
+              The singer already completed a turn and
+              earned this chair in the next round.
+              Whether they have chosen the actual song
+              yet must make NO difference to newcomer
+              fairness or to their position.
+            */
+            if (
+              singer.lastCompletedTime !== null
+            ) {
+
+              eligibleRepeatCount += 1;
+
+            }
+
+
+            if (
+              eligibleRepeatCount >=
+                REPEATS_PER_NEWCOMER &&
+              newcomerIndex <
+                newcomers.length &&
+              newcomersInserted <
+                MAX_INSERTED_NEWCOMERS
+            ) {
+
+              balancedTail.push(
+                newcomers[
+                  newcomerIndex
+                ]
+              );
+
+              newcomerIndex += 1;
+              newcomersInserted += 1;
+              eligibleRepeatCount = 0;
+
+            }
+
+          }
+
+
+          const remainingNewcomers =
+            newcomers.slice(
+              newcomerIndex
+            );
+
+
+          waiting = [
+            ...protectedWaiting,
+            ...fixedExistingPrefix,
+            ...balancedTail,
+            ...remainingNewcomers
+          ];
+
+        }
+
+      }
+
+
+      /*
+        FINAL 3
+
+        When Final 3 is set, all other
+        singers stay in their normal order.
+
+        The selected final singers are
+        moved to the END in exactly the
+        order chosen by the KJ.
+      */
+
+      const finalThree =
+        getFinalThree(data);
+
+
+      if (finalThree.length === 3) {
+
+        const finalPositions =
+          new Map(
+            finalThree.map(
+              (key, index) => [
+                key,
+                index
+              ]
+            )
+          );
+
+
+        const normalWaiting =
+          waiting.filter(
+            singer =>
+              !finalPositions.has(
+                singer.key
+              )
+          );
+
+
+        const finalWaiting =
+          waiting
+            .filter(
+              singer =>
+                finalPositions.has(
+                  singer.key
+                )
+            )
+            .sort(
+              (a, b) =>
+                finalPositions.get(a.key) -
+                finalPositions.get(b.key)
+            );
+
+
+        waiting = [
+          ...normalWaiting,
+          ...finalWaiting
+        ];
+
+      }
+
+
+      if (upNextSinger) {
+
+        return [
+          upNextSinger,
+          ...waiting
+        ];
+
+      }
+
+
+      return waiting;
+
+    }
+
+
+    /* =========================
+       SET ONE REQUEST UP NEXT
+       ========================= */
+
+    async function setUpNext(id) {
+
+      /*
+        RESET CURRENT UP NEXT
+      */
+
+      const resetResponse =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests?status=eq.up_next`,
+
+          {
+            method: "PATCH",
+
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization":
+                `Bearer ${accessToken || SUPABASE_KEY}`,
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              status: "waiting"
+            })
+          }
+
+        );
+
+
+      if (!resetResponse.ok) {
+
+        throw new Error(
+          "Could not reset Up Next."
+        );
+
+      }
+
+
+      /*
+        SET SELECTED SONG
+        UP NEXT
+      */
+
+      const response =
+        await fetch(
+
+          `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
+
+          {
+            method: "PATCH",
+
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization":
+                `Bearer ${accessToken || SUPABASE_KEY}`,
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              status: "up_next"
+            })
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Could not set Up Next."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       AUTOMATIC UP NEXT
+       ========================= */
+
+    async function ensureUpNext(data) {
+
+      const active =
+        data.filter(isActive);
+
+
+      if (active.length === 0) {
+        return false;
+      }
+
+
+      const existingUpNext =
+        active.find(
+          request =>
+            request.status ===
+            "up_next"
+        );
+
+
+      if (existingUpNext) {
+        return false;
+      }
+
+
+      const rotation =
+        buildRotation(data);
+
+
+      if (
+        rotation.length === 0 ||
+        !rotation[0].currentRequest
+      ) {
+        return false;
+      }
+
+
+      await setUpNext(
+        rotation[0]
+          .currentRequest
+          .id
+      );
+
+
+      return true;
+
+    }
+
+
+    /* =========================
+       PAUSED SINGERS
+       ========================= */
+
+    function buildPausedSingers(data) {
+
+      const paused =
+        data.filter(isPaused);
+
+
+      const singers =
+        new Map();
+
+
+      paused.forEach(request => {
+
+        const key =
+          singerKey(request);
+
+
+        if (!key) {
+          return;
+        }
+
+
+        if (!singers.has(key)) {
+
+          singers.set(
+            key,
+            {
+              key: key,
+
+              name:
+                String(
+                  request.singer_name || ""
+                ).trim(),
+
+              requests: []
+            }
+          );
+
+        }
+
+
+        singers
+          .get(key)
+          .requests
+          .push(request);
+
+      });
+
+
+      const result =
+        Array.from(
+          singers.values()
+        );
+
+
+      result.forEach(singer => {
+
+        singer.requests.sort(
+          (a, b) =>
+            new Date(a.created_at) -
+            new Date(b.created_at)
+        );
+
+      });
+
+
+      return result;
+
+    }
+
+
+    function singerControlsHtml(
+      singer,
+      request,
+      isUpNext,
+      waitingForSong
+    ) {
+
+      if (waitingForSong) {
+
+        if (isUpNext) {
+          return `
+            <button
+              class="waiting-song-button"
+              onclick='markSingerSongReady(${JSON.stringify(singer.key)})'
+            >
+              Song Ready
+            </button>
+            <button
+              class="skip-slot-button"
+              onclick='skipWaitingSinger(${JSON.stringify(singer.key)})'
+            >
+              Skip
+            </button>
+          `;
+        }
+
+        return `
+          <button class="up-next-button" onclick="manualUpNext(${request.id})">Up Next</button>
+          <button class="move-button" title="Move up" onclick='moveSinger(${JSON.stringify(singer.key)}, -1)'>↑</button>
+          <button class="move-button" title="Move down" onclick='moveSinger(${JSON.stringify(singer.key)}, 1)'>↓</button>
+          <button class="pause-button" onclick='pauseSinger(${JSON.stringify(singer.key)})'>Pause</button>
+        `;
+      }
+
+      return `
+        ${isUpNext
+          ? `<button class="current-button" disabled>Up Next</button>`
+          : `<button class="up-next-button" onclick="manualUpNext(${request.id})">Up Next</button>`
+        }
+        ${!isUpNext
+          ? `
+            <button class="move-button" title="Move up" onclick='moveSinger(${JSON.stringify(singer.key)}, -1)'>↑</button>
+            <button class="move-button" title="Move down" onclick='moveSinger(${JSON.stringify(singer.key)}, 1)'>↓</button>
+          `
+          : ""
+        }
+        <button class="pause-button" onclick='pauseSinger(${JSON.stringify(singer.key)})'>Pause</button>
+        <button class="done-button" onclick="finishRequest(${request.id})">Done</button>
+      `;
+    }
+
+
+    /* =========================
+       LOAD KJ SCREEN
+       ========================= */
+
+    async function loadRequests() {
+
+      const container =
+        document.getElementById(
+          "requests"
+        );
+
+      const pausedSection =
+        document.getElementById(
+          "pausedSection"
+        );
+
+      const pausedContainer =
+        document.getElementById(
+          "pausedRequests"
+        );
+
+
+      try {
+
+        let data =
+          await fetchRequests();
+
+
+        /*
+          SHOW CURRENT TV DISPLAY
+          SETTING ON THE KJ PAGE
+        */
+
+        updateTvDisplayButtons(
+          getTvDisplayCount(data)
+        );
+
+        updateFinalThreeControls(
+          data
+        );
+
+
+        updateLiveRequestsButton(
+          getLiveRequestsOpen(data)
+        );
+
+        if (!venueInputInitialized) {
+          document.getElementById(
+            "venueNameInput"
+          ).value = getVenueName(data);
+          venueInputInitialized = true;
+        }
+
+        if (wishlistOpen) {
+          await loadWishlist();
+        }
+
+
+        /*
+          AUTO PICK UP NEXT
+        */
+
+        const changed =
+          await ensureUpNext(data);
+
+
+        if (changed) {
+
+          data =
+            await fetchRequests();
+
+        }
+
+
+        const mismatchedDevices =
+          findMismatchedDevices(data);
+
+
+        const rotation =
+          buildRotation(data);
+
+
+        /*
+          Persist the queue we just calculated.
+
+          This is what lets the next truly NEW singer
+          be identified explicitly instead of using a
+          made-up time-gap rule.
+        */
+        try {
+
+          await syncActiveRotationOrder(
+            data,
+            rotation
+          );
+
+        }
+
+        catch (orderError) {
+
+          console.error(
+            "Could not sync active rotation order.",
+            orderError
+          );
+
+        }
+
+
+        /*
+          ACTIVE ROTATION
+        */
+
+        if (rotation.length === 0) {
+
+          container.innerHTML =
+            "No active singers right now.";
+
+        }
+
+        else {
+
+          container.innerHTML =
+            rotation.map((singer, rotationIndex) => {
+
+              const request =
+                singer.currentRequest;
+
+
+              if (!request) {
+                return "";
+              }
+
+
+              const currentName =
+                String(
+                  request.singer_name || ""
+                ).trim();
+
+
+              const originalName =
+                String(
+                  request.original_name || ""
+                ).trim();
+
+
+              const nameChanged =
+                originalName &&
+                originalName.toLowerCase() !==
+                currentName.toLowerCase();
+
+
+              const sameDeviceMismatch =
+                request.singer_id &&
+                mismatchedDevices.has(
+                  request.singer_id
+                );
+
+
+              const isUpNext =
+                (
+                  singer.isUpNext === true ||
+                  request.status === "up_next"
+                );
+
+              const waitingForSong =
+                singer.isWaitingForSong === true;
+
+              const extraSongCount =
+                Math.max(
+                  0,
+                  singer.realRequests.length - 1
+                );
+
+
+              return `
+
+                <div
+                  class="request
+                  ${isUpNext ? "up-next" : ""}
+                  ${waitingForSong ? "waiting-for-song" : ""}"
+                >
+
+                  <div class="singer">
+                    ${escapeHtml(
+                      currentName
+                    )}
+                  </div>
+
+
+                  <div class="song">
+                    ${
+                      waitingForSong
+                        ? "Waiting for next song"
+                        : (
+                            isKjReadySong(request)
+                              ? "Song Ready"
+                              : escapeHtml(request.song_title)
+                          )
+                    }
+                  </div>
+
+
+                  <div class="artist">
+                    ${
+                      waitingForSong
+                        ? "Reserved rotation spot"
+                        : (
+                            isKjReadySong(request)
+                              ? "Queued by KJ"
+                              : escapeHtml(request.artist)
+                          )
+                    }
+                  </div>
+
+
+                  <div class="status">
+
+                    ${
+                      isUpNext
+                        ? "UP NEXT"
+                        : (
+                            waitingForSong
+                              ? "WAITING FOR SONG"
+                              : "WAITING"
+                          )
+                    }
+
+                  </div>
+
+
+                  <div class="time">
+                    ${formatTime(
+                      request.created_at
+                    )}
+                  </div>
+
+
+                  <div class="controls">
+                    ${
+                      singerControlsHtml(
+                        singer,
+                        request,
+                        isUpNext,
+                        waitingForSong
+                      )
+                    }
+                  </div>
+
+
+                  <div class="departure-control">
+                    <button
+                      class="left-button"
+                      onclick='markSingerLeft(
+                        ${JSON.stringify(
+                          singer.key
+                        )}
+                      )'
+                    >
+                      Left
+                    </button>
+                  </div>
+
+
+                  ${
+                    extraSongCount > 0
+
+                      ? `
+                        <div class="extra-songs">
+
+                          + ${extraSongCount}
+                          more
+                          ${
+                            extraSongCount === 1
+                              ? "song"
+                              : "songs"
+                          }
+                          waiting for
+                          ${escapeHtml(
+                            currentName
+                          )}
+
+                        </div>
+                      `
+
+                      : ""
+                  }
+
+
+                  ${
+                    nameChanged ||
+                    sameDeviceMismatch
+
+                      ? `
+                        <div class="warnings">
+
+                          ${
+                            nameChanged
+
+                              ? `
+                                <div class="warning">
+
+                                  ⚠️ Originally:
+                                  ${escapeHtml(
+                                    originalName
+                                  )}
+
+                                </div>
+                              `
+
+                              : ""
+                          }
+
+
+                          ${
+                            sameDeviceMismatch
+
+                              ? `
+                                <div class="warning">
+
+                                  ⚠️ NAME MISMATCH -
+                                  SAME DEVICE
+
+                                </div>
+                              `
+
+                              : ""
+                          }
+
+                        </div>
+                      `
+
+                      : ""
+                  }
+
+                </div>
+
+              `;
+
+            }).join("");
+
+        }
+
+
+        /*
+          PAUSED SECTION
+        */
+
+        const pausedSingers =
+          buildPausedSingers(data);
+
+
+        if (
+          pausedSingers.length === 0
+        ) {
+
+          pausedSection.style.display =
+            "none";
+
+          pausedContainer.innerHTML =
+            "";
+
+        }
+
+        else {
+
+          pausedSection.style.display =
+            "block";
+
+
+          pausedContainer.innerHTML =
+            pausedSingers.map(singer => {
+
+              const request =
+                singer.requests[0];
+
+
+              const songCount =
+                singer.requests.length;
+
+
+              return `
+
+                <div class="request paused">
+
+                  <div class="singer">
+                    ${escapeHtml(
+                      singer.name
+                    )}
+                    <span
+                      class="singer-badge ${
+                        singer.lastCompletedTime === null
+                          ? "new"
+                          : "repeat"
+                      }"
+                    >
+                      ${
+                        singer.lastCompletedTime === null
+                          ? "NEW"
+                          : "REPEAT"
+                      }
+                    </span>
+                  </div>
+
+
+                  <div class="song">
+                    ${escapeHtml(
+                      request.song_title
+                    )}
+                  </div>
+
+
+                  <div class="artist">
+                    ${escapeHtml(
+                      request.artist
+                    )}
+                  </div>
+
+
+                  <div class="status">
+                    PAUSED
+                  </div>
+
+
+                  <div class="time">
+                    ${songCount}
+                    ${
+                      songCount === 1
+                        ? "song"
+                        : "songs"
+                    }
+                  </div>
+
+
+                  <div class="controls">
+
+                    <button
+                      class="resume-button"
+                      onclick='resumeSinger(
+                        ${JSON.stringify(
+                          singer.key
+                        )}
+                      )'
+                    >
+                      Resume
+                    </button>
+
+                  </div>
+
+
+                  <div class="departure-control">
+                    <button
+                      class="left-button"
+                      onclick='markSingerLeft(
+                        ${JSON.stringify(
+                          singer.key
+                        )}
+                      )'
+                    >
+                      Left
+                    </button>
+                  </div>
+
+
+                  ${
+                    songCount > 1
+
+                      ? `
+                        <div class="extra-songs">
+
+                          + ${songCount - 1}
+                          more
+                          ${
+                            songCount - 1 === 1
+                              ? "song"
+                              : "songs"
+                          }
+                          saved for later
+
+                        </div>
+                      `
+
+                      : ""
+                  }
+
+                </div>
+
+              `;
+
+            }).join("");
+
+        }
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        container.innerHTML =
+          "Could not load requests.";
+
+      }
+
+    }
+
+
+    /* =========================
+       MANUAL UP NEXT
+       ========================= */
+
+    async function manualUpNext(id) {
+
+      try {
+
+        await setUpNext(id);
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not change Up Next."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       PAUSE SINGER
+
+       PAUSES ALL REMAINING
+       REQUESTS FOR THAT SINGER.
+       ========================= */
+
+    async function pauseSinger(key) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+
+        const singerRequests =
+          data.filter(
+            request =>
+              isActive(request) &&
+              singerKey(request) === key
+          );
+
+
+        if (
+          singerRequests.length === 0
+        ) {
+          return;
+        }
+
+
+        for (
+          const request of singerRequests
+        ) {
+
+          const response =
+            await fetch(
+
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+
+              {
+                method: "PATCH",
+
+                headers: {
+                  "apikey":
+                    SUPABASE_KEY,
+
+                  "Authorization":
+                    `Bearer ${accessToken || SUPABASE_KEY}`,
+
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  status: "paused"
+                })
+              }
+
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Could not pause singer."
+            );
+
+          }
+
+        }
+
+
+        /*
+          IF THEY WERE UP NEXT,
+          LOADREQUESTS WILL
+          AUTOMATICALLY ADVANCE.
+        */
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not pause this singer."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       SINGER LEFT FOR THE NIGHT
+       ========================= */
+
+    async function markSingerLeft(
+      key
+    ) {
+
+      const confirmed =
+        confirm(
+          "Remove this singer from tonight's rotation? Their completed-song history will stay, but their current songs and reserved spot will be removed."
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+
+        /*
+          Mark ONLY currently active/paused/reserved
+          rows as LEFT.
+
+          Do NOT change completed songs. That keeps
+          accurate history of what they actually sang.
+        */
+        const singerRows =
+          data.filter(
+            request =>
+              isCurrentKaraokeNight(
+                request
+              ) &&
+              request.singer_name !==
+                SETTINGS_SINGER &&
+              singerKey(request) ===
+                key &&
+              !isCompleted(
+                request
+              ) &&
+              !isLeft(
+                request
+              )
+          );
+
+
+        const leftStatus =
+          `left_${Date.now()}`;
+
+
+        for (
+          const request
+          of singerRows
+        ) {
+
+          const response =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+              {
+                method:
+                  "PATCH",
+
+                headers:
+                  apiHeaders(true),
+
+                body:
+                  JSON.stringify({
+                    status:
+                      leftStatus
+                  })
+              }
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Could not remove this singer from the rotation."
+            );
+
+          }
+
+        }
+
+
+        /*
+          Remove their earned queue position too.
+
+          If they come back later and submit another
+          song, their key is no longer in the saved
+          rotation order, so they re-enter as a NEW
+          singer for placement.
+        */
+        const savedOrder =
+          getManualOrder(data);
+
+
+        if (
+          savedOrder.includes(
+            key
+          )
+        ) {
+
+          await saveManualOrder(
+            savedOrder.filter(
+              savedKey =>
+                savedKey !== key
+            )
+          );
+
+        }
+
+
+        await loadRequests();
+
+      }
+
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not remove this singer from the rotation."
+        );
+
+      }
+
+    }
+
+
+    async function markSingerSongReady(key) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+        const slot =
+          data.find(
+            request =>
+              isCurrentKaraokeNight(request) &&
+              isWaitingForSong(request) &&
+              !isSkippedSlot(request) &&
+              singerKey(request) === key
+          );
+
+        if (!slot) {
+          return;
+        }
+
+        const response =
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/requests?id=eq.${slot.id}`,
+            {
+              method: "PATCH",
+              headers: apiHeaders(true),
+              body: JSON.stringify({
+                song_title: KJ_READY_SONG_TITLE,
+                artist: "Queued by KJ"
+              })
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "Could not mark this singer's song ready."
+          );
+        }
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not mark this singer's song ready."
+        );
+
+      }
+
+    }
+
+
+    async function skipWaitingSinger(key) {
+
+      try {
+        const data = await fetchRequests();
+
+        const slots =
+          data.filter(
+            request =>
+              isCurrentKaraokeNight(request) &&
+              isWaitingForSong(request) &&
+              !isSkippedSlot(request) &&
+              singerKey(request) === key
+          );
+
+        if (slots.length === 0) {
+          return;
+        }
+
+        const skipStatus =
+          `slot_skipped_${Date.now()}`;
+
+        for (const slot of slots) {
+          const response =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${slot.id}`,
+              {
+                method:"PATCH",
+                headers:apiHeaders(true),
+                body:JSON.stringify({
+                  status:skipStatus
+                })
+              }
+            );
+
+          if (!response.ok) {
+            throw new Error(
+              "Could not skip reserved singer slot."
+            );
+          }
+        }
+
+        const savedOrder = getManualOrder(data);
+
+        if (savedOrder.includes(key)) {
+          await saveManualOrder(
+            savedOrder.filter(
+              savedKey => savedKey !== key
+            )
+          );
+        }
+
+        await loadRequests();
+      }
+
+      catch (error) {
+        console.error(error);
+        alert("Could not skip this singer.");
+      }
+    }
+
+
+    /* =========================
+       RESUME SINGER
+
+       RESTORES ALL THEIR SONGS
+       AND PUTS THEM AT THE BACK.
+       ========================= */
+
+    async function resumeSinger(key) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+        const singerRequests =
+          data.filter(
+            request =>
+              isPaused(request) &&
+              singerKey(request) === key
+          );
+
+        if (
+          singerRequests.length === 0
+        ) {
+          return;
+        }
+
+        const currentRotation =
+          buildRotation(data);
+
+        const upNextSinger =
+          currentRotation.find(
+            singer =>
+              singer.isUpNext === true ||
+              (
+                singer.currentRequest &&
+                singer.currentRequest.status ===
+                  "up_next"
+              )
+          ) || null;
+
+        const currentWaitingKeys =
+          currentRotation
+            .filter(
+              singer =>
+                (!upNextSinger ||
+                  singer.key !==
+                    upNextSinger.key) &&
+                singer.key !== key
+            )
+            .map(
+              singer => singer.key
+            );
+
+        for (
+          const request of singerRequests
+        ) {
+
+          const response =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+              {
+                method: "PATCH",
+
+                headers: {
+                  "apikey":
+                    SUPABASE_KEY,
+
+                  "Authorization":
+                    `Bearer ${accessToken || SUPABASE_KEY}`,
+
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  status: "waiting"
+                })
+              }
+            );
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Could not resume singer."
+            );
+
+          }
+
+        }
+
+        const resumedWaitingOrder = [
+          ...currentWaitingKeys.slice(0, 1),
+          key,
+          ...currentWaitingKeys.slice(1)
+        ];
+
+        const fullOrder = [
+          ...(upNextSinger
+            ? [upNextSinger.key]
+            : []),
+          ...resumedWaitingOrder
+        ];
+
+        await saveManualOrder(
+          fullOrder
+        );
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not resume this singer."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       DONE
+       ========================= */
+
+    async function finishRequest(id) {
+
+      try {
+
+        const data =
+          await fetchRequests();
+
+        const finishedRequest =
+          data.find(
+            request =>
+              String(request.id) ===
+              String(id)
+          );
+
+        if (
+          !finishedRequest ||
+          isWaitingForSong(
+            finishedRequest
+          )
+        ) {
+          throw new Error(
+            "Could not find the finished song."
+          );
+        }
+
+        const finishedSingerKey =
+          singerKey(
+            finishedRequest
+          );
+
+        /*
+          Snapshot the exact singer order BEFORE
+          changing anything.
+
+          Everybody else keeps the position they
+          already earned. The singer who just sang
+          gets their next-round slot at the END.
+        */
+        const rotationBeforeFinish =
+          buildRotation(data);
+
+        const remainingEarnedOrder =
+          rotationBeforeFinish
+            .filter(
+              singer =>
+                singer.key !==
+                  finishedSingerKey
+            )
+            .map(
+              singer =>
+                singer.key
+            );
+
+        const nextRoundEarnedOrder = [
+          ...remainingEarnedOrder,
+          finishedSingerKey
+        ];
+
+
+        const response =
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
+            {
+              method: "PATCH",
+              headers: apiHeaders(true),
+              body: JSON.stringify({
+                status: "completed"
+              })
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "Could not finish request."
+          );
+        }
+
+
+        const oldSlots =
+          data.filter(
+            request =>
+              isCurrentKaraokeNight(
+                request
+              ) &&
+              isWaitingForSong(
+                request
+              ) &&
+              !isSkippedSlot(
+                request
+              ) &&
+              singerKey(request) ===
+                finishedSingerKey
+          );
+
+        for (const slot of oldSlots) {
+
+          const deleteResponse =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests?id=eq.${slot.id}`,
+              {
+                method: "DELETE",
+                headers: apiHeaders()
+              }
+            );
+
+          if (!deleteResponse.ok) {
+            throw new Error(
+              "Could not clear old reserved singer slot."
+            );
+          }
+
+        }
+
+
+        const remainingSingerRequests =
+          data.filter(
+            request =>
+              String(request.id) !==
+                String(
+                  finishedRequest.id
+                ) &&
+              isActive(request) &&
+              !isWaitingForSong(
+                request
+              ) &&
+              singerKey(request) ===
+                finishedSingerKey
+          );
+
+
+        const finalThree =
+          getFinalThree(data);
+
+        const isFinalThreeSinger =
+          (
+            finalThree.length === 3 &&
+            finalThree.includes(
+              finishedSingerKey
+            )
+          );
+
+
+        if (isFinalThreeSinger) {
+
+          for (
+            const request
+            of remainingSingerRequests
+          ) {
+
+            const closeResponse =
+              await fetch(
+                `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+                {
+                  method: "PATCH",
+                  headers: apiHeaders(true),
+                  body: JSON.stringify({
+                    status: "completed"
+                  })
+                }
+              );
+
+            if (!closeResponse.ok) {
+              throw new Error(
+                "Final singer finished, but remaining songs could not be closed."
+              );
+            }
+
+          }
+
+          await saveManualOrder(
+            remainingEarnedOrder
+          );
+
+        }
+
+
+        else if (
+          remainingSingerRequests.length > 0
+        ) {
+
+          const nextRoundStatus =
+            `waiting_resumed_${Date.now()}`;
+
+          for (
+            const request
+            of remainingSingerRequests
+          ) {
+
+            const moveResponse =
+              await fetch(
+                `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
+                {
+                  method: "PATCH",
+                  headers: apiHeaders(true),
+                  body: JSON.stringify({
+                    status:
+                      nextRoundStatus
+                  })
+                }
+              );
+
+            if (!moveResponse.ok) {
+              throw new Error(
+                "Song finished, but remaining songs could not be moved to the next round."
+              );
+            }
+
+          }
+
+          await saveManualOrder(
+            nextRoundEarnedOrder
+          );
+
+        }
+
+
+        else {
+
+          const slotBody = {
+
+            singer_name:
+              finishedRequest.singer_name,
+
+            song_title:
+              WAITING_FOR_SONG_TITLE,
+
+            artist:
+              "Waiting for next song",
+
+            status:
+              `waiting_resumed_${Date.now()}`
+
+          };
+
+          if (
+            finishedRequest.singer_id
+          ) {
+            slotBody.singer_id =
+              finishedRequest.singer_id;
+          }
+
+          if (
+            finishedRequest.original_name
+          ) {
+            slotBody.original_name =
+              finishedRequest.original_name;
+          }
+
+          const slotResponse =
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/requests`,
+              {
+                method: "POST",
+                headers: apiHeaders(true),
+                body: JSON.stringify(
+                  slotBody
+                )
+              }
+            );
+
+          if (!slotResponse.ok) {
+            throw new Error(
+              "Song finished, but the singer's next-round slot could not be reserved."
+            );
+          }
+
+          await saveManualOrder(
+            nextRoundEarnedOrder
+          );
+
+        }
+
+
+        await loadRequests();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not finish this request."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       START
+       ========================= */
+
+    refreshAuthUI();
+
+
+    supabaseClient.auth.onAuthStateChange(
+      async () => {
+        await refreshAuthUI();
+      }
+    );
+
+
+    /* =========================
+       AUTO REFRESH
+       ========================= */
+
+    setInterval(
+      () => {
+        if (accessToken) {
+          loadRequests();
+        }
+      },
+      5000
+    );
+
+  </script>
+
+</body>
+
+</html>
