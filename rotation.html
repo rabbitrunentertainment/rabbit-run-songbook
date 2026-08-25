@@ -2201,52 +2201,55 @@ body.show-6 {
       );
 
 
-      /*
-        APPLY KJ MANUAL ORDER FIRST.
-
-        This preserves manual up/down moves and the
-        special pause/resume placement before any
-        invisible lower-queue balancing happens.
-      */
-
-      waiting =
-        applyManualOrder(
-          waiting,
-          data
-        );
-
-
-      /*
-        SMART FIRST-TIME SINGER WEAVE
-
-        The TV can show at most:
-        Up Next + the next 5 singers.
-
-        Those 6 visible positions are protected.
-        A new singer can NEVER reshuffle someone
-        who is already in that visible group.
-
-        Smart balancing only happens BELOW the
-        protected group, and only when there are
-        more than 6 active singers total.
-
-        Below the protected group we weave:
-        two REPEAT singers, then one
-        FIRST-TIME singer. Extra first-time
-        singers go to the bottom.
-
-        A first-time singer is someone who has not
-        completed a turn since tonight's 3:00 AM
-        reset. Relative order inside each group is
-        preserved.
-      */
-
       const totalActiveSingers =
         waiting.length +
         (upNextSinger ? 1 : 0);
 
 
-      if (totalActiveSingers > 6) {
+      /*
+        SMART ROTATION FAIRNESS
+
+        IMPORTANT:
+        We no longer guess "newcomers" from a time gap.
+
+        MANUAL_ROTATION_ORDER is also our memory of
+        who already had a place in the active queue.
+
+        A singer whose key is NOT in that saved order
+        is genuinely new to the current queue.
+
+        RULES:
+        1. Up Next + next 5 are protected.
+        2. Existing first-turn singers keep their
+           earned order. New arrivals never cut in
+           ahead of them.
+        3. After the established first-turn section,
+           new arrivals may be worked into established
+           repeat singers at 1 new per 2 repeats.
+        4. At most 2 newcomers are inserted in that
+           hidden balancing pass. Extras go to bottom.
+        5. Reserved "Waiting for next song" slots are
+           established repeat slots.
+      */
+
+      const savedRotationOrder =
+        getManualOrder(data);
+
+      const savedRotationKeys =
+        new Set(
+          savedRotationOrder
+        );
+
+
+      /*
+        If there is no saved queue yet, this is the
+        initial queue for the night. Preserve it as-is.
+        The KJ page will save this order after rendering.
+      */
+      if (
+        savedRotationOrder.length > 0 &&
+        totalActiveSingers > 6
+      ) {
 
         const protectedCount =
           upNextSinger
@@ -2261,197 +2264,105 @@ body.show-6 {
           );
 
 
-        const flexibleWaiting =
+        const hiddenWaiting =
           waiting.slice(
             protectedCount
           );
 
 
         /*
-          ARRIVAL-BASED FAIRNESS
-
-          "New" here means NEW TO THE EXISTING QUEUE,
-          not merely "has not sung yet."
-
-          That distinction matters on the first round:
-          Jane/Tom/Amy/etc. were already waiting before
-          Susy/Mike/etc. arrived, so the later arrivals
-          must not leapfrog the established queue just
-          because Jane has not performed yet.
-
-          We use the singer's oldest active request time
-          as their arrival time. The earliest waiting
-          cohort stays established. Later arrivals are
-          the newcomers eligible for weaving.
+          Split the hidden queue into singers who
+          already had an earned position and singers
+          who have just arrived.
         */
+        const existingHidden =
+          hiddenWaiting.filter(
+            singer =>
+              savedRotationKeys.has(
+                singer.key
+              )
+          );
 
-        const arrivalTimes =
-          flexibleWaiting
-            .map(singer => {
 
-              const activeTimes =
-                singer.requests
-                  .map(request =>
-                    new Date(
-                      request.created_at
-                    ).getTime()
-                  )
-                  .filter(
-                    value =>
-                      Number.isFinite(value)
-                  );
-
-              return {
-                singer,
-                time:
-                  activeTimes.length
-                    ? Math.min(
-                        ...activeTimes
-                      )
-                    : Number.MAX_SAFE_INTEGER
-              };
-
-            })
-            .sort(
-              (a, b) =>
-                a.time - b.time
-            );
+        const newcomers =
+          hiddenWaiting.filter(
+            singer =>
+              !savedRotationKeys.has(
+                singer.key
+              )
+          );
 
 
         /*
-          Find natural arrival waves.
+          Existing singers who have not completed a
+          turn tonight are still on their FIRST turn.
+          Nobody arriving later may be inserted before
+          them.
 
-          Requests entered together by the test seeder
-          (or a group scanning around the same time)
-          form a cohort. A later cohort is considered
-          newly arrived relative to the established one.
-
-          Five minutes is deliberately generous so a
-          normal first-round queue entered over a few
-          minutes remains one established group.
+          Keep everything through the LAST such singer
+          exactly where it was.
         */
-        const ARRIVAL_WAVE_GAP_MS =
-          5 * 60 * 1000;
+        let lastExistingFirstTurnIndex =
+          -1;
 
-        let newestWaveStart =
-          arrivalTimes.length;
 
-        for (
-          let index = 1;
-          index < arrivalTimes.length;
-          index += 1
-        ) {
+        existingHidden.forEach(
+          (singer, index) => {
 
-          const gap =
-            arrivalTimes[index].time -
-            arrivalTimes[index - 1].time;
+            if (
+              singer.lastCompletedTime === null &&
+              !singer.isWaitingForSong
+            ) {
 
-          if (
-            gap >
-            ARRIVAL_WAVE_GAP_MS
-          ) {
+              lastExistingFirstTurnIndex =
+                index;
 
-            newestWaveStart =
-              index;
+            }
 
           }
+        );
 
-        }
 
-
-        /*
-          If there is no later arrival wave, preserve
-          everybody's current order. Once a later wave
-          exists, only that newest wave is woven into
-          the established singers ahead of it.
-        */
-        const establishedKeys =
-          new Set(
-            arrivalTimes
-              .slice(
-                0,
-                newestWaveStart
-              )
-              .map(
-                item =>
-                  item.singer.key
-              )
+        const fixedExistingPrefix =
+          existingHidden.slice(
+            0,
+            lastExistingFirstTurnIndex + 1
           );
 
 
-        const newcomerKeys =
-          new Set(
-            arrivalTimes
-              .slice(
-                newestWaveStart
-              )
-              .map(
-                item =>
-                  item.singer.key
-              )
+        const repeatTail =
+          existingHidden.slice(
+            lastExistingFirstTurnIndex + 1
           );
 
 
-        const firstTimeSingers =
-          flexibleWaiting.filter(
-            singer =>
-              newcomerKeys.has(
-                singer.key
-              )
-          );
+        const balancedTail = [];
 
-
-        const repeatSingers =
-          flexibleWaiting.filter(
-            singer =>
-              establishedKeys.has(
-                singer.key
-              )
-          );
-
-
-        const wovenWaiting = [];
-
-        let firstIndex = 0;
         let repeatIndex = 0;
+        let newcomerIndex = 0;
+        let newcomersInserted = 0;
 
-        /*
-          FAIRNESS RULE
-
-          Normal mix-in:
-          two established singers, then one new singer.
-
-          Maximum stretch:
-          no established singer may have more than
-          TWO newly inserted singers added ahead of
-          the position they had already earned.
-
-          The protected visible six are handled above
-          and are never changed here.
-
-          "Waiting for next song" reserved slots count
-          as established singers because that singer
-          already earned the position.
-        */
-
-        const MAX_NEW_AHEAD_OF_REPEAT = 2;
-        let newInsertedThisHiddenRound = 0;
+        const REPEATS_PER_NEWCOMER = 2;
+        const MAX_INSERTED_NEWCOMERS = 2;
 
 
         while (
-          repeatIndex < repeatSingers.length
+          repeatIndex <
+          repeatTail.length
         ) {
 
           let repeatsAdded = 0;
 
 
           while (
-            repeatsAdded < 2 &&
-            repeatIndex < repeatSingers.length
+            repeatsAdded <
+              REPEATS_PER_NEWCOMER &&
+            repeatIndex <
+              repeatTail.length
           ) {
 
-            wovenWaiting.push(
-              repeatSingers[
+            balancedTail.push(
+              repeatTail[
                 repeatIndex
               ]
             );
@@ -2462,25 +2373,21 @@ body.show-6 {
           }
 
 
-          /*
-            Work in one newcomer only while doing so
-            cannot stretch any still-waiting established
-            singer by more than the fairness cap.
-          */
           if (
-            firstIndex < firstTimeSingers.length &&
-            newInsertedThisHiddenRound <
-              MAX_NEW_AHEAD_OF_REPEAT
+            newcomerIndex <
+              newcomers.length &&
+            newcomersInserted <
+              MAX_INSERTED_NEWCOMERS
           ) {
 
-            wovenWaiting.push(
-              firstTimeSingers[
-                firstIndex
+            balancedTail.push(
+              newcomers[
+                newcomerIndex
               ]
             );
 
-            firstIndex += 1;
-            newInsertedThisHiddenRound += 1;
+            newcomerIndex += 1;
+            newcomersInserted += 1;
 
           }
 
@@ -2488,28 +2395,20 @@ body.show-6 {
 
 
         /*
-          Once the fairness cap is reached, or there
-          are no established slots left to weave around,
-          all remaining newcomers join the bottom.
+          Any newcomers we could not fairly work in
+          are appended to the bottom in arrival order.
         */
-        while (
-          firstIndex < firstTimeSingers.length
-        ) {
-
-          wovenWaiting.push(
-            firstTimeSingers[
-              firstIndex
-            ]
+        const remainingNewcomers =
+          newcomers.slice(
+            newcomerIndex
           );
-
-          firstIndex += 1;
-
-        }
 
 
         waiting = [
           ...protectedWaiting,
-          ...wovenWaiting
+          ...fixedExistingPrefix,
+          ...balancedTail,
+          ...remainingNewcomers
         ];
 
       }
