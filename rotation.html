@@ -1594,9 +1594,26 @@
           `${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
 
 
+        // Measure only the singer name, not the
+        // "Waiting for next song" note underneath it.
+        const singerNameText =
+          Array.from(
+            nameElement.childNodes
+          )
+          .filter(
+            node =>
+              node.nodeType === Node.TEXT_NODE
+          )
+          .map(
+            node => node.textContent
+          )
+          .join(" ")
+          .trim();
+
+
         const width =
           context.measureText(
-            nameElement.textContent.trim()
+            singerNameText
           ).width;
 
 
