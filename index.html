@@ -144,6 +144,22 @@ h1 {
   background:#8d4ce6;
 }
 
+.rotation-link {
+  display:block;
+  width:max-content;
+  max-width:100%;
+  margin:2px auto 14px;
+  color:#f8f8fb;
+  font-size:18px;
+  font-weight:bold;
+  text-decoration:none;
+  text-align:center;
+  text-shadow:
+    0 0 5px #ffd84d,
+    0 0 10px rgba(255,216,77,.75),
+    0 0 18px rgba(255,216,77,.45);
+}
+
 .rotation-link:hover {
   text-shadow:
     0 0 7px #ffd84d,
@@ -451,53 +467,28 @@ input {
 }
 
 
-
-/* =========================
-   ROTATION BUTTON
-   ========================= */
-
-.rotation-link {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:min(520px, 88%);
-  min-height:54px;
-  margin:20px auto 18px;
-  padding:12px 20px;
-  box-sizing:border-box;
-  border-radius:16px;
-  text-decoration:none;
-  text-align:center;
-  font-size:17px;
-  font-weight:900;
-  letter-spacing:.01em;
+button.rotation-link {
+  appearance:none;
+  -webkit-appearance:none;
+  display:block;
+  width:min(520px, 90%);
+  min-height:58px;
+  margin:24px auto 20px;
+  padding:13px 20px;
+  border:2px solid #ee0ff2;
+  border-radius:18px;
+  background:#171329;
   color:#fff3a6;
-  background:
-    linear-gradient(#171329,#171329) padding-box,
-    linear-gradient(90deg,var(--pink),#8b5cf6,var(--blue)) border-box;
-  border:2px solid transparent;
-  box-shadow:
-    0 0 12px rgba(250,204,21,.30),
-    0 0 22px rgba(236,72,153,.18);
+  font:inherit;
+  font-size:18px;
+  font-weight:900;
+  text-align:center;
   cursor:pointer;
+  box-shadow:0 0 12px rgba(238,15,242,.35), 0 0 20px rgba(59,130,246,.18);
 }
-
-.rotation-link:hover,
-.rotation-link:focus {
-  filter:brightness(1.12);
-  transform:translateY(-1px);
-}
-
-@media (max-width:600px) {
-  .rotation-link {
-    width:90%;
-    min-height:58px;
-    margin-top:22px;
-    margin-bottom:20px;
-    padding:13px 18px;
-    border-radius:18px;
-    font-size:18px;
-  }
+button.rotation-link:active { transform:scale(.98); }
+@media (min-width:601px) {
+  button.rotation-link { width:min(460px, 70%); }
 }
 
 </style>
@@ -583,13 +574,13 @@ input {
 
 </div>
 
-<a
+<button
   class="rotation-link"
-  href="rotation.html"
-  target="_top"
+  type="button"
+  onclick="window.location.href='rotation.html'"
 >
   🎵 Check Rotation Here
-</a>
+</button>
 
 
 <div
