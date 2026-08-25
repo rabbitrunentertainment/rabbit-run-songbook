@@ -3709,209 +3709,151 @@
 
 
       /*
-        SMART ROTATION FAIRNESS — PLACE ONCE
+        PERSISTENT QUEUE ORDER
 
-        NEW badge status and queue placement are now
-        completely separate concepts.
+        Saved manual order is authoritative.
+        Existing singers are never automatically re-woven.
 
-        A singer can remain visually NEW until they
-        complete their first song, but NEW status does
-        NOT keep moving them around the queue.
+        A genuinely new singer is inserted ONCE:
+        protect first six active positions, then use
+        NEW -> two existing chairs -> NEW -> two existing chairs.
 
-        Automatic placement happens ONLY when a singer:
-        1. is currently marked NEW, AND
-        2. is NOT already present in the saved rotation.
-
-        Once inserted, their saved position becomes
-        permanent unless something explicit changes it:
-        Done, Left, Skip, Pause/Resume, or manual move.
+        After insertion the order is saved immediately.
+        NEW badge status can remain until the singer performs,
+        but badge status never moves an already placed singer.
       */
 
-      const savedRotationOrder =
+      const persistedOrder =
         getManualOrder(data);
 
-      const savedRotationKeys =
-        new Set(
-          savedRotationOrder
-        );
+      const persistedKeys =
+        new Set(persistedOrder);
 
       const newcomerKeys =
-        new Set(
-          getNewcomerQueue(data)
+        new Set(getNewcomerQueue(data));
+
+      const waitingByKey =
+        new Map(
+          waiting.map(
+            singer => [singer.key, singer]
+          )
         );
 
+      const persistedWaiting =
+        persistedOrder
+          .map(key => waitingByKey.get(key))
+          .filter(Boolean);
 
-      const unplacedNewcomers =
+      const persistedWaitingKeys =
+        new Set(
+          persistedWaiting.map(
+            singer => singer.key
+          )
+        );
+
+      const notYetPersisted =
         waiting.filter(
           singer =>
-            newcomerKeys.has(
-              singer.key
-            ) &&
-            !savedRotationKeys.has(
+            !persistedWaitingKeys.has(
               singer.key
             )
         );
 
+      const ordinaryUnsaved =
+        notYetPersisted.filter(
+          singer =>
+            !newcomerKeys.has(
+              singer.key
+            )
+        );
 
-      if (
-        unplacedNewcomers.length > 0 &&
-        totalActiveSingers > 6
-      ) {
+      const brandNew =
+        notYetPersisted.filter(
+          singer =>
+            newcomerKeys.has(
+              singer.key
+            )
+        );
 
-        const protectedCount =
+      waiting =
+        [
+          ...persistedWaiting,
+          ...ordinaryUnsaved
+        ];
+
+      if (brandNew.length > 0) {
+
+        const protectedWaitingCount =
           upNextSinger
             ? 5
             : 6;
 
+        for (const newcomer of brandNew) {
 
-        const fixedWaiting =
-          waiting.filter(
-            singer =>
-              savedRotationKeys.has(
-                singer.key
-              )
-          );
-
-
-        const otherUnsaved =
-          waiting.filter(
-            singer =>
-              !savedRotationKeys.has(
-                singer.key
-              ) &&
-              !newcomerKeys.has(
-                singer.key
-              )
-          );
-
-
-        let working =
-          [
-            ...fixedWaiting,
-            ...otherUnsaved
-          ];
-
-
-        for (
-          const newcomer
-          of unplacedNewcomers
-        ) {
-
-          let lastNewIndex =
-            -1;
-
-
-          for (
-            let index = 0;
-            index < working.length;
-            index += 1
-          ) {
-
-            if (
-              newcomerKeys.has(
-                working[index].key
-              )
-            ) {
-
-              lastNewIndex =
-                index;
-
-            }
-
-          }
-
-
-          let insertIndex =
+          let insertAt =
             Math.min(
-              protectedCount,
-              working.length
+              protectedWaitingCount,
+              waiting.length
             );
 
+          let lastNewIndex = -1;
 
-          if (
-            lastNewIndex >= 0
+          for (
+            let i = 0;
+            i < waiting.length;
+            i += 1
           ) {
-
-            let repeatsSeen =
-              0;
-
-            insertIndex =
-              working.length;
-
-
-            for (
-              let index =
-                lastNewIndex + 1;
-              index < working.length;
-              index += 1
+            if (
+              newcomerKeys.has(
+                waiting[i].key
+              )
             ) {
-
-              const singer =
-                working[index];
-
-
-              if (
-                newcomerKeys.has(
-                  singer.key
-                )
-              ) {
-
-                lastNewIndex =
-                  index;
-
-                repeatsSeen =
-                  0;
-
-                continue;
-
-              }
-
-
-              if (
-                singer.lastCompletedTime !==
-                  null
-              ) {
-
-                repeatsSeen += 1;
-
-              }
-
-
-              if (
-                repeatsSeen >= 2
-              ) {
-
-                insertIndex =
-                  index + 1;
-
-                break;
-
-              }
-
+              lastNewIndex = i;
             }
-
-
-            insertIndex =
-              Math.max(
-                insertIndex,
-                protectedCount
-              );
-
           }
 
+          if (lastNewIndex >= 0) {
+            insertAt =
+              Math.max(
+                protectedWaitingCount,
+                Math.min(
+                  lastNewIndex + 3,
+                  waiting.length
+                )
+              );
+          }
 
-          working.splice(
-            insertIndex,
+          waiting.splice(
+            insertAt,
             0,
             newcomer
           );
-
         }
 
+        /*
+          saveManualOrder is async, but this render path is not.
+          Fire the save only when the signature changed.
+          The current render already uses the new order immediately.
+        */
+        const newPersistedOrder =
+          waiting.map(
+            singer => singer.key
+          );
 
-        waiting =
-          working;
-
+        if (
+          newPersistedOrder.join("|") !==
+          persistedOrder.join("|")
+        ) {
+          saveManualOrder(
+            newPersistedOrder
+          ).catch(
+            error =>
+              console.error(
+                "Could not persist newcomer placement:",
+                error
+              )
+          );
+        }
       }
 
 
