@@ -2503,17 +2503,22 @@
           : null;
 
 
+      /*
+        Save the FULL singer rotation, INCLUDING Up Next.
+
+        Up Next is ignored by applyManualOrder while they
+        are currently Up Next, but keeping their key here
+        preserves their earned membership in the rotation.
+
+        This is critical when Done is pressed: the singer
+        who was Up Next becomes a waiting/repeat singer and
+        must NOT suddenly be mistaken for a brand-new arrival.
+      */
       const desiredOrder =
-        rotation
-          .filter(
-            singer =>
-              singer.key !==
-              upNextKey
-          )
-          .map(
-            singer =>
-              singer.key
-          );
+        rotation.map(
+          singer =>
+            singer.key
+        );
 
 
       const savedOrder =
@@ -3307,7 +3312,12 @@
         We no longer guess "newcomers" from a time gap.
 
         MANUAL_ROTATION_ORDER is also our memory of
-        who already had a place in the active queue.
+        who already had a place in the active queue,
+        INCLUDING the current Up Next singer.
+
+        A singer becomes established the moment their
+        position is assigned. Pressing Done on anyone
+        ahead of them must never make them "new" again.
 
         A singer whose key is NOT in that saved order
         is genuinely new to the current queue.
