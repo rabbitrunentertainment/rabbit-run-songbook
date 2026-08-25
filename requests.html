@@ -843,6 +843,44 @@
       }
     }
 
+
+
+    /* =========================
+       NEW / REPEAT SINGER BADGES
+       ========================= */
+
+    .singer-badge {
+      display: inline-block;
+      margin-left: 7px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .05em;
+      vertical-align: middle;
+      line-height: 1.2;
+    }
+
+    .singer-badge.new {
+      background: #0f766e;
+      color: #ccfbf1;
+      border: 1px solid #2dd4bf;
+    }
+
+    .singer-badge.repeat {
+      background: #4c1d95;
+      color: #ede9fe;
+      border: 1px solid #a78bfa;
+    }
+
+    @media (min-width: 430px) and (max-width: 900px) {
+      .singer-badge {
+        margin-left: 5px;
+        padding: 2px 5px;
+        font-size: 8px;
+      }
+    }
+
 </style>
 </head>
 
@@ -3402,10 +3440,11 @@
         4. Choosing or entering the singer's next song
            changes only the slot contents, never fairness
            classification or queue position.
-        5. Newcomers are inserted at 1 per 2 eligible
-           repeats, with a maximum of 2 inserted in the
-           hidden balancing pass.
-        6. Extra newcomers go to the bottom.
+        5. The first newcomer goes immediately after
+           the protected six, then another newcomer is
+           inserted after every 2 established repeats.
+        6. If established repeats run out, remaining
+           newcomers go to the bottom.
       */
 
       const savedRotationOrder =
@@ -3517,23 +3556,51 @@
           const balancedTail = [];
 
           let newcomerIndex = 0;
-          let eligibleRepeatCount = 0;
-          let newcomersInserted = 0;
+          let repeatsSinceNewcomer = 0;
 
           const REPEATS_PER_NEWCOMER = 2;
-          const MAX_INSERTED_NEWCOMERS = 2;
 
 
           /*
-            Walk the established tail IN ITS EXISTING
-            ORDER. We never sort it into new groups.
+            FAIRNESS PATTERN AFTER THE PROTECTED SIX:
 
-            Waiting-for-song placeholders are simply
-            carried along in their earned position.
-            Because that singer already sang and earned
-            the next-round chair, the placeholder DOES
-            count as an established repeat position.
+            NEW
+            REPEAT
+            REPEAT
+            NEW
+            REPEAT
+            REPEAT
+            NEW ...
+
+            So the FIRST true newcomer is inserted
+            immediately at the first unlocked position
+            (#7 when Up Next + next 5 are protected).
+
+            After that, two established repeat positions
+            pass before the next newcomer is inserted.
+
+            Waiting-for-next-song reserved chairs count
+            as established repeat positions because those
+            singers already completed a turn and earned
+            that place.
           */
+
+          if (
+            newcomerIndex <
+            newcomers.length
+          ) {
+
+            balancedTail.push(
+              newcomers[
+                newcomerIndex
+              ]
+            );
+
+            newcomerIndex += 1;
+
+          }
+
+
           for (
             const singer
             of establishedTail
@@ -3544,32 +3611,21 @@
             );
 
 
-            /*
-              A reserved "Waiting for next song" slot
-              IS still an established repeat position.
-
-              The singer already completed a turn and
-              earned this chair in the next round.
-              Whether they have chosen the actual song
-              yet must make NO difference to newcomer
-              fairness or to their position.
-            */
             if (
-              singer.lastCompletedTime !== null
+              singer.lastCompletedTime !==
+                null
             ) {
 
-              eligibleRepeatCount += 1;
+              repeatsSinceNewcomer += 1;
 
             }
 
 
             if (
-              eligibleRepeatCount >=
+              repeatsSinceNewcomer >=
                 REPEATS_PER_NEWCOMER &&
               newcomerIndex <
-                newcomers.length &&
-              newcomersInserted <
-                MAX_INSERTED_NEWCOMERS
+                newcomers.length
             ) {
 
               balancedTail.push(
@@ -3579,8 +3635,7 @@
               );
 
               newcomerIndex += 1;
-              newcomersInserted += 1;
-              eligibleRepeatCount = 0;
+              repeatsSinceNewcomer = 0;
 
             }
 
@@ -4329,6 +4384,19 @@
                     ${escapeHtml(
                       singer.name
                     )}
+                    <span
+                      class="singer-badge ${
+                        singer.lastCompletedTime === null
+                          ? "new"
+                          : "repeat"
+                      }"
+                    >
+                      ${
+                        singer.lastCompletedTime === null
+                          ? "NEW"
+                          : "REPEAT"
+                      }
+                    </span>
                   </div>
 
 
