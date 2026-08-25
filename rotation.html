@@ -656,382 +656,575 @@
 
   
 
+/* ===== TV SHOW SCREEN FINAL OVERRIDES ===== */
 
-/* =========================================================
-   RABBIT RUN ROTATION — CONSOLIDATED DISPLAY RULES
-   Replaces the older stacked override blocks below this point.
-   ========================================================= */
+    /* VENUE: electric aqua -> electric blue */
+    .venue,
+    #venue,
+    .venue-name,
+    #venueName {
+      background: linear-gradient(90deg, #00F5FF 0%, #00A8FF 100%) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: #00F5FF;
+      filter: drop-shadow(0 0 5px rgba(0,245,255,.24));
+    }
 
-/* ---------- Venue ---------- */
-.venue-name,
-#venueName {
-  background: linear-gradient(
-    90deg,
-    #FFE600 0%,
-    #FFB000 45%,
-    #FF6A00 100%
-  ) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  color: #FFE600 !important;
-  filter:
-    drop-shadow(0 0 2px rgba(255,230,0,.55))
-    drop-shadow(0 0 7px rgba(255,106,0,.22)) !important;
-}
+    /* Closing headline readability + descender fix */
+    .closing-banner-main {
+      line-height: 1.18 !important;
+      padding: 0.08em 0.08em 0.16em !important;
+      overflow: visible !important;
 
-.venue-emoji {
-  background: none !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  -webkit-text-fill-color: initial !important;
-  color: initial !important;
-  filter: none !important;
-  text-shadow: none !important;
-}
+      /* Keep existing gradient text but add a thin mint outline */
+      -webkit-text-stroke: 1.5px #5CFFB0;
+      paint-order: stroke fill;
+      text-shadow:
+        0 0 2px rgba(92,255,176,.85),
+        0 0 8px rgba(92,255,176,.30);
+    }
+
+    .closing-banner {
+      overflow: visible !important;
+    }
+
+    /* 6 singer view: fit on one TV screen */
+    body.show-6 .rotation-row {
+      min-height: 62px !important;
+      padding-top: 5px !important;
+      padding-bottom: 5px !important;
+    }
+
+    body.show-6 #rotation {
+      row-gap: 7px !important;
+      gap: 7px !important;
+    }
+
+    body.show-6 .rotation-name {
+      font-size: clamp(31px, 3.4vw, 48px) !important;
+      line-height: 1.05 !important;
+    }
+
+    body.show-6 .wrap {
+      padding-bottom: 92px !important;
+    }
+
+    /* 4 singer view: keep large, remove page overflow */
+    body.show-4 .rotation-row {
+      min-height: 76px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    body.show-4 #rotation {
+      row-gap: 9px !important;
+      gap: 9px !important;
+    }
+
+    body.show-4 .wrap {
+      padding-bottom: 92px !important;
+    }
+
+    /* Final 3: fit banner without shrinking its text */
+    body.final-three-active .closing-banner {
+      width: min(94vw, 1380px) !important;
+      max-width: calc(100vw - 42px) !important;
+      padding-top: 20px !important;
+      padding-bottom: 20px !important;
+      margin-top: 2px !important;
+    }
+
+    body.final-three-active #rotation {
+      row-gap: 8px !important;
+      gap: 8px !important;
+    }
+
+    body.final-three-active .wrap {
+      padding-bottom: 96px !important;
+    }
+
+    /* Footer: fixed to TV viewport bottom */
+    footer {
+      position: fixed !important;
+      left: 50% !important;
+      bottom: 14px !important;
+      transform: translateX(-50%) !important;
+      z-index: 200 !important;
+      width: min(92vw, 1240px) !important;
+      max-width: calc(100vw - 40px) !important;
+    }
+
+    body {
+      overflow-x: hidden !important;
+    }
 
 
-/* ---------- Closing / final banners ---------- */
+/* ===== REFINED TV OVERRIDES ===== */
+
+    /* VENUE: electric gold -> orange so it does NOT blend into the title */
+    .venue-name,
+    #venueName {
+      background: linear-gradient(
+        90deg,
+        #FFE600 0%,
+        #FFB000 45%,
+        #FF6A00 100%
+      ) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: #FFE600 !important;
+      filter:
+        drop-shadow(0 0 2px rgba(255,230,0,.55))
+        drop-shadow(0 0 7px rgba(255,106,0,.22)) !important;
+    }
+
+    .venue-emoji {
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      background-clip: initial !important;
+      -webkit-text-fill-color: initial !important;
+      color: initial !important;
+      filter: none !important;
+      text-shadow: none !important;
+    }
+
+    /* Closing headline: gradient fill + thin GOLD outline, not mint fill */
+    .closing-banner-main {
+      line-height: 1.20 !important;
+      padding: .06em .06em .18em !important;
+      overflow: visible !important;
+      -webkit-text-stroke: 0 !important;
+      text-shadow: none !important;
+    }
+
+    .closing-headline-text {
+      display: inline-block;
+      background: linear-gradient(
+        90deg,
+        #ff008c 0%,
+        #ff00d4 24%,
+        #b000ff 52%,
+        #5b2cff 74%,
+        #00b7ff 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      -webkit-text-stroke: 1.25px #FFD400;
+      paint-order: stroke fill;
+      filter: drop-shadow(0 0 2px rgba(255,212,0,.32));
+    }
+
+    .closing-emoji {
+      display: inline-block;
+      margin: 0 .12em;
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      background-clip: initial !important;
+      -webkit-text-fill-color: initial !important;
+      color: initial !important;
+      -webkit-text-stroke: 0 !important;
+      filter: none !important;
+      text-shadow: none !important;
+    }
+
+    /* 6-SINGER VIEW: fit all 6 + footer on one screen */
+    body.show-6 .wrap {
+      padding-top: 2px !important;
+      padding-bottom: 70px !important;
+    }
+
+    body.show-6 header {
+      margin-bottom: 4px !important;
+    }
+
+    body.show-6 h1 {
+      font-size: clamp(62px, 7.8vw, 110px) !important;
+    }
+
+    body.show-6 .venue-name {
+      font-size: clamp(32px, 3.9vw, 50px) !important;
+      min-height: 38px !important;
+      margin-top: 0 !important;
+    }
+
+    body.show-6 .up-next-box {
+      margin-top: 5px !important;
+      margin-bottom: 5px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    body.show-6 .rotation-title {
+      margin: 3px 0 4px !important;
+    }
+
+    body.show-6 #rotation {
+      gap: 3px !important;
+      row-gap: 3px !important;
+    }
+
+    body.show-6 .rotation-row {
+      min-height: 48px !important;
+      padding: 2px 10px !important;
+    }
+
+    body.show-6 .name {
+      font-size: clamp(34px, 3.4vw, 44px) !important;
+      line-height: 1.02 !important;
+    }
+
+    body.show-6 .position {
+      font-size: 20px !important;
+    }
+
+    body.show-6 .more-waiting {
+      padding: 2px 0 0 !important;
+      font-size: 15px !important;
+    }
+
+    body.show-6 {
+      overflow-y: hidden !important;
+    }
+
+    /* 4-SINGER VIEW: remove scrollbar without making names small */
+    body.show-4 .wrap {
+      padding-top: 4px !important;
+      padding-bottom: 74px !important;
+    }
+
+    body.show-4 header {
+      margin-bottom: 6px !important;
+    }
+
+    body.show-4 .up-next-box {
+      margin-top: 6px !important;
+      margin-bottom: 6px !important;
+    }
+
+    body.show-4 .rotation-title {
+      margin: 4px 0 5px !important;
+    }
+
+    body.show-4 #rotation {
+      gap: 6px !important;
+      row-gap: 6px !important;
+    }
+
+    body.show-4 .rotation-row {
+      min-height: 66px !important;
+      padding: 6px 12px !important;
+    }
+
+    body.show-4 .name {
+      font-size: clamp(40px, 4.1vw, 54px) !important;
+      line-height: 1.04 !important;
+    }
+
+    body.show-4 {
+      overflow-y: hidden !important;
+    }
+
+    /* FINAL 3 START ONLY: fit the banner without shrinking its text */
+    body.final-three-start .wrap {
+      padding-top: 3px !important;
+      padding-bottom: 84px !important;
+    }
+
+    body.final-three-start header {
+      margin-bottom: 3px !important;
+    }
+
+    body.final-three-start .up-next-box {
+      margin-top: 4px !important;
+      margin-bottom: 4px !important;
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+    }
+
+    body.final-three-start .rotation-title {
+      margin: 2px 0 4px !important;
+    }
+
+    body.final-three-start #rotation {
+      gap: 5px !important;
+      row-gap: 5px !important;
+    }
+
+    body.final-three-start .rotation-row {
+      min-height: 52px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+
+    body.final-three-start .closing-banner {
+      width: min(94vw, 1380px) !important;
+      max-width: calc(100vw - 34px) !important;
+      padding: 16px 30px !important;
+      margin-top: 1px !important;
+    }
+
+    body.final-three-start {
+      overflow-y: hidden !important;
+    }
+
+    footer {
+      position: fixed !important;
+      left: 50% !important;
+      bottom: 10px !important;
+      transform: translateX(-50%) !important;
+      z-index: 300 !important;
+      width: min(92vw, 1240px) !important;
+      max-width: calc(100vw - 40px) !important;
+      margin: 0 !important;
+      pointer-events: none !important;
+    }
+
+    body {
+      overflow-x: hidden !important;
+    }
+
+
+
+/* ===== FINAL BOX TRANSPARENCY OVERRIDE =====
+   Applies to Last 3, Last 2, Final Singer, and That's a Wrap.
+   Text styling/gradients are intentionally unchanged. */
 .closing-banner {
-  overflow: visible !important;
   background: linear-gradient(
     90deg,
-    rgba(0,183,255,.30) 0%,
-    rgba(91,44,255,.30) 35%,
-    rgba(176,0,255,.30) 65%,
-    rgba(255,0,140,.30) 100%
+    rgba(0, 183, 255, 0.30) 0%,
+    rgba(91, 44, 255, 0.30) 35%,
+    rgba(176, 0, 255, 0.30) 65%,
+    rgba(255, 0, 140, 0.30) 100%
   ) !important;
-  border: 4px solid rgba(255,0,140,.75) !important;
+
+  border: 4px solid rgba(255, 0, 140, 0.75) !important;
+
   box-shadow:
     0 0 9px rgba(0,183,255,.35),
     0 0 18px rgba(176,0,255,.24),
     0 0 24px rgba(255,0,140,.20) !important;
 }
 
-.closing-banner-main {
-  line-height: 1.20 !important;
-  padding: .06em .06em .18em !important;
-  overflow: visible !important;
-  -webkit-text-stroke: 0 !important;
-  text-shadow: none !important;
+/* ===== SAFE VIEWPORT GUARD ===== */
+html,
+body {
+  max-width: 100%;
 }
 
-.closing-headline-text {
-  display: inline-block;
-  background: linear-gradient(
-    90deg,
-    #ff008c 0%,
-    #ff00d4 24%,
-    #b000ff 52%,
-    #5b2cff 74%,
-    #00b7ff 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  -webkit-text-stroke: 1.25px #FFD400;
-  paint-order: stroke fill;
-  filter: drop-shadow(0 0 2px rgba(255,212,0,.32));
-}
-
-.closing-emoji {
-  display: inline-block;
-  margin: 0 .12em;
-  background: none !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  -webkit-text-fill-color: initial !important;
-  color: initial !important;
-  -webkit-text-stroke: 0 !important;
-  filter: none !important;
-  text-shadow: none !important;
+body.show-2,
+body.show-4,
+body.show-6 {
+  overflow-x: hidden !important;
 }
 
 
-/* ---------- Shared rotation row appearance ---------- */
+
+/* ===== FIT FIX AFTER UP NEXT RESTYLE =====
+   Keep the gold halo, but reclaim vertical room so 2/4/6 all stay on-screen. */
+
+body.show-6 .need-more {
+  padding: 9px 14px !important;
+  margin-top: 2px !important;
+}
+
+
+body.show-4 .need-more {
+  padding: 10px 14px !important;
+  margin-top: 2px !important;
+}
+
+
+body.show-2 .need-more {
+  padding: 12px 16px !important;
+  margin-top: 3px !important;
+}
+
+
+/* Keep footer clear of the recruiting box without forcing a scrollbar. */
+body.show-6 .wrap,
+body.show-4 .wrap,
+body.show-2 .wrap {
+  padding-bottom: 82px !important;
+}
+
+/* Preserve the stronger row blur/darker panels. */
 .rotation-row {
   background: rgba(15,23,42,.66) !important;
   backdrop-filter: blur(4px) !important;
   -webkit-backdrop-filter: blur(4px) !important;
 }
 
-.waiting-for-song-note {
-  display: block !important;
-  margin: 3px 0 0 !important;
-  color: #fbbf24 !important;
-  font-weight: 800 !important;
-  font-style: italic !important;
+/* Protect all TV modes from accidental horizontal scrollbars. */
+body.show-2,
+body.show-4,
+body.show-6 {
+  overflow-x: hidden !important;
+}
+
+
+
+/* ===== KEEP "NEED MORE SINGERS" HEADLINE ON ONE LINE ===== */
+body.show-2 .need-more-main,
+body.show-4 .need-more-main,
+body.show-6 .need-more-main {
+  white-space: nowrap !important;
+  width: 100% !important;
+  max-width: none !important;
   line-height: 1.08 !important;
-  text-align: center !important;
-  white-space: normal !important;
 }
 
-.up-next-song-note {
-  display: none;
-  margin-top: 2px;
-  color: #fbbf24;
-  font-size: clamp(16px,1.7vw,22px);
-  font-weight: 800;
-  font-style: italic;
-}
-
-.up-next-song-note.show {
-  display: block;
+/* Let the message box use enough horizontal room without causing a scrollbar. */
+body.show-2 .need-more,
+body.show-4 .need-more,
+body.show-6 .need-more {
+  width: min(88vw, 1180px) !important;
+  max-width: calc(100vw - 48px) !important;
+  box-sizing: border-box !important;
 }
 
 
-/* ---------- Desktop / TV ---------- */
-@media (min-width: 701px) {
 
-  html,
-  body {
-    max-width: 100%;
-    overflow-x: hidden !important;
-  }
+/* ===== CENTER EACH ROTATION ITEM INDEPENDENTLY =====
+   The wide one-line recruiting banner must not determine
+   the width/position of the singer rows. */
+body.show-2 #rotation,
+body.show-4 #rotation,
+body.show-6 #rotation {
+  width: 100% !important;
+  max-width: 100% !important;
+  justify-items: center !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
 
-  footer {
-    position: fixed !important;
-    left: 50% !important;
-    bottom: 10px !important;
-    transform: translateX(-50%) !important;
-    z-index: 300 !important;
-    width: min(92vw,1240px) !important;
-    max-width: calc(100vw - 40px) !important;
-    margin: 0 !important;
-    pointer-events: none !important;
-  }
+/* Singer rows keep their JS-calculated fitted width,
+   but are centered independently of the wide banner. */
+body.show-2 .rotation-row,
+body.show-4 .rotation-row,
+body.show-6 .rotation-row {
+  justify-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
 
-  body.show-2 #rotation,
-  body.show-4 #rotation,
-  body.show-6 #rotation {
-    width: 100% !important;
-    max-width: 100% !important;
-    justify-items: center !important;
-    align-items: center !important;
-  }
+/* The recruiting banner may stay wide and one-line,
+   but it no longer controls the singer-row placement. */
+body.show-2 .need-more,
+body.show-4 .need-more,
+body.show-6 .need-more {
+  justify-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
 
-  body.show-2 .rotation-row,
-  body.show-4 .rotation-row,
-  body.show-6 .rotation-row {
-    justify-self: center !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
+/* Keep the title centered over the singer list. */
+body.show-2 .rotation-title,
+body.show-4 .rotation-title,
+body.show-6 .rotation-title {
+  justify-self: center !important;
+  width: auto !important;
+}
 
-  .name {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding-right: 0 !important;
-  }
-
-  .waiting-for-song-note {
-    font-size: 11px !important;
-    white-space: nowrap !important;
-  }
-
-  /* 6 singer view */
-  body.show-6 {
-    overflow-y: hidden !important;
-  }
-
-  body.show-6 .wrap {
-    padding-top: 2px !important;
-    padding-bottom: 82px !important;
-  }
-
-  body.show-6 header {
-    margin-bottom: 4px !important;
-  }
-
-  body.show-6 h1 {
-    font-size: clamp(62px,7.8vw,110px) !important;
-  }
-
-  body.show-6 .venue-name {
-    font-size: clamp(32px,3.9vw,50px) !important;
-    min-height: 38px !important;
-    margin-top: 0 !important;
-  }
-
-  body.show-6 .up-next-box {
-    margin-top: 5px !important;
-    margin-bottom: 5px !important;
-    padding-top: 7px !important;
-    padding-bottom: 7px !important;
-  }
-
-  body.show-6 .rotation-title {
-    margin: 3px 0 4px !important;
-  }
-
-  body.show-6 #rotation {
-    gap: 3px !important;
-    row-gap: 3px !important;
-  }
-
-  body.show-6 .rotation-row {
-    min-height: 44px !important;
-    padding: 1px 10px !important;
-  }
-
-  body.show-6 .name {
-    font-size: clamp(29px,2.9vw,39px) !important;
-    line-height: 1 !important;
-  }
-
-  body.show-6 .position {
-    font-size: 20px !important;
-  }
-
-  body.show-6 .more-waiting {
-    padding: 2px 0 0 !important;
-    font-size: 15px !important;
-  }
-
-  body.show-6 .need-more {
-    padding: 9px 14px !important;
-    margin-top: 2px !important;
-  }
-
-  /* 4 singer view */
-  body.show-4 {
-    overflow-y: hidden !important;
-  }
-
-  body.show-4 .wrap {
-    padding-top: 4px !important;
-    padding-bottom: 82px !important;
-  }
-
-  body.show-4 header {
-    margin-bottom: 6px !important;
-  }
-
-  body.show-4 .up-next-box {
-    margin-top: 6px !important;
-    margin-bottom: 6px !important;
-  }
-
-  body.show-4 .rotation-title {
-    margin: 4px 0 5px !important;
-  }
-
-  body.show-4 #rotation {
-    gap: 6px !important;
-    row-gap: 6px !important;
-  }
-
-  body.show-4 .rotation-row {
-    min-height: 58px !important;
-    padding: 3px 12px !important;
-  }
-
-  body.show-4 .name {
-    font-size: clamp(37px,3.8vw,50px) !important;
-    line-height: 1.02 !important;
-  }
-
-  body.show-4 .need-more {
-    padding: 10px 14px !important;
-    margin-top: 2px !important;
-  }
-
-  /* 2 singer view */
-  body.show-2 .wrap {
-    padding-bottom: 82px !important;
-  }
-
-  body.show-2 .rotation-row {
-    min-height: 68px !important;
-    padding: 4px 14px !important;
-  }
-
-  body.show-2 .name {
-    font-size: clamp(46px,4.8vw,60px) !important;
-    line-height: 1.02 !important;
-  }
-
-  body.show-2 .need-more {
-    padding: 12px 16px !important;
-    margin-top: 3px !important;
-  }
-
-  /* recruiting banner */
-  body.show-2 .need-more-main,
-  body.show-4 .need-more-main,
-  body.show-6 .need-more-main {
-    white-space: nowrap !important;
-    width: 100% !important;
-    max-width: none !important;
-    line-height: 1.08 !important;
-  }
-
-  body.show-2 .need-more,
-  body.show-4 .need-more,
-  body.show-6 .need-more {
-    width: min(88vw,1180px) !important;
-    max-width: calc(100vw - 48px) !important;
-    box-sizing: border-box !important;
-    justify-self: center !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-
-  /* final three start */
-  body.final-three-start {
-    overflow-y: hidden !important;
-  }
-
-  body.final-three-start .wrap {
-    padding-top: 3px !important;
-    padding-bottom: 84px !important;
-  }
-
-  body.final-three-start header {
-    margin-bottom: 3px !important;
-  }
-
-  body.final-three-start .up-next-box {
-    margin-top: 4px !important;
-    margin-bottom: 4px !important;
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
-  }
-
-  body.final-three-start .rotation-title {
-    margin: 2px 0 4px !important;
-  }
-
-  body.final-three-start #rotation {
-    gap: 5px !important;
-    row-gap: 5px !important;
-  }
-
-  body.final-three-start .rotation-row {
-    min-height: 52px !important;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-  }
-
-  body.final-three-start .closing-banner {
-    width: min(94vw,1380px) !important;
-    max-width: calc(100vw - 34px) !important;
-    padding: 16px 30px !important;
-    margin-top: 1px !important;
-  }
-
-  body.final-three-active .wrap {
-    padding-bottom: 96px !important;
-  }
+/* No horizontal scrollbar in any TV mode. */
+body.show-2,
+body.show-4,
+body.show-6 {
+  overflow-x: hidden !important;
 }
 
 
-/* ---------- Mobile ---------- */
+    .waiting-for-song-note {
+      display:inline-block;
+      margin-left:10px;
+      color:#fbbf24;
+      font-size:.42em;
+      font-weight:800;
+      font-style:italic;
+      white-space:nowrap;
+      vertical-align:middle;
+    }
+
+    .up-next-song-note {
+      display:none;
+      margin-top:2px;
+      color:#fbbf24;
+      font-size:clamp(16px,1.7vw,22px);
+      font-weight:800;
+      font-style:italic;
+    }
+
+    .up-next-song-note.show {
+      display:block;
+    }
+
+
+    /* =========================
+       MOBILE: NORMAL PAGE SCROLL
+       ========================= */
+
+    @media (max-width: 700px) {
+
+      html,
+      body {
+        height: auto;
+        min-height: 100%;
+        overflow-y: auto;
+      }
+
+      .wrap {
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0 auto;
+        padding-bottom: 24px;
+      }
+
+      body.final-three-active .wrap {
+        padding-bottom: 24px;
+      }
+
+      /*
+        On phones the footer belongs AFTER the singer list,
+        not fixed over the bottom of the screen.
+      */
+      footer {
+        position: relative;
+        left: auto;
+        bottom: auto;
+        transform: none;
+        z-index: 2;
+        width: min(94vw, 640px);
+        max-width: 100%;
+        margin: 28px auto 18px;
+        padding: 0 8px 10px;
+        box-sizing: border-box;
+      }
+
+      .footer-tagline {
+        font-size: clamp(20px, 6vw, 30px);
+        white-space: normal;
+        text-align: center;
+      }
+
+      .sound-bars {
+        min-width: 48px;
+        height: 30px;
+        gap: 2px;
+      }
+
+      .sound-bars span {
+        width: 5px;
+        min-width: 3px;
+      }
+    }
+
+
+
+/* ===== FINAL MOBILE SCROLL + FOOTER FLOW FIX ===== */
 @media (max-width: 700px) {
-
   html,
   body,
   body.show-2,
@@ -1039,8 +1232,6 @@
   body.show-6,
   body.final-three-start,
   body.final-three-active {
-    width: 100% !important;
-    max-width: 100% !important;
     height: auto !important;
     min-height: 100% !important;
     overflow-x: hidden !important;
@@ -1054,31 +1245,73 @@
   body.final-three-start .wrap,
   body.final-three-active .wrap {
     width: 100% !important;
-    max-width: 100% !important;
     margin: 0 auto !important;
+    padding-bottom: 18px !important;
+    box-sizing: border-box !important;
+  }
+
+  footer,
+  body.show-2 footer,
+  body.show-4 footer,
+  body.show-6 footer,
+  body.final-three-start footer,
+  body.final-three-active footer {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    width: min(94vw, 640px) !important;
+    max-width: 100% !important;
+    margin: 28px auto 18px !important;
+    padding: 0 8px 10px !important;
+    box-sizing: border-box !important;
+    z-index: 2 !important;
+  }
+
+  .footer-tagline {
+    font-size: clamp(20px, 6vw, 30px) !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .sound-bars {
+    min-width: 48px !important;
+    height: 30px !important;
+    gap: 2px !important;
+  }
+
+  .sound-bars span {
+    width: 5px !important;
+    min-width: 3px !important;
+  }
+}
+
+
+
+/* ===== MOBILE WIDTH + SCROLL FINAL FIX ===== */
+@media (max-width: 700px) {
+
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .wrap,
+  body.show-2 .wrap,
+  body.show-4 .wrap,
+  body.show-6 .wrap,
+  body.final-three-start .wrap,
+  body.final-three-active .wrap {
+    width: 100% !important;
+    max-width: 100% !important;
     padding-left: 10px !important;
     padding-right: 10px !important;
     padding-bottom: 18px !important;
-    box-sizing: border-box !important;
     overflow: visible !important;
-  }
-
-  header {
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 0 10px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-  }
-
-  .up-next-box {
-    width: 100% !important;
-    margin: 12px auto !important;
-  }
-
-  .rotation-title {
-    margin: 9px 0 8px !important;
   }
 
   .content,
@@ -1109,53 +1342,30 @@
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 86px !important;
-    padding: 6px 10px !important;
     justify-self: stretch !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    grid-template-columns: 42px minmax(0,1fr) !important;
-    align-items: center !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
   }
 
-  #rotation .position,
-  #rotation.display-2 .position,
-  #rotation.display-4 .position,
-  #rotation.display-6 .position {
-    font-size: 25px !important;
-    line-height: 1 !important;
-  }
-
-  #rotation .name,
+  .rotation-row .name,
   #rotation.display-2 .name,
   #rotation.display-4 .name,
   #rotation.display-6 .name,
   body.show-2 .name,
   body.show-4 .name,
   body.show-6 .name {
-    display: flex !important;
     min-width: 0 !important;
-    min-height: 72px !important;
     max-width: 100% !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 !important;
-    font-size: clamp(34px,9.5vw,48px) !important;
-    line-height: .98 !important;
+    padding-right: 0 !important;
     text-align: center !important;
     overflow-wrap: anywhere !important;
-  }
-
-  .waiting-for-song-note {
-    margin: 5px 0 0 !important;
-    font-size: 13px !important;
-    line-height: 1.05 !important;
-    white-space: normal !important;
+    word-break: normal !important;
   }
 
   .more-waiting,
   .need-more {
+    width: 100% !important;
     max-width: 100% !important;
     white-space: normal !important;
   }
@@ -1171,41 +1381,274 @@
     right: auto !important;
     bottom: auto !important;
     transform: none !important;
-    z-index: 2 !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin: 30px auto 18px !important;
-    padding: 0 8px 10px !important;
-    box-sizing: border-box !important;
+    margin: 28px auto 18px !important;
+  }
+}
+
+
+
+/* ===== MOBILE: WAITING NOTE UNDER SINGER NAME ===== */
+@media (max-width: 700px) {
+
+  #rotation .rotation-row,
+  #rotation.display-2 .rotation-row,
+  #rotation.display-4 .rotation-row,
+  #rotation.display-6 .rotation-row,
+  body.show-2 .rotation-row,
+  body.show-4 .rotation-row,
+  body.show-6 .rotation-row {
+    align-items: center !important;
   }
 
-  .footer-tagline {
-    font-size: clamp(19px,5.4vw,27px) !important;
-    white-space: nowrap !important;
+  .name {
+    display: block !important;
+    text-align: center !important;
+    padding-right: 0 !important;
+    min-width: 0 !important;
+  }
+
+  .waiting-for-song-note {
+    display: block !important;
+    margin: 5px 0 0 !important;
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+}
+
+
+
+/* ===== ALL SCREENS: WAITING NOTE UNDER SINGER NAME ===== */
+.waiting-for-song-note {
+  display: block !important;
+  margin: 5px 0 0 !important;
+  line-height: 1.15 !important;
+  white-space: normal !important;
+  text-align: center !important;
+}
+
+
+
+/* ===== BALANCE MOBILE + KEEP DESKTOP COMPACT ===== */
+
+/* Desktop / TV: keep waiting note underneath, but do NOT let it make the rows tall. */
+@media (min-width: 701px) {
+
+  .name {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding-right:0 !important;
+    line-height:1 !important;
+  }
+
+  .waiting-for-song-note {
+    display:block !important;
+    margin:2px 0 0 !important;
+    font-size:11px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    text-align:center !important;
+  }
+
+  body.show-6 .rotation-row {
+    min-height:44px !important;
+    padding:1px 10px !important;
+  }
+
+  body.show-6 .name {
+    font-size:clamp(30px,3vw,40px) !important;
+  }
+
+  body.show-4 .rotation-row {
+    min-height:58px !important;
+    padding:3px 12px !important;
+  }
+
+  body.show-4 .name {
+    font-size:clamp(37px,3.8vw,50px) !important;
+  }
+
+  body.show-2 .rotation-row {
+    min-height:68px !important;
+    padding:4px 14px !important;
+  }
+
+  body.show-2 .name {
+    font-size:clamp(46px,4.8vw,60px) !important;
+  }
+}
+
+/* Mobile: same-size singer cards, centered name block, note tucked directly underneath. */
+@media (max-width: 700px) {
+
+  #rotation .rotation-row,
+  #rotation.display-2 .rotation-row,
+  #rotation.display-4 .rotation-row,
+  #rotation.display-6 .rotation-row,
+  body.show-2 .rotation-row,
+  body.show-4 .rotation-row,
+  body.show-6 .rotation-row {
+    min-height:86px !important;
+    padding:6px 10px !important;
+    grid-template-columns:42px minmax(0,1fr) !important;
+    align-items:center !important;
+  }
+
+  #rotation .name,
+  #rotation.display-2 .name,
+  #rotation.display-4 .name,
+  #rotation.display-6 .name,
+  body.show-2 .name,
+  body.show-4 .name,
+  body.show-6 .name {
+    display:flex !important;
+    min-height:72px !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:0 !important;
+    font-size:clamp(34px,9.5vw,48px) !important;
+    line-height:.98 !important;
+    text-align:center !important;
+  }
+
+  .waiting-for-song-note {
+    display:block !important;
+    margin:5px 0 0 !important;
+    font-size:13px !important;
+    line-height:1.05 !important;
+    white-space:normal !important;
+    text-align:center !important;
+  }
+
+  .rotation-title {
+    margin:9px 0 8px !important;
+  }
+}
+
+
+
+/* ===== FINAL ALIGNMENT / SIZE CORRECTION ===== */
+
+/* DESKTOP / TV: restore the compact row feel and true centering */
+@media (min-width: 701px) {
+
+  #rotation .rotation-row,
+  #rotation.display-2 .rotation-row,
+  #rotation.display-4 .rotation-row,
+  #rotation.display-6 .rotation-row,
+  body.show-2 .rotation-row,
+  body.show-4 .rotation-row,
+  body.show-6 .rotation-row {
+    grid-template-columns: 42px 1fr 42px !important;
+  }
+
+  .position {
+    grid-column: 1 !important;
+    justify-self: start !important;
+  }
+
+  .name {
+    grid-column: 2 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    padding: 0 !important;
+    text-align: center !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+
+  body.show-6 .rotation-row {
+    min-height: 38px !important;
+    padding: 0 8px !important;
+  }
+
+  body.show-6 .name {
+    font-size: clamp(28px,2.7vw,36px) !important;
+  }
+
+  body.show-4 .rotation-row {
+    min-height: 50px !important;
+    padding: 2px 10px !important;
+  }
+
+  body.show-4 .name {
+    font-size: clamp(34px,3.4vw,46px) !important;
+  }
+
+  body.show-2 .rotation-row {
+    min-height: 62px !important;
+    padding: 3px 12px !important;
+  }
+
+  body.show-2 .name {
+    font-size: clamp(42px,4.4vw,56px) !important;
+  }
+
+  .waiting-for-song-note {
+    margin-top: 1px !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+  }
+}
+
+/* MOBILE: keep the original visual scale, just center correctly */
+@media (max-width: 700px) {
+
+  #rotation .rotation-row,
+  #rotation.display-2 .rotation-row,
+  #rotation.display-4 .rotation-row,
+  #rotation.display-6 .rotation-row,
+  body.show-2 .rotation-row,
+  body.show-4 .rotation-row,
+  body.show-6 .rotation-row {
+    min-height: 72px !important;
+    padding: 4px 8px !important;
+    grid-template-columns: 42px 1fr 42px !important;
+  }
+
+  .position {
+    grid-column: 1 !important;
+    justify-self: start !important;
+  }
+
+  #rotation .name,
+  #rotation.display-2 .name,
+  #rotation.display-4 .name,
+  #rotation.display-6 .name,
+  body.show-2 .name,
+  body.show-4 .name,
+  body.show-6 .name {
+    grid-column: 2 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    text-align:center !important;
+    font-size: clamp(30px,8.3vw,42px) !important;
+    line-height: 1 !important;
+  }
+
+  .waiting-for-song-note {
+    margin-top: 4px !important;
+    font-size: 13px !important;
+    line-height: 1.05 !important;
     text-align: center !important;
   }
 
-  .sound-bars {
-    min-width: 48px !important;
-    height: 30px !important;
-    gap: 2px !important;
-  }
-
-  .sound-bars span {
-    width: 5px !important;
-    min-width: 3px !important;
-  }
-
-  .closing-banner {
-    padding: 24px 14px !important;
-  }
-
-  .closing-banner-main {
-    font-size: clamp(30px,9vw,46px) !important;
-  }
-
-  .closing-banner-sub {
-    font-size: clamp(18px,5vw,24px) !important;
+  .rotation-title {
+    margin: 8px 0 7px !important;
   }
 }
 
