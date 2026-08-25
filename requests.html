@@ -2564,17 +2564,23 @@
         const rotation =
           buildRotation(data);
 
-        const upNextKey =
-          rotation.length > 0 &&
-          rotation[0].currentRequest &&
-          rotation[0].currentRequest.status === "up_next"
-            ? rotation[0].key
-            : null;
+        const upNextSinger =
+          rotation.find(
+            singer =>
+              singer.isUpNext === true ||
+              (
+                singer.currentRequest &&
+                singer.currentRequest.status ===
+                  "up_next"
+              )
+          ) || null;
 
         const waiting =
           rotation.filter(
             singer =>
-              singer.key !== upNextKey
+              !upNextSinger ||
+              singer.key !==
+                upNextSinger.key
           );
 
         const index =
@@ -2608,10 +2614,17 @@
           reordered[index]
         ];
 
-        await saveManualOrder(
-          reordered.map(
+        const fullOrder = [
+          ...(upNextSinger
+            ? [upNextSinger.key]
+            : []),
+          ...reordered.map(
             singer => singer.key
           )
+        ];
+
+        await saveManualOrder(
+          fullOrder
         );
 
         await loadRequests();
@@ -4583,7 +4596,6 @@
         const data =
           await fetchRequests();
 
-
         const singerRequests =
           data.filter(
             request =>
@@ -4591,48 +4603,45 @@
               singerKey(request) === key
           );
 
-
         if (
           singerRequests.length === 0
         ) {
           return;
         }
 
-
-        /*
-          Capture the current rotation before restoring
-          the singer. Up Next stays where it is.
-        */
         const currentRotation =
           buildRotation(data);
 
-        const upNextKey =
-          currentRotation.length > 0 &&
-          currentRotation[0].currentRequest &&
-          currentRotation[0].currentRequest.status === "up_next"
-            ? currentRotation[0].key
-            : null;
+        const upNextSinger =
+          currentRotation.find(
+            singer =>
+              singer.isUpNext === true ||
+              (
+                singer.currentRequest &&
+                singer.currentRequest.status ===
+                  "up_next"
+              )
+          ) || null;
 
         const currentWaitingKeys =
           currentRotation
             .filter(
               singer =>
-                singer.key !== upNextKey &&
+                (!upNextSinger ||
+                  singer.key !==
+                    upNextSinger.key) &&
                 singer.key !== key
             )
             .map(
               singer => singer.key
             );
 
-
-        /* Restore all paused songs as normal waiting songs. */
         for (
           const request of singerRequests
         ) {
 
           const response =
             await fetch(
-
               `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
               {
                 method: "PATCH",
@@ -4652,9 +4661,7 @@
                   status: "waiting"
                 })
               }
-
             );
-
 
           if (!response.ok) {
 
@@ -4666,25 +4673,26 @@
 
         }
 
-
-        /*
-          Put the resumed singer in the SECOND waiting spot:
-          Up Next -> first waiting singer -> resumed singer -> rest.
-        */
-        const resumedOrder = [
+        const resumedWaitingOrder = [
+          ...currentWaitingKeys.slice(0, 1),
           key,
-          ...currentWaitingKeys
+          ...currentWaitingKeys.slice(1)
+        ];
+
+        const fullOrder = [
+          ...(upNextSinger
+            ? [upNextSinger.key]
+            : []),
+          ...resumedWaitingOrder
         ];
 
         await saveManualOrder(
-          resumedOrder
+          fullOrder
         );
-
 
         await loadRequests();
 
       }
-
 
       catch (error) {
 
@@ -4707,17 +4715,21 @@
 
       try {
 
-        const data = await fetchRequests();
+        const data =
+          await fetchRequests();
 
         const finishedRequest =
           data.find(
             request =>
-              String(request.id) === String(id)
+              String(request.id) ===
+              String(id)
           );
 
         if (
           !finishedRequest ||
-          isWaitingForSong(finishedRequest)
+          isWaitingForSong(
+            finishedRequest
+          )
         ) {
           throw new Error(
             "Could not find the finished song."
@@ -4725,16 +4737,47 @@
         }
 
         const finishedSingerKey =
-          singerKey(finishedRequest);
+          singerKey(
+            finishedRequest
+          );
+
+        /*
+          Snapshot the exact singer order BEFORE
+          changing anything.
+
+          Everybody else keeps the position they
+          already earned. The singer who just sang
+          gets their next-round slot at the END.
+        */
+        const rotationBeforeFinish =
+          buildRotation(data);
+
+        const remainingEarnedOrder =
+          rotationBeforeFinish
+            .filter(
+              singer =>
+                singer.key !==
+                  finishedSingerKey
+            )
+            .map(
+              singer =>
+                singer.key
+            );
+
+        const nextRoundEarnedOrder = [
+          ...remainingEarnedOrder,
+          finishedSingerKey
+        ];
+
 
         const response =
           await fetch(
             `${SUPABASE_URL}/rest/v1/requests?id=eq.${id}`,
             {
-              method:"PATCH",
-              headers:apiHeaders(true),
-              body:JSON.stringify({
-                status:"completed"
+              method: "PATCH",
+              headers: apiHeaders(true),
+              body: JSON.stringify({
+                status: "completed"
               })
             }
           );
@@ -4745,22 +4788,31 @@
           );
         }
 
+
         const oldSlots =
           data.filter(
             request =>
-              isCurrentKaraokeNight(request) &&
-              isWaitingForSong(request) &&
-              !isSkippedSlot(request) &&
-              singerKey(request) === finishedSingerKey
+              isCurrentKaraokeNight(
+                request
+              ) &&
+              isWaitingForSong(
+                request
+              ) &&
+              !isSkippedSlot(
+                request
+              ) &&
+              singerKey(request) ===
+                finishedSingerKey
           );
 
         for (const slot of oldSlots) {
+
           const deleteResponse =
             await fetch(
               `${SUPABASE_URL}/rest/v1/requests?id=eq.${slot.id}`,
               {
-                method:"DELETE",
-                headers:apiHeaders()
+                method: "DELETE",
+                headers: apiHeaders()
               }
             );
 
@@ -4769,37 +4821,53 @@
               "Could not clear old reserved singer slot."
             );
           }
+
         }
+
 
         const remainingSingerRequests =
           data.filter(
             request =>
               String(request.id) !==
-                String(finishedRequest.id) &&
+                String(
+                  finishedRequest.id
+                ) &&
               isActive(request) &&
-              !isWaitingForSong(request) &&
-              singerKey(request) === finishedSingerKey
+              !isWaitingForSong(
+                request
+              ) &&
+              singerKey(request) ===
+                finishedSingerKey
           );
 
-        const finalThree = getFinalThree(data);
+
+        const finalThree =
+          getFinalThree(data);
 
         const isFinalThreeSinger =
           (
             finalThree.length === 3 &&
-            finalThree.includes(finishedSingerKey)
+            finalThree.includes(
+              finishedSingerKey
+            )
           );
+
 
         if (isFinalThreeSinger) {
 
-          for (const request of remainingSingerRequests) {
+          for (
+            const request
+            of remainingSingerRequests
+          ) {
+
             const closeResponse =
               await fetch(
                 `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
                 {
-                  method:"PATCH",
-                  headers:apiHeaders(true),
-                  body:JSON.stringify({
-                    status:"completed"
+                  method: "PATCH",
+                  headers: apiHeaders(true),
+                  body: JSON.stringify({
+                    status: "completed"
                   })
                 }
               );
@@ -4809,23 +4877,37 @@
                 "Final singer finished, but remaining songs could not be closed."
               );
             }
+
           }
+
+          await saveManualOrder(
+            remainingEarnedOrder
+          );
+
         }
 
-        else if (remainingSingerRequests.length > 0) {
+
+        else if (
+          remainingSingerRequests.length > 0
+        ) {
 
           const nextRoundStatus =
             `waiting_resumed_${Date.now()}`;
 
-          for (const request of remainingSingerRequests) {
+          for (
+            const request
+            of remainingSingerRequests
+          ) {
+
             const moveResponse =
               await fetch(
                 `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
                 {
-                  method:"PATCH",
-                  headers:apiHeaders(true),
-                  body:JSON.stringify({
-                    status:nextRoundStatus
+                  method: "PATCH",
+                  headers: apiHeaders(true),
+                  body: JSON.stringify({
+                    status:
+                      nextRoundStatus
                   })
                 }
               );
@@ -4835,24 +4917,44 @@
                 "Song finished, but remaining songs could not be moved to the next round."
               );
             }
+
           }
+
+          await saveManualOrder(
+            nextRoundEarnedOrder
+          );
+
         }
+
 
         else {
 
           const slotBody = {
-            singer_name:finishedRequest.singer_name,
-            song_title:WAITING_FOR_SONG_TITLE,
-            artist:"Waiting for next song",
-            status:`waiting_resumed_${Date.now()}`
+
+            singer_name:
+              finishedRequest.singer_name,
+
+            song_title:
+              WAITING_FOR_SONG_TITLE,
+
+            artist:
+              "Waiting for next song",
+
+            status:
+              `waiting_resumed_${Date.now()}`
+
           };
 
-          if (finishedRequest.singer_id) {
+          if (
+            finishedRequest.singer_id
+          ) {
             slotBody.singer_id =
               finishedRequest.singer_id;
           }
 
-          if (finishedRequest.original_name) {
+          if (
+            finishedRequest.original_name
+          ) {
             slotBody.original_name =
               finishedRequest.original_name;
           }
@@ -4861,9 +4963,11 @@
             await fetch(
               `${SUPABASE_URL}/rest/v1/requests`,
               {
-                method:"POST",
-                headers:apiHeaders(true),
-                body:JSON.stringify(slotBody)
+                method: "POST",
+                headers: apiHeaders(true),
+                body: JSON.stringify(
+                  slotBody
+                )
               }
             );
 
@@ -4872,26 +4976,28 @@
               "Song finished, but the singer's next-round slot could not be reserved."
             );
           }
+
+          await saveManualOrder(
+            nextRoundEarnedOrder
+          );
+
         }
 
-        const savedOrder = getManualOrder(data);
-
-        if (savedOrder.includes(finishedSingerKey)) {
-          await saveManualOrder([
-            ...savedOrder.filter(
-              key => key !== finishedSingerKey
-            ),
-            finishedSingerKey
-          ]);
-        }
 
         await loadRequests();
+
       }
 
       catch (error) {
+
         console.error(error);
-        alert("Could not finish this request.");
+
+        alert(
+          "Could not finish this request."
+        );
+
       }
+
     }
 
 

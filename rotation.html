@@ -2201,6 +2201,13 @@ body.show-6 {
       );
 
 
+      waiting =
+        applyManualOrder(
+          waiting,
+          data
+        );
+
+
       const totalActiveSingers =
         waiting.length +
         (upNextSinger ? 1 : 0);
