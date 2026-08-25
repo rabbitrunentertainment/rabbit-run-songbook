@@ -3709,24 +3709,22 @@
 
 
       /*
-        SMART ROTATION FAIRNESS — STABLE POSITIONS
+        SMART ROTATION FAIRNESS — PLACE ONCE
 
-        KEY RULE:
-        Once a newcomer has been assigned a fair spot,
-        that spot STAYS PUT as the rotation advances.
+        NEW badge status and queue placement are now
+        completely separate concepts.
 
-        NEW/REPEAT classification is separate from
-        placement:
-        - A singer keeps the NEW badge until they sing.
-        - But automatic placement only happens ONCE,
-          when their key is not yet in the saved order.
+        A singer can remain visually NEW until they
+        complete their first song, but NEW status does
+        NOT keep moving them around the queue.
 
-        Pattern after the protected six:
-        NEW → REPEAT → REPEAT → NEW → REPEAT → REPEAT...
+        Automatic placement happens ONLY when a singer:
+        1. is currently marked NEW, AND
+        2. is NOT already present in the saved rotation.
 
-        The first six are protected from movement, but
-        their NEW/REPEAT state still matters when deciding
-        where the NEXT newcomer belongs.
+        Once inserted, their saved position becomes
+        permanent unless something explicit changes it:
+        Done, Left, Skip, Pause/Resume, or manual move.
       */
 
       const savedRotationOrder =
@@ -3743,17 +3741,6 @@
         );
 
 
-      /*
-        Only singers who are BOTH:
-        1) still classified NEW, and
-        2) not already present in the saved queue order
-
-        need automatic placement.
-
-        Previously we re-wove every NEW singer on every
-        refresh, which is why NEW singers drifted together
-        as the protected window moved.
-      */
       const unplacedNewcomers =
         waiting.filter(
           singer =>
@@ -3777,21 +3764,32 @@
             : 6;
 
 
-        /*
-          Start with the established queue exactly as it
-          already exists. Remove only the truly unplaced
-          newcomers, then insert those newcomers one at a
-          time into the next fair slot.
-        */
-        let stableWaiting =
+        const fixedWaiting =
           waiting.filter(
             singer =>
-              !unplacedNewcomers.some(
-                newcomer =>
-                  newcomer.key ===
-                  singer.key
+              savedRotationKeys.has(
+                singer.key
               )
           );
+
+
+        const otherUnsaved =
+          waiting.filter(
+            singer =>
+              !savedRotationKeys.has(
+                singer.key
+              ) &&
+              !newcomerKeys.has(
+                singer.key
+              )
+          );
+
+
+        let working =
+          [
+            ...fixedWaiting,
+            ...otherUnsaved
+          ];
 
 
         for (
@@ -3799,135 +3797,110 @@
           of unplacedNewcomers
         ) {
 
-          /*
-            Track the pattern across the ENTIRE current
-            queue, including the protected singers.
-
-            This is critical:
-            if a NEW singer has moved into the protected
-            six, the next newcomer must still wait for
-            two REPEAT singers before being inserted.
-          */
-          let seenAnyNew =
-            false;
-
-          let repeatsSinceNew =
-            0;
-
-          let insertIndex =
-            stableWaiting.length;
+          let lastNewIndex =
+            -1;
 
 
           for (
             let index = 0;
-            index < stableWaiting.length;
+            index < working.length;
             index += 1
           ) {
 
-            const singer =
-              stableWaiting[index];
-
-            const singerIsNew =
+            if (
               newcomerKeys.has(
-                singer.key
-              );
-
-
-            if (singerIsNew) {
-
-              seenAnyNew = true;
-              repeatsSinceNew = 0;
-
-              continue;
-
-            }
-
-
-            if (
-              seenAnyNew &&
-              singer.lastCompletedTime !==
-                null
+                working[index].key
+              )
             ) {
 
-              repeatsSinceNew += 1;
-
-            }
-
-
-            /*
-              We are not allowed to insert before the
-              protected section.
-
-              If no prior NEW exists anywhere in the
-              current queue, the first available fair
-              slot is immediately after the protected six.
-
-              Otherwise wait until two established repeat
-              positions have passed since the last NEW.
-            */
-            const candidateIndex =
-              index + 1;
-
-
-            if (
-              candidateIndex <
-              protectedCount
-            ) {
-
-              continue;
-
-            }
-
-
-            if (!seenAnyNew) {
-
-              insertIndex =
-                protectedCount;
-
-              break;
-
-            }
-
-
-            if (
-              repeatsSinceNew >= 2
-            ) {
-
-              insertIndex =
-                candidateIndex;
-
-              break;
+              lastNewIndex =
+                index;
 
             }
 
           }
 
 
-          /*
-            Special case:
-            if the queue contains no NEW singer yet,
-            place this first newcomer immediately after
-            the protected section.
-          */
+          let insertIndex =
+            Math.min(
+              protectedCount,
+              working.length
+            );
+
+
           if (
-            !stableWaiting.some(
-              singer =>
+            lastNewIndex >= 0
+          ) {
+
+            let repeatsSeen =
+              0;
+
+            insertIndex =
+              working.length;
+
+
+            for (
+              let index =
+                lastNewIndex + 1;
+              index < working.length;
+              index += 1
+            ) {
+
+              const singer =
+                working[index];
+
+
+              if (
                 newcomerKeys.has(
                   singer.key
                 )
-            )
-          ) {
+              ) {
+
+                lastNewIndex =
+                  index;
+
+                repeatsSeen =
+                  0;
+
+                continue;
+
+              }
+
+
+              if (
+                singer.lastCompletedTime !==
+                  null
+              ) {
+
+                repeatsSeen += 1;
+
+              }
+
+
+              if (
+                repeatsSeen >= 2
+              ) {
+
+                insertIndex =
+                  index + 1;
+
+                break;
+
+              }
+
+            }
+
 
             insertIndex =
-              Math.min(
-                protectedCount,
-                stableWaiting.length
+              Math.max(
+                insertIndex,
+                protectedCount
               );
 
           }
 
 
-          stableWaiting.splice(
+          working.splice(
             insertIndex,
             0,
             newcomer
@@ -3937,7 +3910,7 @@
 
 
         waiting =
-          stableWaiting;
+          working;
 
       }
 
