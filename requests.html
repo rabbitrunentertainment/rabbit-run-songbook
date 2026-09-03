@@ -1586,6 +1586,48 @@
     const FINAL_THREE_SETTING =
       "FINAL_THREE";
 
+    const WRAP_MODE_SETTING =
+      "WRAP_MODE";
+
+
+    async function saveWrapMode(isWrapped) {
+
+      const deleteResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(WRAP_MODE_SETTING)}`,
+        {
+          method: "DELETE",
+          headers: apiHeaders()
+        }
+      );
+
+      if (!deleteResponse.ok) {
+        throw new Error("Could not clear old wrap setting.");
+      }
+
+      if (!isWrapped) {
+        return;
+      }
+
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/requests`,
+        {
+          method: "POST",
+          headers: apiHeaders(true),
+          body: JSON.stringify({
+            singer_name: SETTINGS_SINGER,
+            song_title: WRAP_MODE_SETTING,
+            artist: "true",
+            status: "completed"
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Could not save wrap setting: ${await response.text()}`);
+      }
+
+    }
+
 
     function getFinalThree(data) {
 
@@ -2160,6 +2202,10 @@
 
 
     async function setLiveRequestsOpen(isOpen) {
+
+      if (isOpen) {
+        await saveWrapMode(false);
+      }
 
       const deleteResponse =
         await fetch(
@@ -5033,6 +5079,10 @@
         await setLiveRequestsOpen(
           false
         );
+
+        /* Force the TV onto the same final That's a Wrap screen
+           that appears after the last Final 3 singer. */
+        await saveWrapMode(true);
 
 
         const data =
