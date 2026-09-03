@@ -1969,6 +1969,9 @@
           false
         );
 
+        /* Show the existing That's a Wrap box on the TV. */
+        await saveWrapMode(true);
+
 
         /*
           IGNORE EVERYBODY EXCEPT THE
@@ -5079,10 +5082,6 @@
         await setLiveRequestsOpen(
           false
         );
-
-        /* Force the TV onto the same final That's a Wrap screen
-           that appears after the last Final 3 singer. */
-        await saveWrapMode(true);
 
 
         const data =

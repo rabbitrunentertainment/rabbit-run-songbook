@@ -3307,23 +3307,20 @@ body {
           data.filter(isActive);
 
 
-        /* Manual KJ That's a Wrap button: show the exact same
-           completed closing screen as the natural end of Final 3. */
+        /* Manual That's a Wrap button: show ONLY the existing
+           closing box. Do not change Final 3 classes or formatting. */
         if (getWrapMode(data)) {
 
           upNextBox.style.display =
             "none";
 
-          document.body.classList.add(
-            "final-three-active"
-          );
-
           document.body.classList.remove(
+            "final-three-active",
             "final-three-start"
           );
 
           rotationTitle.textContent =
-            "🎤 FINAL 3 COMPLETE 🎤";
+            "";
 
           rotation.innerHTML =
             closingMessage(0);
