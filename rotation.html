@@ -1312,6 +1312,35 @@ body.show-6 {
     const MANUAL_WRAP_SETTING =
       "MANUAL_WRAP_SCREEN";
 
+    const LIVE_REQUESTS_SETTING =
+      "LIVE_REQUESTS_OPEN";
+
+
+    function getLiveRequestsOpen(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === LIVE_REQUESTS_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return true;
+      }
+
+      return String(
+        settings[0].artist || "true"
+      ).toLowerCase() !== "false";
+
+    }
+
 
     function getManualWrapScreen(data) {
 
@@ -2860,7 +2889,10 @@ body.show-6 {
         );
 
 
-        if (getManualWrapScreen(data)) {
+        if (
+          getManualWrapScreen(data) &&
+          !getLiveRequestsOpen(data)
+        ) {
 
           upNextBox.style.display =
             "none";
