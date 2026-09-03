@@ -1586,44 +1586,76 @@
     const FINAL_THREE_SETTING =
       "FINAL_THREE";
 
-    const WRAP_MODE_SETTING =
-      "WRAP_MODE";
+    const MANUAL_WRAP_SETTING =
+      "MANUAL_WRAP";
 
 
-    async function saveWrapMode(isWrapped) {
+    function getManualWrap(data) {
 
-      const deleteResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(WRAP_MODE_SETTING)}`,
-        {
-          method: "DELETE",
-          headers: apiHeaders()
-        }
-      );
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === MANUAL_WRAP_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      if (settings.length === 0) {
+        return false;
+      }
+
+      return String(
+        settings[0].artist || "false"
+      ).toLowerCase() === "true";
+
+    }
+
+
+    async function setManualWrap(isWrapped) {
+
+      const deleteResponse =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(MANUAL_WRAP_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+        );
 
       if (!deleteResponse.ok) {
-        throw new Error("Could not clear old wrap setting.");
+        throw new Error(
+          "Could not clear old manual wrap setting."
+        );
       }
 
       if (!isWrapped) {
         return;
       }
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/requests`,
-        {
-          method: "POST",
-          headers: apiHeaders(true),
-          body: JSON.stringify({
-            singer_name: SETTINGS_SINGER,
-            song_title: WRAP_MODE_SETTING,
-            artist: "true",
-            status: "completed"
-          })
-        }
-      );
+      const response =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests`,
+          {
+            method: "POST",
+            headers: apiHeaders(true),
+            body: JSON.stringify({
+              singer_name: SETTINGS_SINGER,
+              song_title: MANUAL_WRAP_SETTING,
+              artist: "true",
+              status: "completed"
+            })
+          }
+        );
 
       if (!response.ok) {
-        throw new Error(`Could not save wrap setting: ${await response.text()}`);
+        throw new Error(
+          `Could not save manual wrap setting: ${await response.text()}`
+        );
       }
 
     }
@@ -1969,9 +2001,6 @@
           false
         );
 
-        /* Show the existing That's a Wrap box on the TV. */
-        await saveWrapMode(true);
-
 
         /*
           IGNORE EVERYBODY EXCEPT THE
@@ -2206,10 +2235,6 @@
 
     async function setLiveRequestsOpen(isOpen) {
 
-      if (isOpen) {
-        await saveWrapMode(false);
-      }
-
       const deleteResponse =
         await fetch(
           `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(LIVE_REQUESTS_SETTING)}`,
@@ -2247,6 +2272,10 @@
       }
 
       updateLiveRequestsButton(isOpen);
+
+      if (isOpen) {
+        await setManualWrap(false);
+      }
 
     }
 
@@ -5081,6 +5110,10 @@
 
         await setLiveRequestsOpen(
           false
+        );
+
+        await setManualWrap(
+          true
         );
 
 

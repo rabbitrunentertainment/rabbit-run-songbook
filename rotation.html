@@ -1359,28 +1359,32 @@ body {
     const FINAL_THREE_SETTING =
       "FINAL_THREE";
 
-    const WRAP_MODE_SETTING =
-      "WRAP_MODE";
+    const MANUAL_WRAP_SETTING =
+      "MANUAL_WRAP";
 
 
-    function getWrapMode(data) {
+    function getManualWrap(data) {
 
-      const settings = data
-        .filter(
-          request =>
-            request.singer_name === SETTINGS_SINGER &&
-            request.song_title === WRAP_MODE_SETTING
-        )
-        .sort(
-          (a, b) =>
-            new Date(b.created_at) -
-            new Date(a.created_at)
-        );
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === MANUAL_WRAP_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
 
-      return (
-        settings.length > 0 &&
-        String(settings[0].artist || "").toLowerCase() === "true"
-      );
+      if (settings.length === 0) {
+        return false;
+      }
+
+      return String(
+        settings[0].artist || "false"
+      ).toLowerCase() === "true";
 
     }
 
@@ -3306,26 +3310,30 @@ body {
         const active =
           data.filter(isActive);
 
+        const manualWrap =
+          getManualWrap(data);
 
-        /* Manual That's a Wrap button: show ONLY the existing
-           closing box. Do not change Final 3 classes or formatting. */
-        if (getWrapMode(data)) {
+        if (manualWrap) {
 
           upNextBox.style.display =
             "none";
 
+          document.body.classList.add(
+            "final-three-active"
+          );
+
           document.body.classList.remove(
-            "final-three-active",
             "final-three-start"
           );
 
           rotationTitle.textContent =
-            "";
+            "🎤 FINAL 3 COMPLETE 🎤";
 
           rotation.innerHTML =
             closingMessage(0);
 
           return;
+
         }
 
 
