@@ -1309,6 +1309,30 @@ body.show-6 {
     const FINAL_THREE_SETTING =
       "FINAL_THREE";
 
+    const MANUAL_WRAP_SETTING =
+      "MANUAL_WRAP_SCREEN";
+
+
+    function getManualWrapScreen(data) {
+
+      const settings =
+        data
+          .filter(
+            request =>
+              request.singer_name === SETTINGS_SINGER &&
+              request.song_title === MANUAL_WRAP_SETTING
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at) -
+              new Date(a.created_at)
+          );
+
+      return settings.length > 0 &&
+        String(settings[0].artist || "").toLowerCase() === "true";
+
+    }
+
 
     function getFinalThree(data) {
 
@@ -2834,6 +2858,30 @@ body.show-6 {
         document.body.classList.add(
           `show-${tvDisplayCount}`
         );
+
+
+        if (getManualWrapScreen(data)) {
+
+          upNextBox.style.display =
+            "none";
+
+          document.body.classList.add(
+            "final-three-active"
+          );
+
+          document.body.classList.remove(
+            "final-three-start"
+          );
+
+          rotationTitle.textContent =
+            "🎤 FINAL 3 COMPLETE 🎤";
+
+          rotation.innerHTML =
+            closingMessage(0);
+
+          return;
+
+        }
 
 
         const active =

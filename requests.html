@@ -2106,6 +2106,9 @@
     const LIVE_REQUESTS_SETTING =
       "LIVE_REQUESTS_OPEN";
 
+    const MANUAL_WRAP_SETTING =
+      "MANUAL_WRAP_SCREEN";
+
     function getLiveRequestsOpen(data) {
 
       const settings =
@@ -2159,6 +2162,51 @@
     }
 
 
+    async function setManualWrapScreen(showWrap) {
+
+      const deleteResponse =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(MANUAL_WRAP_SETTING)}`,
+          {
+            method: "DELETE",
+            headers: apiHeaders()
+          }
+        );
+
+      if (!deleteResponse.ok) {
+        throw new Error(
+          "Could not clear old manual wrap setting."
+        );
+      }
+
+      if (!showWrap) {
+        return;
+      }
+
+      const response =
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/requests`,
+          {
+            method: "POST",
+            headers: apiHeaders(true),
+            body: JSON.stringify({
+              singer_name: SETTINGS_SINGER,
+              song_title: MANUAL_WRAP_SETTING,
+              artist: "true",
+              status: "completed"
+            })
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          `Could not save manual wrap setting: ${await response.text()}`
+        );
+      }
+
+    }
+
+
     async function setLiveRequestsOpen(isOpen) {
 
       const deleteResponse =
@@ -2198,6 +2246,10 @@
       }
 
       updateLiveRequestsButton(isOpen);
+
+      if (isOpen) {
+        await setManualWrapScreen(false);
+      }
 
     }
 
@@ -5085,6 +5137,8 @@
 
         await saveManualOrder([]);
         await saveNewcomerQueue([]);
+
+        await setManualWrapScreen(true);
 
         await loadRequests();
 
