@@ -1586,80 +1586,6 @@
     const FINAL_THREE_SETTING =
       "FINAL_THREE";
 
-    const MANUAL_WRAP_SETTING =
-      "MANUAL_WRAP";
-
-
-    function getManualWrap(data) {
-
-      const settings =
-        data
-          .filter(
-            request =>
-              request.singer_name === SETTINGS_SINGER &&
-              request.song_title === MANUAL_WRAP_SETTING
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.created_at) -
-              new Date(a.created_at)
-          );
-
-      if (settings.length === 0) {
-        return false;
-      }
-
-      return String(
-        settings[0].artist || "false"
-      ).toLowerCase() === "true";
-
-    }
-
-
-    async function setManualWrap(isWrapped) {
-
-      const deleteResponse =
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/requests?singer_name=eq.${encodeURIComponent(SETTINGS_SINGER)}&song_title=eq.${encodeURIComponent(MANUAL_WRAP_SETTING)}`,
-          {
-            method: "DELETE",
-            headers: apiHeaders()
-          }
-        );
-
-      if (!deleteResponse.ok) {
-        throw new Error(
-          "Could not clear old manual wrap setting."
-        );
-      }
-
-      if (!isWrapped) {
-        return;
-      }
-
-      const response =
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/requests`,
-          {
-            method: "POST",
-            headers: apiHeaders(true),
-            body: JSON.stringify({
-              singer_name: SETTINGS_SINGER,
-              song_title: MANUAL_WRAP_SETTING,
-              artist: "true",
-              status: "completed"
-            })
-          }
-        );
-
-      if (!response.ok) {
-        throw new Error(
-          `Could not save manual wrap setting: ${await response.text()}`
-        );
-      }
-
-    }
-
 
     function getFinalThree(data) {
 
@@ -2273,10 +2199,6 @@
 
       updateLiveRequestsButton(isOpen);
 
-      if (isOpen) {
-        await setManualWrap(false);
-      }
-
     }
 
 
@@ -2289,6 +2211,34 @@
 
         const currentlyOpen =
           getLiveRequestsOpen(data);
+
+        /*
+          If the previous show ended with the manual Wrap button,
+          clear only that temporary marker when requests are reopened.
+        */
+        if (!currentlyOpen) {
+
+          const savedFinalThree =
+            getFinalThree(data);
+
+          const manualWrapMarker = [
+            "__MANUAL_WRAP_1__",
+            "__MANUAL_WRAP_2__",
+            "__MANUAL_WRAP_3__"
+          ];
+
+          const isManualWrapMarker =
+            savedFinalThree.length === 3 &&
+            savedFinalThree.every(
+              (value, index) =>
+                value === manualWrapMarker[index]
+            );
+
+          if (isManualWrapMarker) {
+            await saveFinalThreeSetting([]);
+          }
+
+        }
 
         await setLiveRequestsOpen(
           !currentlyOpen
@@ -5112,10 +5062,6 @@
           false
         );
 
-        await setManualWrap(
-          true
-        );
-
 
         const data =
           await fetchRequests();
@@ -5167,6 +5113,17 @@
 
         await saveManualOrder([]);
         await saveNewcomerQueue([]);
+
+        /*
+          Make the untouched rotation page see the exact
+          same completed-Final-3 state it already knows
+          how to format as the existing That's a Wrap screen.
+        */
+        await saveFinalThreeSetting([
+          "__MANUAL_WRAP_1__",
+          "__MANUAL_WRAP_2__",
+          "__MANUAL_WRAP_3__"
+        ]);
 
         await loadRequests();
 
