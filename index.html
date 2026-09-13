@@ -966,12 +966,21 @@ fetch('songs.json')
    SEARCH SONGS
    ========================= */
 
+function normalizeSearchText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+
 function render() {
 
   const term =
-    q.value
-      .trim()
-      .toLowerCase();
+    normalizeSearchText(
+      q.value.trim()
+    );
 
 
   results.innerHTML = '';
@@ -997,8 +1006,9 @@ function render() {
   for (const song of songs) {
 
     const searchable =
-      `${song.artist} ${song.title}`
-        .toLowerCase();
+      normalizeSearchText(
+        `${song.artist} ${song.title}`
+      );
 
 
     if (
