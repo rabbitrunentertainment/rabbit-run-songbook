@@ -2626,17 +2626,36 @@
         );
 
 
-      const completedSingerKeys =
+      const allSingerKeys =
         new Set(
           data
             .filter(
-              isCompleted
+              request =>
+                isCurrentKaraokeNight(
+                  request
+                ) &&
+                request.singer_name !==
+                  SETTINGS_SINGER
             )
             .map(
               request =>
                 singerKey(request)
             )
             .filter(Boolean)
+        );
+
+
+      const completedSingerKeys =
+        new Set(
+          Array.from(
+            allSingerKeys
+          ).filter(
+            key =>
+              hasSungSinceLastLeft(
+                data,
+                key
+              )
+          )
         );
 
 
@@ -3256,6 +3275,97 @@
         ).startsWith(
           "left_"
         )
+      );
+
+    }
+
+
+    function leftStatusTime(request) {
+
+      const status =
+        String(request.status || "");
+
+      const match =
+        status.match(
+          /^left_(?:wrap_)?(\d+)$/
+        );
+
+      if (!match) {
+        return null;
+      }
+
+      const value =
+        Number(match[1]);
+
+      return Number.isFinite(value)
+        ? value
+        : null;
+
+    }
+
+
+    function hasSungSinceLastLeft(
+      data,
+      key
+    ) {
+
+      const singerRows =
+        data.filter(
+          request =>
+            isCurrentKaraokeNight(
+              request
+            ) &&
+            request.singer_name !==
+              SETTINGS_SINGER &&
+            singerKey(request) === key
+        );
+
+
+      let latestLeftTime = null;
+
+      singerRows.forEach(
+        request => {
+
+          const leftTime =
+            leftStatusTime(request);
+
+          if (
+            leftTime !== null &&
+            (
+              latestLeftTime === null ||
+              leftTime > latestLeftTime
+            )
+          ) {
+            latestLeftTime =
+              leftTime;
+          }
+
+        }
+      );
+
+
+      return singerRows.some(
+        request => {
+
+          if (!isCompleted(request)) {
+            return false;
+          }
+
+          if (latestLeftTime === null) {
+            return true;
+          }
+
+          const createdTime =
+            new Date(
+              request.created_at
+            ).getTime();
+
+          return (
+            Number.isFinite(createdTime) &&
+            createdTime > latestLeftTime
+          );
+
+        }
       );
 
     }
@@ -4454,19 +4564,21 @@
                     )}
                     <span
                       class="singer-badge ${
-                        getNewcomerQueue(data).includes(
+                        hasSungSinceLastLeft(
+                          data,
                           singer.key
                         )
-                          ? "new"
-                          : "repeat"
+                          ? "repeat"
+                          : "new"
                       }"
                     >
                       ${
-                        getNewcomerQueue(data).includes(
+                        hasSungSinceLastLeft(
+                          data,
                           singer.key
                         )
-                          ? "NEW"
-                          : "REPEAT"
+                          ? "REPEAT"
+                          : "NEW"
                       }
                     </span>
                   </div>
@@ -4673,15 +4785,21 @@
                     )}
                     <span
                       class="singer-badge ${
-                        singer.lastCompletedTime === null
-                          ? "new"
-                          : "repeat"
+                        hasSungSinceLastLeft(
+                          data,
+                          singer.key
+                        )
+                          ? "repeat"
+                          : "new"
                       }"
                     >
                       ${
-                        singer.lastCompletedTime === null
-                          ? "NEW"
-                          : "REPEAT"
+                        hasSungSinceLastLeft(
+                          data,
+                          singer.key
+                        )
+                          ? "REPEAT"
+                          : "NEW"
                       }
                     </span>
                   </div>
@@ -5073,7 +5191,7 @@
 
       const confirmed =
         confirm(
-          "End karaoke for tonight? This will close new song requests and end the active rotation. Completed song history will be kept."
+          "End karaoke for tonight? This will close new song requests and permanently delete tonight's singer list."
         );
 
       if (!confirmed) {
@@ -5091,45 +5209,45 @@
           await fetchRequests();
 
 
-        const rowsToClose =
+        /*
+          DELETE EVERY SINGER ROW FROM THE
+          CURRENT KARAOKE NIGHT.
+
+          SETTINGS ROWS ARE KEPT.
+        */
+
+        const singerRowsToDelete =
           data.filter(
             request =>
               isCurrentKaraokeNight(
                 request
               ) &&
               request.singer_name !==
-                SETTINGS_SINGER &&
-              !isCompleted(request) &&
-              !isLeft(request)
+                SETTINGS_SINGER
           );
-
-
-        const wrapStatus =
-          `left_wrap_${Date.now()}`;
 
 
         for (
           const request
-          of rowsToClose
+          of singerRowsToDelete
         ) {
 
           const response =
             await fetch(
               `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
               {
-                method: "PATCH",
-                headers: apiHeaders(true),
-                body: JSON.stringify({
-                  status:
-                    wrapStatus
-                })
+                method: "DELETE",
+                headers: apiHeaders()
               }
             );
 
+
           if (!response.ok) {
+
             throw new Error(
-              "Could not end the active rotation."
+              "Could not delete tonight's singer list."
             );
+
           }
 
         }
@@ -5143,17 +5261,18 @@
         await loadRequests();
 
         alert(
-          "That's a wrap! Requests are closed and tonight's active rotation has ended."
+          "That's a wrap! Requests are closed and tonight's singer list has been deleted."
         );
 
       }
+
 
       catch (error) {
 
         console.error(error);
 
         alert(
-          "Could not end tonight's karaoke rotation."
+          "Could not finish closing out tonight's karaoke rotation."
         );
 
       }
