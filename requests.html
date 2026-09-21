@@ -3930,13 +3930,29 @@
             )
         );
 
-      const brandNew =
-        notYetPersisted.filter(
-          singer =>
-            newcomerKeys.has(
-              singer.key
-            )
+      const newcomerQueue =
+        getNewcomerQueue(data);
+
+      const newcomerPosition =
+        new Map(
+          newcomerQueue.map(
+            (key, index) => [key, index]
+          )
         );
+
+      const brandNew =
+        notYetPersisted
+          .filter(
+            singer =>
+              newcomerKeys.has(
+                singer.key
+              )
+          )
+          .sort(
+            (a, b) =>
+              (newcomerPosition.get(a.key) ?? Number.MAX_SAFE_INTEGER) -
+              (newcomerPosition.get(b.key) ?? Number.MAX_SAFE_INTEGER)
+          );
 
       waiting =
         [
