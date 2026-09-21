@@ -4003,20 +4003,14 @@
             singer => singer.key
           );
 
-        if (
-          newPersistedOrder.join("|") !==
-          persistedOrder.join("|")
-        ) {
-          saveManualOrder(
-            newPersistedOrder
-          ).catch(
-            error =>
-              console.error(
-                "Could not persist newcomer placement:",
-                error
-              )
-          );
-        }
+        /*
+          Do not save from inside buildRotation().
+          loadRequests() immediately calls syncActiveRotationOrder()
+          with this finished rotation and awaits that save. Keeping a
+          second fire-and-forget save here can race with Done and
+          overwrite the order after the finished singer was moved
+          to the bottom.
+        */
       }
 
 
@@ -5561,9 +5555,10 @@
           Snapshot the exact singer order BEFORE
           changing anything.
 
-          Everybody else keeps the position they
-          already earned. The singer who just sang
-          gets their next-round slot at the END.
+          Everybody else keeps the exact position they
+          already had. The singer who just sang is
+          removed from that position and placed at the
+          absolute END of the active rotation.
         */
         const rotationBeforeFinish =
           buildRotation(data);

@@ -703,7 +703,7 @@ input {
       id="nameRequestInput"
       type="text"
       placeholder="Your name"
-      maxlength="80"
+      maxlength="25"
       autocomplete="name"
     >
 
@@ -1205,7 +1205,7 @@ function openNameRequestModal(
       : title;
 
   nameRequestInput.value =
-    rememberedSingerName;
+    rememberedSingerName.slice(0, 25);
 
   nameRequestMessage.textContent = '';
 
@@ -1315,7 +1315,7 @@ nameRequestConfirm.addEventListener(
   async () => {
 
     const cleanSingerName =
-      nameRequestInput.value.trim();
+      nameRequestInput.value.trim().slice(0, 25);
 
     if (!cleanSingerName) {
 
