@@ -3430,35 +3430,38 @@
 
     async function fetchRequests() {
 
-      const response = await fetch(
+      // Supabase REST responses are limited to 1,000 rows by default.
+      // Fetch every page so older completed requests do not hide new songs.
+      const pageSize = 500;
+      const allRequests = [];
+      let offset = 0;
 
-        `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc`,
-
-        {
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Authorization":
-              `Bearer ${accessToken || SUPABASE_KEY}`
-          }
-        }
-
-      );
-
-
-      if (!response.ok) {
-
-        const errorText =
-          await response.text();
-
-        throw new Error(
-          `Could not load requests: ${errorText}`
+      while (true) {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/requests?select=*&order=created_at.asc,id.asc&limit=${pageSize}&offset=${offset}`,
+          { headers: apiHeaders() }
         );
 
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Could not load requests: ${errorText}`);
+        }
+
+        const page = await response.json();
+        if (!Array.isArray(page)) {
+          throw new Error("Unexpected response while loading requests.");
+        }
+
+        allRequests.push(...page);
+
+        if (page.length < pageSize) {
+          break;
+        }
+
+        offset += pageSize;
       }
 
-
-      return await response.json();
-
+      return allRequests;
     }
 
 
@@ -5202,7 +5205,7 @@
 
       const confirmed =
         confirm(
-          "End karaoke for tonight? This will close new song requests and permanently delete tonight's singer list."
+          "End karaoke for tonight? This will close requests and permanently delete ALL singer requests from tonight and previous nights. Your KJ settings will be kept."
         );
 
       if (!confirmed) {
@@ -5216,51 +5219,28 @@
         );
 
 
-        const data =
-          await fetchRequests();
-
-
         /*
-          DELETE EVERY SINGER ROW FROM THE
-          CURRENT KARAOKE NIGHT.
-
-          SETTINGS ROWS ARE KEPT.
+          END-OF-NIGHT CLEANUP:
+          Remove ALL historical singer requests, not just tonight's.
+          Keep internal settings rows so venue, TV preferences,
+          and other KJ configuration are preserved.
+          This runs only after the KJ confirms That's a Wrap.
         */
+        const deleteUrl = new URL(`${SUPABASE_URL}/rest/v1/requests`);
+        deleteUrl.searchParams.set(
+          "or",
+          `(singer_name.neq.${SETTINGS_SINGER},singer_name.is.null)`
+        );
 
-        const singerRowsToDelete =
-          data.filter(
-            request =>
-              isCurrentKaraokeNight(
-                request
-              ) &&
-              request.singer_name !==
-                SETTINGS_SINGER
+        const deleteResponse = await fetch(deleteUrl.toString(), {
+          method: "DELETE",
+          headers: apiHeaders()
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error(
+            `Could not clear historical singer requests: ${await deleteResponse.text()}`
           );
-
-
-        for (
-          const request
-          of singerRowsToDelete
-        ) {
-
-          const response =
-            await fetch(
-              `${SUPABASE_URL}/rest/v1/requests?id=eq.${request.id}`,
-              {
-                method: "DELETE",
-                headers: apiHeaders()
-              }
-            );
-
-
-          if (!response.ok) {
-
-            throw new Error(
-              "Could not delete tonight's singer list."
-            );
-
-          }
-
         }
 
 
@@ -5272,7 +5252,7 @@
         await loadRequests();
 
         alert(
-          "That's a wrap! Requests are closed and tonight's singer list has been deleted."
+          "That's a wrap! Requests are closed and all historical singer requests have been cleared. Your KJ settings were kept."
         );
 
       }
