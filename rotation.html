@@ -3196,6 +3196,119 @@ body.show-6 {
 
   </script>
 
+<!-- BEGIN RABBIT RUN TV AUTO-FIT FIX: insert immediately BEFORE </body> in rotation.html -->
+<style id="rabbit-run-tv-autofit-css">
+  /* Let the main show fit vertically; keep the tagline out of the singer area. */
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  body .wrap {
+    position: absolute !important;
+    left: 50% !important;
+    top: 0 !important;
+    margin: 0 !important;
+    padding: 6px 12px 0 !important;
+    transform-origin: top center !important;
+    max-width: none !important;
+  }
+
+  /* Footer is moved to <body>, so it cannot be covered by the closing banner. */
+  body > footer {
+    position: fixed !important;
+    left: 50% !important;
+    bottom: 10px !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    width: min(94vw, 1240px) !important;
+    max-width: calc(100vw - 24px) !important;
+    justify-content: center !important;
+    gap: clamp(4px, 1.1vw, 18px) !important;
+    z-index: 300 !important;
+    pointer-events: none !important;
+  }
+  body > footer .footer-tagline {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    font-size: clamp(13px, 2.5vw, 36px) !important;
+    white-space: nowrap !important;
+  }
+  body > footer .sound-bars {
+    min-width: 0 !important;
+    flex: 1 1 0 !important;
+    max-width: 360px !important;
+  }
+  body > footer .sound-bars span {
+    flex: 1 1 0 !important;
+    min-width: 1px !important;
+    max-width: 8px !important;
+  }
+
+  /* The footer is no longer part of .wrap. Its old padding is unnecessary. */
+  body .wrap { padding-bottom: 0 !important; }
+
+  /* Avoid names and recruiting messages poking outside their boxes. */
+  #rotation .rotation-row { min-width: 0 !important; }
+  #rotation .name { min-width: 0 !important; overflow-wrap: anywhere; }
+  #rotation .need-more-main { white-space: normal !important; overflow-wrap: anywhere; }
+</style>
+<script id="rabbit-run-tv-autofit-js">
+(function () {
+  'use strict';
+
+  const wrap = document.querySelector('.wrap');
+  const footer = wrap && wrap.querySelector('footer');
+  const rotation = document.getElementById('rotation');
+  if (!wrap || !footer || !rotation) return;
+
+  // Move only the visual footer, not the singers or any rotation logic.
+  document.body.appendChild(footer);
+
+  let pendingFrame = 0;
+  function fitToScreen() {
+    pendingFrame = 0;
+    const viewportWidth = document.documentElement.clientWidth;
+    const viewportHeight = document.documentElement.clientHeight;
+    if (!viewportWidth || !viewportHeight) return;
+
+    // Transforming changes appearance, not layout measurements.
+    wrap.style.transform = 'translateX(-50%) scale(1)';
+
+    const footerHeight = Math.ceil(footer.getBoundingClientRect().height);
+    const availableHeight = Math.max(1, viewportHeight - footerHeight - 30);
+    const availableWidth = Math.max(1, viewportWidth - 24);
+    const naturalHeight = Math.max(1, wrap.scrollHeight);
+    const naturalWidth = Math.max(1, wrap.offsetWidth);
+
+    const scale = Math.min(1, availableHeight / naturalHeight, availableWidth / naturalWidth);
+    wrap.style.transform = `translateX(-50%) scale(${scale.toFixed(4)})`;
+  }
+
+  function scheduleFit() {
+    if (pendingFrame) cancelAnimationFrame(pendingFrame);
+    pendingFrame = requestAnimationFrame(fitToScreen);
+  }
+
+  // The existing code refreshes singers every five seconds. Fit after each update.
+  const updates = new MutationObserver(scheduleFit);
+  updates.observe(rotation, { childList: true, subtree: true, characterData: true });
+  const upNext = document.getElementById('upNextBox');
+  if (upNext) updates.observe(upNext, { attributes: true, attributeFilter: ['style'], childList: true, subtree: true, characterData: true });
+  const venue = document.getElementById('venueName');
+  if (venue) updates.observe(venue, { childList: true, characterData: true, subtree: true });
+
+  updates.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', scheduleFit);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleFit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
+  window.addEventListener('load', scheduleFit);
+  scheduleFit();
+})();
+</script>
+<!-- END RABBIT RUN TV AUTO-FIT FIX -->
+
 </body>
 
 </html>
