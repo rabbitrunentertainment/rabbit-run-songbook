@@ -4357,10 +4357,10 @@
         <div style="color:#d8b4fe;font-weight:bold;margin-bottom:5px">Requested songs (top song is next)</div>
         ${tracks.map((track,i) => `<div class="song-queue-row">
           <span class="song-queue-name">${i+1}. ${escapeHtml(track.song_title)} <span style="color:#94a3b8">— ${escapeHtml(track.artist)}</span>${track.status === 'up_next' ? ' <b style="color:#f9a8d4">UP NEXT</b>' : ''}</span>
-          <button title="Move song earlier" ${i===0?'disabled':''} onclick="reorderSingerSong(${JSON.stringify(key)},${i},-1)">↑</button>
-          <button title="Move song later" ${i===tracks.length-1?'disabled':''} onclick="reorderSingerSong(${JSON.stringify(key)},${i},1)">↓</button>
-          ${i>0 ? `<button class="song-queue-next" onclick="reorderSingerSong(${JSON.stringify(key)},${i},'first')">Sing Next</button>` : ''}
-          <button class="song-queue-delete" title="Remove this requested song" onclick="deleteSingerSong(${JSON.stringify(key)},${JSON.stringify(String(track.id))})">Delete Song</button>
+          <button title="Move song earlier" ${i===0?'disabled':''} onclick='reorderSingerSong(${JSON.stringify(key)},${i},-1)'>↑</button>
+          <button title="Move song later" ${i===tracks.length-1?'disabled':''} onclick='reorderSingerSong(${JSON.stringify(key)},${i},1)'>↓</button>
+          ${i>0 ? `<button class="song-queue-next" onclick='reorderSingerSong(${JSON.stringify(key)},${i},"first")'>Sing Next</button>` : ''}
+          <button class="song-queue-delete" title="Remove this requested song" onclick='deleteSingerSong(${JSON.stringify(key)},${JSON.stringify(String(track.id))})'>Delete Song</button>
         </div>`).join('')}
       </div>` : ''}`;
     }
