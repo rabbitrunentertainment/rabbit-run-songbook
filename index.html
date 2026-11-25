@@ -947,6 +947,8 @@ fetch('songs.json')
     status.textContent =
       `${songs.length.toLocaleString()} songs ready to search`;
 
+    render();
+
   })
 
   .catch(error => {
@@ -977,10 +979,9 @@ function normalizeSearchText(value) {
 
 function render() {
 
-  const term =
-    normalizeSearchText(
-      q.value.trim()
-    );
+  const query = q.value.trim();
+  const term = normalizeSearchText(query);
+  const terms = query.split(/\s+/).map(normalizeSearchText).filter(Boolean);
 
 
   results.innerHTML = '';
@@ -1012,7 +1013,7 @@ function render() {
 
 
     if (
-      searchable.includes(term)
+      terms.every(word => searchable.includes(word))
     ) {
 
       found.push(song);

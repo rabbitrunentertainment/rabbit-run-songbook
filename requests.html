@@ -892,6 +892,16 @@
       }
     }
 
+
+    .song-queue-toggle {background:#6d28d9;color:white;margin-top:5px}
+    .song-queue-panel {grid-column:1/-1;background:#111827;border:1px solid #a78bfa;border-radius:8px;padding:10px;margin-top:5px}
+    .song-queue-row {display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #374151}
+    .song-queue-row:last-child {border-bottom:0}
+    .song-queue-name {flex:1 1 230px;font-size:13px}
+    .song-queue-row button {background:#374151;color:white;border:1px solid #64748b}
+    .song-queue-row button:disabled {opacity:.35;cursor:default}
+    .song-queue-row .song-queue-next {background:#7c3aed;border-color:#a78bfa}
+
 </style>
 </head>
 
@@ -2937,16 +2947,19 @@
         who was Up Next becomes a waiting/repeat singer and
         must NOT suddenly be mistaken for a brand-new arrival.
       */
-      const desiredOrder =
-        rotation.map(
-          singer =>
-            singer.key
-        );
-
-
-      const savedOrder =
-        getManualOrder(data);
-
+      const calculated = rotation.map(singer => singer.key);
+      const savedOrder = getManualOrder(data);
+      const activeKeys = new Set(calculated);
+      const desiredOrder = savedOrder.filter(key => activeKeys.has(key));
+      // Never reshuffle existing singers during a polling refresh.
+      // Only insert singers who were not in the saved rotation.
+      for (const key of calculated) {
+        if (desiredOrder.includes(key)) continue;
+        const calculatedIndex = calculated.indexOf(key);
+        const nextExisting = calculated.slice(calculatedIndex+1).find(k => desiredOrder.includes(k));
+        if (nextExisting) desiredOrder.splice(desiredOrder.indexOf(nextExisting),0,key);
+        else desiredOrder.push(key);
+      }
 
       const same =
         (
@@ -3790,9 +3803,11 @@
           upNextSinger.upNextRequest =
             upNextRequest;
 
-          upNextSinger.currentRequest =
-            upNextSinger.realRequests[0] ||
-            upNextRequest;
+          upNextSinger.currentRequest = upNextRequest;
+          upNextSinger.realRequests.sort((a, b) =>
+            (a.id === upNextRequest.id ? -1 : b.id === upNextRequest.id ? 1 :
+              new Date(a.created_at) - new Date(b.created_at))
+          );
 
           break;
         }
@@ -4317,6 +4332,77 @@
     }
 
 
+    /* KJ-only song queue editor. Swaps song contents between existing
+       request slots, keeping their statuses, IDs and singer positions. */
+    const expandedSongQueues = new Set();
+    let songQueueBusy = false;
+
+    function toggleSongQueue(key) {
+      if (expandedSongQueues.has(key)) expandedSongQueues.delete(key);
+      else expandedSongQueues.add(key);
+      loadRequests();
+    }
+
+    function songQueueHtml(singer) {
+      const tracks = singer.realRequests || [];
+      if (!tracks.length) return '';
+      const key = singer.key;
+      const open = expandedSongQueues.has(key);
+      return `<div class="extra-songs">
+        <button class="song-queue-toggle" onclick='toggleSongQueue(${JSON.stringify(key)})'>
+          ${open ? 'Hide' : 'View / Change'} ${tracks.length} requested ${tracks.length === 1 ? 'song' : 'songs'}
+        </button>
+      </div>${open ? `<div class="song-queue-panel">
+        <div style="color:#d8b4fe;font-weight:bold;margin-bottom:5px">Requested songs (top song is next)</div>
+        ${tracks.map((track,i) => `<div class="song-queue-row">
+          <span class="song-queue-name">${i+1}. ${escapeHtml(track.song_title)} <span style="color:#94a3b8">— ${escapeHtml(track.artist)}</span>${track.status === 'up_next' ? ' <b style="color:#f9a8d4">UP NEXT</b>' : ''}</span>
+          <button title="Move song earlier" ${i===0?'disabled':''} onclick="reorderSingerSong(${JSON.stringify(key)},${i},-1)">↑</button>
+          <button title="Move song later" ${i===tracks.length-1?'disabled':''} onclick="reorderSingerSong(${JSON.stringify(key)},${i},1)">↓</button>
+          ${i>0 ? `<button class="song-queue-next" onclick="reorderSingerSong(${JSON.stringify(key)},${i},'first')">Sing Next</button>` : ''}
+        </div>`).join('')}
+      </div>` : ''}`;
+    }
+
+    async function reorderSingerSong(key, fromIndex, direction) {
+      if (songQueueBusy) return;
+      songQueueBusy = true;
+      try {
+        const data = await fetchRequests();
+        const singer = buildRotation(data).find(s => s.key === key);
+        if (!singer) throw new Error('Singer no longer in the rotation');
+        const tracks = singer.realRequests;
+        const target = direction === 'first' ? 0 : fromIndex + direction;
+        if (fromIndex < 0 || target < 0 || fromIndex >= tracks.length || target >= tracks.length || fromIndex === target) return;
+        // Shift songs through the existing request slots, keeping the current
+        // up_next slot and the singer's rotation position unchanged.
+        const before = tracks.map(r => ({id:r.id,song_title:r.song_title,artist:r.artist}));
+        const after = before.map(r => ({...r}));
+        const selected = after.splice(fromIndex,1)[0];
+        after.splice(target,0,selected);
+        const changed = [];
+        try {
+          for (let i=0;i<before.length;i++) {
+            if (before[i].song_title === after[i].song_title && before[i].artist === after[i].artist) continue;
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/requests?id=eq.${encodeURIComponent(before[i].id)}`,{
+              method:'PATCH',headers:apiHeaders(true),body:JSON.stringify({song_title:after[i].song_title,artist:after[i].artist})
+            });
+            if (!response.ok) throw new Error('Could not save song order ('+response.status+')');
+            changed.push(i);
+          }
+        } catch (error) {
+          // Best-effort rollback if a multi-row update fails partway.
+          for (const i of changed.reverse()) {
+            await fetch(`${SUPABASE_URL}/rest/v1/requests?id=eq.${encodeURIComponent(before[i].id)}`,{
+              method:'PATCH',headers:apiHeaders(true),body:JSON.stringify({song_title:before[i].song_title,artist:before[i].artist})
+            }).catch(console.error);
+          }
+          throw error;
+        }
+        await loadRequests();
+      } catch(error) { console.error(error); alert('Could not change song order. Please try again.'); }
+      finally { songQueueBusy = false; }
+    }
+
     function singerControlsHtml(
       singer,
       request,
@@ -4672,30 +4758,7 @@
                   </div>
 
 
-                  ${
-                    extraSongCount > 0
-
-                      ? `
-                        <div class="extra-songs">
-
-                          + ${extraSongCount}
-                          more
-                          ${
-                            extraSongCount === 1
-                              ? "song"
-                              : "songs"
-                          }
-                          waiting for
-                          ${escapeHtml(
-                            currentName
-                          )}
-
-                        </div>
-                      `
-
-                      : ""
-                  }
-
+                  ${songQueueHtml(singer)}
 
                   ${
                     nameChanged ||
