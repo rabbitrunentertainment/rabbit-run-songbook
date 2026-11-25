@@ -3490,7 +3490,13 @@
 
       data.forEach(request => {
 
-        if (!request.singer_id) {
+        // Only compare names from the current karaoke night.
+        // Historical requests must not cause permanent mismatch warnings.
+        if (
+          request.singer_name === SETTINGS_SINGER ||
+          !isCurrentKaraokeNight(request) ||
+          !request.singer_id
+        ) {
           return;
         }
 
