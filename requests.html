@@ -903,6 +903,13 @@
     .song-queue-row .song-queue-next {background:#7c3aed;border-color:#a78bfa}
     .song-queue-row .song-queue-delete {background:#991b1b;border-color:#f87171;color:white}
 
+  .songbook-manager {max-width:1100px;margin:8px auto 14px;padding:14px;background:#1f2937;border:2px solid #7c3aed;border-radius:10px;box-sizing:border-box}
+  .songbook-manager h2 {font-size:19px;color:#f9a8d4;margin:0 0 7px;text-align:center}
+  .songbook-manager p {color:#cbd5e1;font-size:12px;text-align:center;margin:0 0 12px}
+  .songbook-manager-fields {display:flex;gap:8px;flex-wrap:wrap}
+  .songbook-manager-fields input {flex:1 1 170px;min-width:0;padding:10px;background:#111827;color:white;border:1px solid #64748b;border-radius:7px;font-size:14px}
+  .songbook-manager-fields button {background:#7c3aed;color:white}
+  #songbookManagerStatus {min-height:18px;margin-top:8px;color:#d8b4fe;font-size:13px}
 </style>
 </head>
 
@@ -1063,6 +1070,17 @@
         </div>
       </div>
 
+
+      <div class="songbook-manager" id="songbookManager">
+        <h2>🎵 Add Song to Songbook</h2>
+        <p>Add one song to the public songbook without uploading songs.json. Add the karaoke file to your computer separately.</p>
+        <div class="songbook-manager-fields">
+          <input id="newBookArtist" type="text" placeholder="Artist" autocomplete="off" maxlength="200">
+          <input id="newBookTitle" type="text" placeholder="Song title" autocomplete="off" maxlength="200">
+          <button type="button" id="addBookSongButton" onclick="addSongToSongbook()">Add Song</button>
+        </div>
+        <div id="songbookManagerStatus" role="status" aria-live="polite"></div>
+      </div>
 
       <div class="venue-control">
         <span class="tv-display-label">VENUE:</span>
@@ -5905,6 +5923,68 @@
 
     }
 
+
+    /* Add a single song to the separate, public-readable songbook_additions table.
+       Only a signed-in KJ can insert (enforced by Supabase RLS). */
+    let addingSongbookSong = false;
+    async function addSongToSongbook() {
+      if (addingSongbookSong) return;
+      const artistField = document.getElementById('newBookArtist');
+      const titleField = document.getElementById('newBookTitle');
+      const status = document.getElementById('songbookManagerStatus');
+      const button = document.getElementById('addBookSongButton');
+      const artist = artistField.value.replace(/\s+/g, ' ').trim();
+      const title = titleField.value.replace(/\s+/g, ' ').trim();
+      if (!artist || !title) {
+        status.textContent = 'Enter both an artist and song title.';
+        return;
+      }
+      addingSongbookSong = true;
+      button.disabled = true;
+      status.textContent = 'Checking songbook additions...';
+      try {
+        const {data: {session}} = await supabaseClient.auth.getSession();
+        if (!session) throw new Error('Please sign in again before adding a song.');
+        // Check the main static catalog as well, not just manually added songs.
+        const catalogResponse = await fetch('songs.json');
+        if (!catalogResponse.ok) throw new Error('Could not check the main songbook for duplicates.');
+        const catalog = await catalogResponse.json();
+        const normal = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+        if (catalog.some(song => normal(song.artist) === normal(artist) && normal(song.title) === normal(title))) {
+          status.textContent = 'That song is already in your main songbook.';
+          return;
+        }
+        const query = `${SUPABASE_URL}/rest/v1/songbook_additions?select=artist,title&artist=ilike.${encodeURIComponent(artist)}&title=ilike.${encodeURIComponent(title)}&limit=1`;
+        const check = await fetch(query, {headers: apiHeaders()});
+        if (!check.ok) throw new Error(`Could not check for duplicates (${check.status}). Has the database setup been completed?`);
+        const existing = await check.json();
+        if (existing.length) {
+          status.textContent = 'That song is already in your manually added songs.';
+          return;
+        }
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/songbook_additions`, {
+          method:'POST',
+          headers:{...apiHeaders(true),Prefer:'return=representation'},
+          body:JSON.stringify({artist,title})
+        });
+        if (!response.ok) {
+          const details = await response.text();
+          if (response.status === 409) throw new Error('That song is already in your manually added songs.');
+          throw new Error(`Could not add song (${response.status}): ${details}`);
+        }
+        const saved = await response.json();
+        if (!Array.isArray(saved) || saved.length !== 1) throw new Error('The database did not confirm the addition.');
+        artistField.value = '';
+        titleField.value = '';
+        status.textContent = `Added: ${title} by ${artist}. It will appear when the public songbook is refreshed.`;
+      } catch(error) {
+        console.error('Add songbook song:', error);
+        status.textContent = error.message;
+      } finally {
+        addingSongbookSong = false;
+        button.disabled = false;
+      }
+    }
 
     /* =========================
        START
