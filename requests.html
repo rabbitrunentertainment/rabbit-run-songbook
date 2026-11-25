@@ -4653,10 +4653,13 @@
                 ).trim();
 
 
+              // A stored original_name can survive from an older karaoke night.
+              // Only show the historical-name warning when the device also
+              // has a mismatch among requests from the current night.
               const nameChanged =
-                originalName &&
-                originalName.toLowerCase() !==
-                currentName.toLowerCase();
+                Boolean(originalName &&
+                originalName.toLowerCase() !== currentName.toLowerCase() &&
+                request.singer_id && mismatchedDevices.has(request.singer_id));
 
 
               const sameDeviceMismatch =
