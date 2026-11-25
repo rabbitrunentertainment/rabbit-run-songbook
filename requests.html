@@ -901,6 +901,7 @@
     .song-queue-row button {background:#374151;color:white;border:1px solid #64748b}
     .song-queue-row button:disabled {opacity:.35;cursor:default}
     .song-queue-row .song-queue-next {background:#7c3aed;border-color:#a78bfa}
+    .song-queue-row .song-queue-delete {background:#991b1b;border-color:#f87171;color:white}
 
 </style>
 </head>
@@ -4359,8 +4360,33 @@
           <button title="Move song earlier" ${i===0?'disabled':''} onclick="reorderSingerSong(${JSON.stringify(key)},${i},-1)">↑</button>
           <button title="Move song later" ${i===tracks.length-1?'disabled':''} onclick="reorderSingerSong(${JSON.stringify(key)},${i},1)">↓</button>
           ${i>0 ? `<button class="song-queue-next" onclick="reorderSingerSong(${JSON.stringify(key)},${i},'first')">Sing Next</button>` : ''}
+          <button class="song-queue-delete" title="Remove this requested song" onclick="deleteSingerSong(${JSON.stringify(key)},${JSON.stringify(String(track.id))})">Delete Song</button>
         </div>`).join('')}
       </div>` : ''}`;
+    }
+
+    // Delete one requested song only, never the whole singer or their other songs.
+    async function deleteSingerSong(key, requestId) {
+      if (songQueueBusy) return;
+      const data = await fetchRequests().catch(error => { alert(error.message); return null; });
+      if (!data) return;
+      const singer = buildRotation(data).find(s => s.key === key);
+      const track = singer?.realRequests?.find(r => String(r.id) === String(requestId));
+      if (!track) { alert('This song is no longer in the active queue.'); return; }
+      if (!confirm(`Delete ONLY "${track.song_title}" by ${track.artist} for ${singer.name}?`)) return;
+      songQueueBusy = true;
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/requests?id=eq.${encodeURIComponent(requestId)}`, {
+          method: 'DELETE', headers: {...apiHeaders(), Prefer:'return=representation'}
+        });
+        if (!response.ok) throw new Error(`Database refused deletion (${response.status}): ${await response.text()}`);
+        const removed = await response.json();
+        if (!Array.isArray(removed) || removed.length !== 1) throw new Error('Database did not confirm that the song was deleted. Check permissions.');
+        await loadRequests();
+      } catch (error) {
+        console.error(error);
+        alert(`Could not delete song: ${error.message}`);
+      } finally { songQueueBusy = false; }
     }
 
     async function reorderSingerSong(key, fromIndex, direction) {
@@ -4373,8 +4399,6 @@
         const tracks = singer.realRequests;
         const target = direction === 'first' ? 0 : fromIndex + direction;
         if (fromIndex < 0 || target < 0 || fromIndex >= tracks.length || target >= tracks.length || fromIndex === target) return;
-        // Shift songs through the existing request slots, keeping the current
-        // up_next slot and the singer's rotation position unchanged.
         const before = tracks.map(r => ({id:r.id,song_title:r.song_title,artist:r.artist}));
         const after = before.map(r => ({...r}));
         const selected = after.splice(fromIndex,1)[0];
@@ -4384,13 +4408,15 @@
           for (let i=0;i<before.length;i++) {
             if (before[i].song_title === after[i].song_title && before[i].artist === after[i].artist) continue;
             const response = await fetch(`${SUPABASE_URL}/rest/v1/requests?id=eq.${encodeURIComponent(before[i].id)}`,{
-              method:'PATCH',headers:apiHeaders(true),body:JSON.stringify({song_title:after[i].song_title,artist:after[i].artist})
+              method:'PATCH',headers:{...apiHeaders(true),Prefer:'return=representation'},
+              body:JSON.stringify({song_title:after[i].song_title,artist:after[i].artist})
             });
-            if (!response.ok) throw new Error('Could not save song order ('+response.status+')');
+            if (!response.ok) throw new Error(`Database refused song change (${response.status}): ${await response.text()}`);
+            const updated = await response.json();
+            if (!Array.isArray(updated) || updated.length !== 1) throw new Error('Database did not confirm song change. Check permissions.');
             changed.push(i);
           }
         } catch (error) {
-          // Best-effort rollback if a multi-row update fails partway.
           for (const i of changed.reverse()) {
             await fetch(`${SUPABASE_URL}/rest/v1/requests?id=eq.${encodeURIComponent(before[i].id)}`,{
               method:'PATCH',headers:apiHeaders(true),body:JSON.stringify({song_title:before[i].song_title,artist:before[i].artist})
@@ -4399,7 +4425,7 @@
           throw error;
         }
         await loadRequests();
-      } catch(error) { console.error(error); alert('Could not change song order. Please try again.'); }
+      } catch(error) { console.error(error); alert(`Could not change song order: ${error.message}`); }
       finally { songQueueBusy = false; }
     }
 
