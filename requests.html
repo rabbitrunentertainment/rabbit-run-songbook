@@ -1180,6 +1180,17 @@
   </div><!-- /kjApp -->
 
 
+
+  <div id="kjSongSearchOverlay" class="kj-song-search-overlay" role="presentation">
+    <section class="kj-song-search-dialog" role="dialog" aria-modal="true" aria-labelledby="kjSongSearchTitle">
+      <button type="button" class="kj-song-search-close" id="kjSongSearchClose">Close ✕</button>
+      <h2 id="kjSongSearchTitle">Add song to singer</h2>
+      <input id="kjSongSearchInput" type="search" placeholder="Search artist or song title..." autocomplete="off" aria-label="Search karaoke songbook">
+      <div id="kjSongSearchStatus" class="kj-song-search-status" role="status"></div>
+      <div id="kjSongSearchResults" class="kj-song-search-results"></div>
+    </section>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
@@ -4167,11 +4178,11 @@
           ? `<button class="waiting-song-button" onclick='markSingerSongReady(${key})'>Song Ready</button>
              <button class="skip-slot-button" onclick='skipWaitingSinger(${key})'>Skip</button>`
           : '';
-        return `${upNextControl}${pauseControl}${waitingActions}`;
+        return `${upNextControl}${pauseControl}${waitingActions}<button type="button" class="kj-add-song-button" data-kj-add-song="${escapeHtml(singer.key)}">+ Song</button>`;
       }
 
       return `${upNextControl}${pauseControl}
-        <button class="done-button" onclick="finishRequest(${request.id})">Done</button>`;
+        <button class="done-button" onclick="finishRequest(${request.id})">Done</button><button type="button" class="kj-add-song-button" data-kj-add-song="${escapeHtml(singer.key)}">+ Song</button>`;
     }
 
 
@@ -5781,6 +5792,180 @@
       },
       5000
     );
+
+
+    /* =========================
+       KJ ADD SONG FROM SONGBOOK
+       Uses the public songbook's two sources and normalization.
+       Only inserts a request; never changes rotation positions.
+       ========================= */
+    let kjSongCatalogPromise = null;
+    let kjSongCatalog = [];
+    let kjSongTargetKey = null;
+    let kjSongSearchBusy = false;
+
+    function kjNormalizeSongText(value) {
+      return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '');
+    }
+
+    function kjSongSearchElements() {
+      return {
+        overlay: document.getElementById('kjSongSearchOverlay'),
+        input: document.getElementById('kjSongSearchInput'),
+        results: document.getElementById('kjSongSearchResults'),
+        status: document.getElementById('kjSongSearchStatus')
+      };
+    }
+
+    async function kjLoadSongCatalog() {
+      if (kjSongCatalogPromise) return kjSongCatalogPromise;
+      kjSongCatalogPromise = (async () => {
+        const baseResponse = await fetch('songs.json');
+        if (!baseResponse.ok) throw new Error('Could not load songs.json');
+        const base = await baseResponse.json();
+        if (!Array.isArray(base)) throw new Error('Invalid songbook format');
+        let additions = [];
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/songbook_additions?select=artist,title&order=created_at.asc`, {headers: apiHeaders()});
+          if (!response.ok) throw new Error(`Songbook additions error (${response.status})`);
+          additions = await response.json();
+        } catch (error) {
+          console.warn('Could not load songbook additions', error);
+          throw new Error('Could not load the complete songbook. Try again.');
+        }
+        const seen = new Set();
+        kjSongCatalog = [];
+        for (const song of [...base, ...additions]) {
+          const title = String(song.title || '').trim();
+          const artist = String(song.artist || '').trim();
+          const key = kjNormalizeSongText(`${artist} ${title}`);
+          if (!title || !key || seen.has(key)) continue;
+          seen.add(key);
+          kjSongCatalog.push({title, artist});
+        }
+        return kjSongCatalog;
+      })().catch(error => { kjSongCatalogPromise = null; throw error; });
+      return kjSongCatalogPromise;
+    }
+
+    function kjRenderSongMatches() {
+      const {input, results, status} = kjSongSearchElements();
+      const query = input.value.trim();
+      const words = query.split(/\s+/).map(kjNormalizeSongText).filter(Boolean);
+      if (kjNormalizeSongText(query).length < 2) {
+        results.replaceChildren();
+        status.textContent = `${kjSongCatalog.length.toLocaleString()} songs ready. Type at least 2 characters.`;
+        return;
+      }
+      const matches = [];
+      for (const song of kjSongCatalog) {
+        const searchable = kjNormalizeSongText(`${song.artist} ${song.title}`);
+        if (words.every(word => searchable.includes(word))) {
+          matches.push(song);
+          if (matches.length === 100) break;
+        }
+      }
+      status.textContent = matches.length ? `Showing ${matches.length}${matches.length === 100 ? '+' : ''} matches` : 'No songs found.';
+      results.replaceChildren();
+      matches.forEach(song => {
+        const row = document.createElement('div');
+        row.className = 'kj-song-search-result';
+        const info = document.createElement('div');
+        const title = document.createElement('strong');
+        title.textContent = song.title;
+        const artist = document.createElement('div');
+        artist.className = 'kj-song-search-meta';
+        artist.textContent = song.artist;
+        info.append(title, artist);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Add to Queue';
+        button.disabled = kjSongSearchBusy;
+        button.addEventListener('click', () => kjAddSelectedSong(song));
+        row.append(info, button);
+        results.append(row);
+      });
+    }
+
+    async function kjOpenSongSearch(key) {
+      const {overlay, input, results, status} = kjSongSearchElements();
+      if (kjSongSearchBusy) return;
+      kjSongTargetKey = key;
+      input.value = '';
+      results.replaceChildren();
+      overlay.classList.add('open');
+      status.textContent = 'Loading karaoke songbook...';
+      input.focus();
+      try {
+        await kjLoadSongCatalog();
+        if (kjSongTargetKey === key) kjRenderSongMatches();
+      } catch (error) {
+        console.error(error);
+        status.textContent = error.message;
+      }
+    }
+
+    function kjCloseSongSearch() {
+      if (kjSongSearchBusy) return;
+      kjSongTargetKey = null;
+      kjSongSearchElements().overlay.classList.remove('open');
+    }
+
+    async function kjAddSelectedSong(song) {
+      if (kjSongSearchBusy || !kjSongTargetKey) return;
+      const key = kjSongTargetKey;
+      const {results, status} = kjSongSearchElements();
+      kjSongSearchBusy = true;
+      results.querySelectorAll('button').forEach(button => button.disabled = true);
+      status.textContent = 'Adding song...';
+      try {
+        const data = await fetchRequests();
+        const singer = buildRotation(data).find(item => item.key === key);
+        if (!singer) throw new Error('Singer is no longer in the active rotation.');
+        const existing = data.filter(request => singerKey(request) === key && isActive(request));
+        const source = existing.find(request => request.singer_id) || existing[0];
+        if (!source) throw new Error('Could not identify the singer.');
+        const payload = {
+          singer_name: singer.name,
+          song_title: song.title,
+          artist: song.artist,
+          status: 'waiting'
+        };
+        if (source.singer_id) payload.singer_id = source.singer_id;
+        if (source.original_name) payload.original_name = source.original_name;
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/requests`, {
+          method: 'POST', headers: {...apiHeaders(true), Prefer: 'return=representation'},
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Could not save song (${response.status}): ${await response.text()}`);
+        const inserted = await response.json();
+        if (!Array.isArray(inserted) || inserted.length !== 1) throw new Error('Database did not confirm the new request.');
+        expandedSongQueues.add(key);
+        kjSongTargetKey = null;
+        kjSongSearchElements().overlay.classList.remove('open');
+        await loadRequests();
+      } catch (error) {
+        console.error(error);
+        status.textContent = error.message || 'Could not add song. Please try again.';
+      } finally {
+        kjSongSearchBusy = false;
+        results.querySelectorAll('button').forEach(button => button.disabled = false);
+      }
+    }
+
+    document.getElementById('requests').addEventListener('click', event => {
+      const button = event.target.closest('[data-kj-add-song]');
+      if (button) { event.stopPropagation(); kjOpenSongSearch(button.dataset.kjAddSong); }
+    });
+    document.getElementById('kjSongSearchClose').addEventListener('click', kjCloseSongSearch);
+    document.getElementById('kjSongSearchInput').addEventListener('input', kjRenderSongMatches);
+    document.getElementById('kjSongSearchOverlay').addEventListener('click', event => {
+      if (event.target.id === 'kjSongSearchOverlay') kjCloseSongSearch();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && kjSongSearchElements().overlay.classList.contains('open')) kjCloseSongSearch();
+    });
 
   </script>
 
