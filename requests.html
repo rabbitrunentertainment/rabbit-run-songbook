@@ -956,6 +956,8 @@
       <button id="tvShow6" class="tv-count-button" onclick="setTvDisplayCount(6)">6</button>
     </div>
 
+    <div class="rotation-toolbar"><button id="setRotationButton" type="button" onclick="setRotation()" disabled>SET ROTATION</button><span id="rotationSaveStatus" role="status" aria-live="polite">Rotation saved</span></div>
+
     <div id="requests">
       Loading requests...
     </div>
@@ -2873,253 +2875,12 @@
     }
 
 
-    function applyManualOrder(
-      waiting,
-      data
-    ) {
-
-      const savedOrder =
-        getManualOrder(data);
-
-      if (savedOrder.length === 0) {
-        return waiting;
-      }
-
-      const positions =
-        new Map(
-          savedOrder.map(
-            (key, index) => [
-              key,
-              index
-            ]
-          )
-        );
-
-      const originalPositions =
-        new Map(
-          waiting.map(
-            (singer, index) => [
-              singer.key,
-              index
-            ]
-          )
-        );
-
-      return [...waiting].sort(
-        (a, b) => {
-
-          const aSaved =
-            positions.has(a.key);
-
-          const bSaved =
-            positions.has(b.key);
-
-          if (aSaved && bSaved) {
-            return (
-              positions.get(a.key) -
-              positions.get(b.key)
-            );
-          }
-
-          if (aSaved !== bSaved) {
-            return aSaved ? -1 : 1;
-          }
-
-          return (
-            originalPositions.get(a.key) -
-            originalPositions.get(b.key)
-          );
-
-        }
-      );
-
-    }
-
-
-    async function syncActiveRotationOrder(
-      data,
-      rotation
-    ) {
-
-      const upNextKey =
-        rotation.length > 0 &&
-        (
-          rotation[0].isUpNext === true ||
-          (
-            rotation[0].currentRequest &&
-            rotation[0].currentRequest.status ===
-              "up_next"
-          )
-        )
-          ? rotation[0].key
-          : null;
-
-
-      /*
-        Save the FULL singer rotation, INCLUDING Up Next.
-
-        Up Next is ignored by applyManualOrder while they
-        are currently Up Next, but keeping their key here
-        preserves their earned membership in the rotation.
-
-        This is critical when Done is pressed: the singer
-        who was Up Next becomes a waiting/repeat singer and
-        must NOT suddenly be mistaken for a brand-new arrival.
-      */
-      const calculated = rotation.map(singer => singer.key);
-      const savedOrder = getManualOrder(data);
-      const activeKeys = new Set(calculated);
-      const desiredOrder = savedOrder.filter(key => activeKeys.has(key));
-      // Never reshuffle existing singers during a polling refresh.
-      // Only insert singers who were not in the saved rotation.
-      for (const key of calculated) {
-        if (desiredOrder.includes(key)) continue;
-        const calculatedIndex = calculated.indexOf(key);
-        const nextExisting = calculated.slice(calculatedIndex+1).find(k => desiredOrder.includes(k));
-        if (nextExisting) desiredOrder.splice(desiredOrder.indexOf(nextExisting),0,key);
-        else desiredOrder.push(key);
-      }
-
-      const same =
-        (
-          desiredOrder.length ===
-            savedOrder.length &&
-          desiredOrder.every(
-            (key, index) =>
-              key ===
-              savedOrder[index]
-          )
-        );
-
-
-      if (same) {
-        return false;
-      }
-
-
-      await saveManualOrder(
-        desiredOrder
-      );
-
+    async function syncActiveRotationOrder(data, rotation) {
+      const desired = rotation.map(singer => singer.key);
+      const saved = getManualOrder(data);
+      if (desired.length === saved.length && desired.every((key, i) => key === saved[i])) return false;
+      await saveManualOrder(desired);
       return true;
-
-    }
-
-
-    async function moveSinger(
-      key,
-      direction
-    ) {
-
-      try {
-
-        const data =
-          await fetchRequests();
-
-        const rotation =
-          buildRotation(data);
-
-        const upNextSinger =
-          rotation.find(
-            singer =>
-              singer.isUpNext === true ||
-              (
-                singer.currentRequest &&
-                singer.currentRequest.status ===
-                  "up_next"
-              )
-          ) || null;
-
-        const waiting =
-          rotation.filter(
-            singer =>
-              !upNextSinger ||
-              singer.key !==
-                upNextSinger.key
-          );
-
-        const index =
-          waiting.findIndex(
-            singer =>
-              singer.key === key
-          );
-
-        if (index === -1) {
-          return;
-        }
-
-        const targetIndex =
-          index + direction;
-
-        if (
-          targetIndex < 0 ||
-          targetIndex >= waiting.length
-        ) {
-          return;
-        }
-
-        const reordered =
-          [...waiting];
-
-        [
-          reordered[index],
-          reordered[targetIndex]
-        ] = [
-          reordered[targetIndex],
-          reordered[index]
-        ];
-
-        const fullOrder = [
-          ...(upNextSinger
-            ? [upNextSinger.key]
-            : []),
-          ...reordered.map(
-            singer => singer.key
-          )
-        ];
-
-        await saveManualOrder(
-          fullOrder
-        );
-
-
-        /*
-          A manual KJ move overrides automatic weaving.
-          Keep the visual NEW badge until first song,
-          but stop auto-moving this singer afterward.
-        */
-        const newcomerQueue =
-          getNewcomerQueue(data);
-
-
-        if (
-          newcomerQueue.includes(key)
-        ) {
-
-          await saveNewcomerQueue(
-            newcomerQueue.filter(
-              newcomerKey =>
-                newcomerKey !== key
-            )
-          );
-
-        }
-
-
-        await loadRequests();
-
-      }
-
-      catch (error) {
-
-        console.error(error);
-
-        alert(
-          "Could not move this singer."
-        );
-
-      }
-
     }
 
 
@@ -3902,11 +3663,6 @@
         THE NORMAL AUTO SORT.
       */
 
-      waiting =
-        applyManualOrder(
-          waiting,
-          data
-        );
 
 
       const totalActiveSingers =
@@ -3929,147 +3685,30 @@
         but badge status never moves an already placed singer.
       */
 
-      const persistedOrder =
-        getManualOrder(data);
+      const persistedOrder = getManualOrder(data);
+      const newcomerQueue = getNewcomerQueue(data);
+      const newcomerKeys = new Set(newcomerQueue);
+      const waitingByKey = new Map(waiting.map(singer => [singer.key, singer]));
+      const savedWaiting = persistedOrder.map(key => waitingByKey.get(key)).filter(Boolean);
+      const savedKeys = new Set(savedWaiting.map(singer => singer.key));
+      const unsaved = waiting.filter(singer => !savedKeys.has(singer.key));
+      const ordinaryUnsaved = unsaved.filter(singer => !newcomerKeys.has(singer.key));
+      const newcomerPosition = new Map(newcomerQueue.map((key, index) => [key, index]));
+      const brandNew = unsaved.filter(singer => newcomerKeys.has(singer.key))
+        .sort((a, b) => (newcomerPosition.get(a.key) ?? Infinity) - (newcomerPosition.get(b.key) ?? Infinity));
+      waiting = [...savedWaiting, ...ordinaryUnsaved];
 
-      const persistedKeys =
-        new Set(persistedOrder);
-
-      const newcomerKeys =
-        new Set(getNewcomerQueue(data));
-
-      const waitingByKey =
-        new Map(
-          waiting.map(
-            singer => [singer.key, singer]
-          )
-        );
-
-      const persistedWaiting =
-        persistedOrder
-          .map(key => waitingByKey.get(key))
-          .filter(Boolean);
-
-      const persistedWaitingKeys =
-        new Set(
-          persistedWaiting.map(
-            singer => singer.key
-          )
-        );
-
-      const notYetPersisted =
-        waiting.filter(
-          singer =>
-            !persistedWaitingKeys.has(
-              singer.key
-            )
-        );
-
-      const ordinaryUnsaved =
-        notYetPersisted.filter(
-          singer =>
-            !newcomerKeys.has(
-              singer.key
-            )
-        );
-
-      const newcomerQueue =
-        getNewcomerQueue(data);
-
-      const newcomerPosition =
-        new Map(
-          newcomerQueue.map(
-            (key, index) => [key, index]
-          )
-        );
-
-      const brandNew =
-        notYetPersisted
-          .filter(
-            singer =>
-              newcomerKeys.has(
-                singer.key
-              )
-          )
-          .sort(
-            (a, b) =>
-              (newcomerPosition.get(a.key) ?? Number.MAX_SAFE_INTEGER) -
-              (newcomerPosition.get(b.key) ?? Number.MAX_SAFE_INTEGER)
-          );
-
-      waiting =
-        [
-          ...persistedWaiting,
-          ...ordinaryUnsaved
-        ];
-
-      if (brandNew.length > 0) {
-
-        const protectedWaitingCount =
-          upNextSinger
-            ? 5
-            : 6;
-
-        for (const newcomer of brandNew) {
-
-          let insertAt =
-            Math.min(
-              protectedWaitingCount,
-              waiting.length
-            );
-
-          let lastNewIndex = -1;
-
-          for (
-            let i = 0;
-            i < waiting.length;
-            i += 1
-          ) {
-            if (
-              newcomerKeys.has(
-                waiting[i].key
-              )
-            ) {
-              lastNewIndex = i;
-            }
-          }
-
-          if (lastNewIndex >= 0) {
-            insertAt =
-              Math.max(
-                protectedWaitingCount,
-                Math.min(
-                  lastNewIndex + 3,
-                  waiting.length
-                )
-              );
-          }
-
-          waiting.splice(
-            insertAt,
-            0,
-            newcomer
-          );
-        }
-
-        /*
-          saveManualOrder is async, but this render path is not.
-          Fire the save only when the signature changed.
-          The current render already uses the new order immediately.
-        */
-        const newPersistedOrder =
-          waiting.map(
-            singer => singer.key
-          );
-
-        /*
-          Do not save from inside buildRotation().
-          loadRequests() immediately calls syncActiveRotationOrder()
-          with this finished rotation and awaits that save. Keeping a
-          second fire-and-forget save here can race with Done and
-          overwrite the order after the finished singer was moved
-          to the bottom.
-        */
+      // Insert each newcomer only once. Existing saved chairs never move.
+      // First six active chairs are protected; after that, new arrivals
+      // are spaced behind two existing chairs, in arrival order.
+      const protectedWaitingCount = upNextSinger ? 5 : 6;
+      for (const newcomer of brandNew) {
+        const lastNewIndex = waiting.reduce((last, singer, index) =>
+          newcomerKeys.has(singer.key) ? index : last, -1);
+        const insertAt = lastNewIndex < 0
+          ? Math.min(protectedWaitingCount, waiting.length)
+          : Math.min(waiting.length, Math.max(protectedWaitingCount, lastNewIndex + 3));
+        waiting.splice(insertAt, 0, newcomer);
       }
 
 
@@ -4481,8 +4120,6 @@
 
         return `
           <button class="up-next-button" onclick="manualUpNext(${request.id})">Up Next</button>
-          <button class="move-button" title="Move up" onclick='moveSinger(${JSON.stringify(singer.key)}, -1)'>↑</button>
-          <button class="move-button" title="Move down" onclick='moveSinger(${JSON.stringify(singer.key)}, 1)'>↓</button>
           <button class="pause-button" onclick='pauseSinger(${JSON.stringify(singer.key)})'>Pause</button>
         `;
       }
@@ -4494,8 +4131,6 @@
         }
         ${!isUpNext
           ? `
-            <button class="move-button" title="Move up" onclick='moveSinger(${JSON.stringify(singer.key)}, -1)'>↑</button>
-            <button class="move-button" title="Move down" onclick='moveSinger(${JSON.stringify(singer.key)}, 1)'>↓</button>
           `
           : ""
         }
@@ -4505,11 +4140,107 @@
     }
 
 
+    // Dragging changes the preview only. SET ROTATION persists it.
+    let rotationDirty = false;
+    let rotationSaveBusy = false;
+    let rotationDragKey = null;
+    let rotationDraft = null;
+    let rotationLoadBusy = false;
+
+    function rotationCards() {
+      return Array.from(document.querySelectorAll('#requests > .request[data-singer-key]'));
+    }
+
+    function updateRotationSaveStatus(message) {
+      const button = document.getElementById('setRotationButton');
+      const status = document.getElementById('rotationSaveStatus');
+      if (button) button.disabled = !rotationDirty || rotationSaveBusy;
+      if (status) status.textContent = message || (rotationDirty ? 'Unsaved changes. Click SET ROTATION.' : 'Rotation saved');
+    }
+
+    function rotationCardOrder() {
+      return rotationCards().map(card => card.dataset.singerKey);
+    }
+
+    function restoreDraftCardOrder() {
+      if (!rotationDirty || !rotationDraft) return;
+      const container = document.getElementById('requests');
+      const cards = rotationCards();
+      const byKey = new Map(cards.map(card => [card.dataset.singerKey, card]));
+      const ordered = [...rotationDraft, ...cards.map(card => card.dataset.singerKey)]
+        .filter((key, i, all) => all.indexOf(key) === i)
+        .map(key => byKey.get(key)).filter(Boolean);
+      ordered.forEach(card => container.appendChild(card));
+    }
+
+    async function setRotation() {
+      if (!rotationDirty || rotationSaveBusy) return;
+      rotationSaveBusy = true;
+      updateRotationSaveStatus('Saving rotation...');
+      try {
+        const data = await fetchRequests();
+        const live = buildRotation(data).map(singer => singer.key);
+        const proposed = rotationCardOrder();
+        const liveSet = new Set(live);
+        const ordered = [...proposed.filter(key => liveSet.has(key)), ...live.filter(key => !proposed.includes(key))];
+        if (ordered.length !== live.length || new Set(ordered).size !== live.length) throw new Error('Singer list changed. Please retry.');
+        await saveManualOrder(ordered);
+        rotationDirty = false;
+        rotationDraft = null;
+        updateRotationSaveStatus('Rotation saved to Supabase ✓');
+        await loadRequests();
+      } catch (error) {
+        console.error(error);
+        alert('Could not save rotation. Please try again.');
+      } finally {
+        rotationSaveBusy = false;
+        updateRotationSaveStatus();
+      }
+    }
+
+    document.getElementById('requests').addEventListener('dragstart', event => {
+      const card = event.target.closest('.request[draggable="true"]');
+      if (!card || rotationSaveBusy) { event.preventDefault(); return; }
+      rotationDragKey = card.dataset.singerKey;
+      card.classList.add('dragging');
+      if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', rotationDragKey); }
+    });
+    document.getElementById('requests').addEventListener('dragover', event => {
+      if (!rotationDragKey) return;
+      const target = event.target.closest('.request[draggable="true"]');
+      if (!target || target.dataset.singerKey === rotationDragKey) return;
+      event.preventDefault();
+      rotationCards().forEach(card => card.classList.remove('drag-target'));
+      target.classList.add('drag-target');
+    });
+    document.getElementById('requests').addEventListener('drop', event => {
+      if (!rotationDragKey) return;
+      const target = event.target.closest('.request[draggable="true"]');
+      const moving = rotationCards().find(card => card.dataset.singerKey === rotationDragKey);
+      if (target && moving && target !== moving) {
+        event.preventDefault();
+        const cards = rotationCards();
+        const from = cards.indexOf(moving), to = cards.indexOf(target);
+        target.parentNode.insertBefore(moving, from < to ? target.nextSibling : target);
+        rotationDirty = true;
+        rotationDraft = rotationCardOrder();
+        updateRotationSaveStatus();
+      }
+      rotationCards().forEach(card => card.classList.remove('drag-target'));
+      rotationDragKey = null;
+    });
+    document.getElementById('requests').addEventListener('dragend', () => {
+      rotationCards().forEach(card => card.classList.remove('dragging', 'drag-target'));
+      rotationDragKey = null;
+    });
+
     /* =========================
        LOAD KJ SCREEN
        ========================= */
 
     async function loadRequests() {
+      if (rotationLoadBusy || rotationSaveBusy && rotationDirty) return;
+      rotationLoadBusy = true;
 
       const container =
         document.getElementById(
@@ -4568,7 +4299,7 @@
         */
 
         const changed =
-          await ensureUpNext(data);
+          rotationDirty ? false : await ensureUpNext(data);
 
 
         if (changed) {
@@ -4591,9 +4322,7 @@
           buildRotation and the TV see the same data.
         */
         const newcomerQueueChanged =
-          await syncNewcomerQueue(
-            data
-          );
+          rotationDirty ? false : await syncNewcomerQueue(data);
 
 
         if (newcomerQueueChanged) {
@@ -4616,11 +4345,9 @@
           made-up time-gap rule.
         */
         try {
-
-          await syncActiveRotationOrder(
-            data,
-            rotation
-          );
+          if (!rotationDirty && !rotationSaveBusy) {
+            await syncActiveRotationOrder(data, rotation);
+          }
 
         }
 
@@ -4709,7 +4436,10 @@
                   class="request
                   ${isUpNext ? "up-next" : ""}
                   ${waitingForSong ? "waiting-for-song" : ""}"
+                  data-singer-key="${escapeHtml(singer.key)}"
+                  draggable="${!isUpNext}"
                 >
+                  ${!isUpNext ? '<div class="drag-handle">☰ Drag to reorder</div>' : ''}
 
                   <div class="singer">
                     ${escapeHtml(
@@ -4867,6 +4597,9 @@
 
         }
 
+
+        restoreDraftCardOrder();
+        updateRotationSaveStatus();
 
         /*
           PAUSED SECTION
@@ -5030,9 +4763,10 @@
 
         console.error(error);
 
-        container.innerHTML =
-          "Could not load requests.";
+        if (!rotationDirty) container.innerHTML = "Could not load requests.";
 
+      } finally {
+        rotationLoadBusy = false;
       }
 
     }
