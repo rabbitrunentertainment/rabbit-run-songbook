@@ -973,6 +973,83 @@
       font-size: 12px;
     }
 
+
+/* Centered KJ song search dialog */
+.kj-song-search-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(3, 6, 18, .82);
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+}
+.kj-song-search-overlay.open { display: flex; }
+.kj-song-search-dialog {
+  width: min(680px, 100%);
+  max-height: min(85vh, 800px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  background: #202a3a;
+  color: #fff;
+  border: 2px solid #8b48f7;
+  border-radius: 16px;
+  box-shadow: 0 22px 80px rgba(0,0,0,.65);
+}
+.kj-song-search-dialog h2 { margin: 0 0 16px; color: #f4a3e6; }
+.kj-song-search-close {
+  align-self: flex-end;
+  border: 0;
+  border-radius: 8px;
+  background: #374151;
+  color: #fff;
+  font-weight: 700;
+  padding: 9px 13px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+#kjSongSearchInput {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #a78bfa;
+  background: #111827;
+  color: #fff;
+  font-size: 17px;
+  box-sizing: border-box;
+}
+.kj-song-search-status { margin: 12px 0; color: #d1d5db; }
+.kj-song-search-results { overflow-y: auto; min-height: 0; }
+.kj-song-search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid #465168;
+}
+.kj-song-search-result > div { min-width: 0; }
+.kj-song-search-meta { color: #c7c9d7; margin-top: 4px; }
+.kj-song-search-result button {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #8b48f7;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+.kj-song-search-result button:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 520px) {
+  .kj-song-search-overlay { padding: 10px; }
+  .kj-song-search-dialog { padding: 14px; max-height: 90vh; }
+}
+
 </style>
 </head>
 
