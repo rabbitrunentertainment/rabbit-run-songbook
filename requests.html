@@ -911,6 +911,38 @@
   .songbook-manager-fields button {background:#7c3aed;color:white}
   #songbookManagerStatus {min-height:18px;margin-top:8px;color:#d8b4fe;font-size:13px}
 
+    /* Keep the drag prompt on its own row so it never shifts the
+       singer, song, or KJ action buttons out of their original columns. */
+    .request > .drag-handle {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      justify-self: start;
+      font-size: 12px;
+      color: #d8b4fe;
+      cursor: grab;
+      user-select: none;
+      line-height: 1.1;
+    }
+    .request > .controls {
+      justify-self: end;
+      justify-content: flex-end;
+    }
+    @media (min-width: 430px) and (max-width: 900px) {
+      .request > .drag-handle {
+        grid-area: auto !important;
+        grid-column: 1 / -1 !important;
+        grid-row: 1 !important;
+      }
+      .request > .singer { grid-row: 2; }
+      .request > .song { grid-row: 2; }
+      .request > .status { grid-row: 2; }
+      .request > .time { grid-row: 2; }
+      .request > .artist { grid-row: 3; }
+      .request > .controls { grid-row: 3; }
+      .request > .warnings { grid-row: 4; }
+      .request > .extra-songs { grid-row: 5; }
+    }
+
     /* Rotation confirmation: prominent, centered above the singer list. */
     .rotation-toolbar {
       max-width: 1100px;
