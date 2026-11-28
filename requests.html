@@ -5764,6 +5764,34 @@
         }
 
 
+        /*
+          DONE must advance the active turn, not merely update the
+          saved order.  A singer's next queued song must not inherit
+          their old UP NEXT position after they finish.
+
+          Re-read after all updates, then explicitly assign UP NEXT
+          to the first *other* active singer in the freshly saved
+          rotation.  setUpNext resets any stale UP NEXT flags.
+        */
+        const afterFinish = await fetchRequests();
+        const nextSinger = buildRotation(afterFinish).find(
+          singer => singer.key !== finishedSingerKey && singer.currentRequest
+        );
+        if (nextSinger) {
+          await setUpNext(nextSinger.currentRequest.id);
+        } else {
+          // No other singer: do not promote the just-finished singer.
+          const resetResponse = await fetch(
+            `${SUPABASE_URL}/rest/v1/requests?status=eq.up_next`,
+            {
+              method: "PATCH",
+              headers: apiHeaders(true),
+              body: JSON.stringify({status: "waiting"})
+            }
+          );
+          if (!resetResponse.ok) throw new Error("Could not clear old Up Next status.");
+        }
+
         await loadRequests();
 
       }
